@@ -3,7 +3,7 @@
 import { Icon } from "./Icon";
 import { useLang } from "./Language";
 
-const GH = "https://github.com/sctsivali/arena-cloudinasia";
+const GH = "https://github.com/sctsivali/cloud-directory";
 
 export function Footer() {
   const { t } = useLang();
