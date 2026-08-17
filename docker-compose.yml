@@ -1,0 +1,41 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: arena-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-arena}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-arena_dev}
+      POSTGRES_DB: ${POSTGRES_DB:-arena}
+    ports:
+      - "127.0.0.1:5433:5432"
+    volumes:
+      - arena_pg:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U arena -d arena"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+
+  app:
+    image: node:22-bookworm-slim
+    container_name: arena-app
+    restart: unless-stopped
+    working_dir: /app/web
+    command: ["npm", "run", "start"]
+    mem_limit: 896m
+    cpus: 1.0
+    ports:
+      - "0.0.0.0:3001:3000"
+    volumes:
+      - ./:/app
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-arena}:${POSTGRES_PASSWORD:-arena_dev}@db:5432/${POSTGRES_DB:-arena}
+      NODE_ENV: production
+      NODE_OPTIONS: --max-old-space-size=640
+
+volumes:
+  arena_pg:

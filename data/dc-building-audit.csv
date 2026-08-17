@@ -1,0 +1,439 @@
+provider_id,provider,hq_country,is_local_asean,city,country,building,source,confidence
+biznetgio,BiznetGio,Indonesia,t,Bekasi,Indonesia,Unknown Building,,not-listed
+biznetgio,BiznetGio,Indonesia,t,Cibitung,Indonesia,Unknown Building,,not-listed
+biznetgio,BiznetGio,Indonesia,t,Denpasar,Indonesia,Unknown Building,,not-listed
+biznetgio,BiznetGio,Indonesia,t,Jakarta,Indonesia,MidPlaza,"Biznet Gio KB: DC kedua di MidPlaza, Jakarta",public-listed
+biznetgio,BiznetGio,Indonesia,t,Surabaya,Indonesia,Unknown Building,,not-listed
+cloudkilat,CloudKilat,Indonesia,t,Jakarta,Indonesia,NEX Data Center (Cyber 2 Tower),cloudkilat.com: Data Center Tier III (NEX Data Center); NEX = Cyber 2 Tower,public-listed
+cloudkilat,CloudKilat,Indonesia,t,Singapore,Indonesia,Unknown Building,,not-listed
+dewaweb,Dewaweb,Indonesia,t,Jakarta,Indonesia,Unknown Building,,not-listed
+domainesia,DomaiNesia,Indonesia,t,Jakarta,Indonesia,Unknown Building,,not-listed
+domainesia,DomaiNesia,Indonesia,t,Yogyakarta,Indonesia,Unknown Building,,not-listed
+herza_cloud,Herza Cloud,Indonesia,t,Jakarta,Indonesia,Area31 Data Center,herza.id homepage: DATAHALL / AREA31 DATACENTER,public-listed
+herza_cloud,Herza Cloud,Indonesia,t,Jakarta (Indonesia),Indonesia,Area31 Data Center,herza.id homepage: DATAHALL / AREA31 DATACENTER,public-listed
+herza_cloud,Herza Cloud,Indonesia,t,Kuala Lumpur,Indonesia,Unknown Building,,not-listed
+herza_cloud,Herza Cloud,Indonesia,t,Manila,Indonesia,Unknown Building,,not-listed
+herza_cloud,Herza Cloud,Indonesia,t,Singapore,Indonesia,Unknown Building,,not-listed
+herza_cloud,Herza Cloud,Indonesia,t,Jakarta (Indonesia),Malaysia,Area31 Data Center,herza.id homepage: DATAHALL / AREA31 DATACENTER,public-listed
+herza_cloud,Herza Cloud,Indonesia,t,Jakarta (Indonesia),Philippines,Area31 Data Center,herza.id homepage: DATAHALL / AREA31 DATACENTER,public-listed
+herza_cloud,Herza Cloud,Indonesia,t,Singapore,Singapore,Unknown Building,,not-listed
+idcloudhost,IDCloudHost,Indonesia,t,Balikpapan,Indonesia,Unknown Building,,not-listed
+idcloudhost,IDCloudHost,Indonesia,t,Bandung,Indonesia,Unknown Building,,not-listed
+idcloudhost,IDCloudHost,Indonesia,t,Denpasar,Indonesia,Unknown Building,,not-listed
+idcloudhost,IDCloudHost,Indonesia,t,Jakarta,Indonesia,AtriaDC / IDC 3D (Duren 3),IDCloudHost colocation page lists AtriaDC Jakarta Barat and IDC 3D Duren 3,public-listed
+idcloudhost,IDCloudHost,Indonesia,t,Jakarta (Cibitung),Indonesia,DCI Indonesia H1 Campus,IDCloudHost colocation page: Gedung DCI Tier IV Cikarang/Cibitung,public-listed
+idcloudhost,IDCloudHost,Indonesia,t,Makassar,Indonesia,Unknown Building,,not-listed
+idcloudhost,IDCloudHost,Indonesia,t,Manado,Indonesia,Unknown Building,,not-listed
+idcloudhost,IDCloudHost,Indonesia,t,Medan,Indonesia,Unknown Building,,not-listed
+idcloudhost,IDCloudHost,Indonesia,t,Surabaya,Indonesia,Unknown Building,,not-listed
+idcloudhost,IDCloudHost,Indonesia,t,Yogyakarta,Indonesia,Unknown Building,,not-listed
+indonesian_cloud,Indonesian Cloud,Indonesia,t,Jakarta,Indonesia,Unknown Building,,not-listed
+jagoanhosting,JagoanHosting,Indonesia,t,Jakarta,Indonesia,Unknown Building,,not-listed
+jagoanhosting,JagoanHosting,Indonesia,t,Yogyakarta,Indonesia,Unknown Building,,not-listed
+lintasarta_cloudeka,Lintasarta Cloudeka,Indonesia,t,Jakarta,Indonesia,Jakarta City Center (BDx CGK1) / Technopark BSD / CGK3 TB Simatupang / CGK4 Jatiluhur,lintasarta.net DC page: 4 lokasi terintegrasi,public-listed
+qwords,Qwords,Indonesia,t,Bandung,Indonesia,Unknown Building,,not-listed
+qwords,Qwords,Indonesia,t,Jakarta,Indonesia,Cyber 1 Building / Menara Tendean (Nex Center) / Wisma BBU,"qwords.com/id/data-center: Cyber 1 Lt.3, Menara Tendean Lt.6, Wisma BBU Lt.6",public-listed
+qwords,Qwords,Indonesia,t,Surabaya,Indonesia,Unknown Building,,not-listed
+rumahweb,Rumahweb,Indonesia,t,Jakarta,Indonesia,Gedung Cyber,rumahweb.com/datacenter title + copy: Datacenter di Gedung Cyber,public-listed
+rumahweb,Rumahweb,Indonesia,t,Yogyakarta,Indonesia,Unknown Building,,not-listed
+telkomsigma_cloud,Telkomsigma Cloud,Indonesia,t,Jakarta,Indonesia,NeutraDC Sentul / NeutraDC HDC Cikarang (GIIC Deltamas),neutradc.com: Sentul City Bogor + HDC Cikarang,public-listed
+exabytes,Exabytes,Malaysia,t,Cyberjaya,Malaysia,CJ1 Data Centre (Jalan Cyber Point 4),exabytes.my/about/datacenter/malaysia,public-listed
+exabytes,Exabytes,Malaysia,t,Penang,Malaysia,Suntech @ Penang Cybercity,exabytes.my/about/datacenter/malaysia,public-listed
+ip_serverone,IP ServerOne,Malaysia,t,Petaling Jaya,Malaysia,Unknown Building,,not-listed
+server_connect,Server Connect,Malaysia,t,Kuala Lumpur,Malaysia,Unknown Building,,not-listed
+shinjiru,Shinjiru,Malaysia,t,Kuala Lumpur,Malaysia,Menara AIMS,shinjiru.com.my/network-data-centres,public-listed
+shinjiru_vps,Shinjiru VPS,Malaysia,t,Kuala Lumpur,Malaysia,Menara AIMS,same operator as Shinjiru; official AIMS+CX2,public-listed
+sitedotnet,SiteDotNet,Malaysia,t,Kuala Lumpur,Malaysia,Unknown Building,,not-listed
+1vps_vietnam,1VPS Vietnam,Vietnam,t,Hanoi,Vietnam,Unknown Building,,not-listed
+bizfly_cloud,BizFly Cloud,Vietnam,t,Hanoi,Vietnam,Unknown Building,,not-listed
+fpt_smart_cloud,FPT Smart Cloud,Vietnam,t,Hanoi,Vietnam,FPT Fornix HN01 (17 Duy Tan / FPT Cau Giay) / FPT Fornix HN02 (89 Truong Cong Giai),fti.fpt.vn + datacentermap FPT Telecom,public-listed
+fpt_smart_cloud,FPT Smart Cloud,Vietnam,t,Ho Chi Minh City,Vietnam,FPT Fornix HCM01 / FPT Fornix HCM02 (HCMC High-Tech Park),DCD 2025: Fornix HCM02 inaugurated at HCMC HTP,public-listed
+hostvn,HostVN,Vietnam,t,Hanoi,Vietnam,Unknown Building,,not-listed
+hostinger_vn,Hostinger VN,Vietnam,t,Ho Chi Minh,Vietnam,Unknown Building,,not-listed
+vhost_vietnam,VHost Vietnam,Vietnam,t,Ho Chi Minh,Vietnam,Unknown Building,,not-listed
+vng_cloud,VNG Cloud,Vietnam,t,Hanoi,Vietnam,Unknown Building,,not-listed
+vng_cloud,VNG Cloud,Vietnam,t,Ho Chi Minh City,Vietnam,"STT VNG Ho Chi Minh City 1 (Tan Thuan EPZ, Lot S 39-40, Road 19)",sttelemediagdc.com/vn-en/locations,public-listed
+vng_cloud_greennode,VNG Cloud (GreenNode),Vietnam,t,Hanoi,Vietnam,Unknown Building,,not-listed
+vng_cloud_greennode,VNG Cloud (GreenNode),Vietnam,t,Ho Chi Minh City,Vietnam,STT VNG Ho Chi Minh City 1 (Tan Thuan EPZ),GreenNode: runs on STT VNG HCMC 1,public-listed
+vnpt,VNPT,Vietnam,t,Hanoi,Vietnam,VNPT IDC Hoa Lac (Hoa Lac Hi-Tech Park),DCD 2023: VNPT IDC Hoa Lac,public-listed
+vietnap,VietNAP,Vietnam,t,Ho Chi Minh,Vietnam,Unknown Building,,not-listed
+vietvps,VietVPS,Vietnam,t,Ho Chi Minh,Vietnam,Unknown Building,,not-listed
+viettel_idc,Viettel IDC,Vietnam,t,Da Nang,Vietnam,Unknown Building,,not-listed
+viettel_idc,Viettel IDC,Vietnam,t,Hanoi,Vietnam,Unknown Building,,not-listed
+viettel_idc,Viettel IDC,Vietnam,t,Ho Chi Minh City,Vietnam,Viettel IDC Hoa Tham / Viettel IDC Phu Trung (Tan Phu Trung IP),datacenterhawk listing: Hoa Tham + Phu Trung,public-listed
+aucloud,AUCloud,Australia,f,Adelaide (AU),Australia,Unknown Building,,not-listed
+aucloud,AUCloud,Australia,f,Canberra (AU),Australia,Unknown Building,,not-listed
+aucloud,AUCloud,Australia,f,Melbourne (AU),Australia,Unknown Building,,not-listed
+aucloud,AUCloud,Australia,f,Perth (AU),Australia,Unknown Building,,not-listed
+aucloud,AUCloud,Australia,f,Sydney (AU),Australia,Unknown Building,,not-listed
+macquarie_cloud,Macquarie Cloud,Australia,f,Canberra,Australia,Unknown Building,,not-listed
+macquarie_cloud,Macquarie Cloud,Australia,f,Melbourne,Australia,Unknown Building,,not-listed
+macquarie_cloud,Macquarie Cloud,Australia,f,Sydney,Australia,Unknown Building,,not-listed
+macquarie_cloud,Macquarie Cloud,Australia,f,Sydney (AU),Australia,Unknown Building,,not-listed
+vault_cloud,Vault Cloud,Australia,f,Canberra (AU),Australia,Unknown Building,,not-listed
+vault_cloud,Vault Cloud,Australia,f,Sydney (AU),Australia,Unknown Building,,not-listed
+bravulink,Bravulink,Brazil,f,Belo Horizonte,BR,Unknown Building,,not-listed
+bravulink,Bravulink,Brazil,f,São Paulo,Brazil,Unknown Building,,not-listed
+hostdime_brazil,HostDime Brazil,Brazil,f,São Paulo,BR,Unknown Building,,not-listed
+hostdime_brazil,HostDime Brazil,Brazil,f,Fortaleza,Brazil,Unknown Building,,not-listed
+hostdime_brazil,HostDime Brazil,Brazil,f,Rio de Janeiro,Brazil,Unknown Building,,not-listed
+hostdime_brazil,HostDime Brazil,Brazil,f,São Paulo,Brazil,Unknown Building,,not-listed
+king_host,King.Host,Brazil,f,Curitiba,BR,Unknown Building,,not-listed
+king_host,King.Host,Brazil,f,Curitiba,Brazil,Unknown Building,,not-listed
+king_host,King.Host,Brazil,f,São Paulo,Brazil,Unknown Building,,not-listed
+locaweb_cloud,Locaweb Cloud,Brazil,f,São Paulo,BR,Unknown Building,,not-listed
+locaweb_cloud,Locaweb Cloud,Brazil,f,Rio de Janeiro,Brazil,Unknown Building,,not-listed
+locaweb_cloud,Locaweb Cloud,Brazil,f,São Paulo,Brazil,Unknown Building,,not-listed
+alibaba_cloud,Alibaba Cloud,China,f,Dubai,China,Unknown Building,,not-listed
+alibaba_cloud,Alibaba Cloud,China,f,Frankfurt,China,Unknown Building,,not-listed
+alibaba_cloud,Alibaba Cloud,China,f,Hong Kong,China,Unknown Building,,not-listed
+alibaba_cloud,Alibaba Cloud,China,f,Jakarta,China,Unknown Building,,not-listed
+alibaba_cloud,Alibaba Cloud,China,f,Kuala Lumpur,China,Unknown Building,,not-listed
+alibaba_cloud,Alibaba Cloud,China,f,London,China,Unknown Building,,not-listed
+alibaba_cloud,Alibaba Cloud,China,f,Mumbai,China,Unknown Building,,not-listed
+alibaba_cloud,Alibaba Cloud,China,f,Seoul,China,Unknown Building,,not-listed
+alibaba_cloud,Alibaba Cloud,China,f,Singapore,China,Unknown Building,,not-listed
+alibaba_cloud,Alibaba Cloud,China,f,Sydney,China,Unknown Building,,not-listed
+alibaba_cloud,Alibaba Cloud,China,f,Tokyo,China,Unknown Building,,not-listed
+alibaba_cloud,Alibaba Cloud,China,f,Jakarta,Singapore,Unknown Building,,not-listed
+baidu_ai_cloud,Baidu AI Cloud,China,f,Beijing,China,Unknown Building,,not-listed
+citic_cpc,CITIC CPC,China,f,Hong Kong,China,Unknown Building,,not-listed
+citic_cpc,CITIC CPC,China,f,Shanghai,China,Unknown Building,,not-listed
+citic_cpc,CITIC CPC,China,f,Shenzhen,China,Unknown Building,,not-listed
+citic_cpc,CITIC CPC,China,f,Hong Kong,Hong Kong,Unknown Building,,not-listed
+china_unicom_cloud,China Unicom Cloud,China,f,Beijing,China,Unknown Building,,not-listed
+china_unicom_cloud,China Unicom Cloud,China,f,Guangzhou,China,Unknown Building,,not-listed
+china_unicom_cloud,China Unicom Cloud,China,f,Hong Kong,China,Unknown Building,,not-listed
+china_unicom_cloud,China Unicom Cloud,China,f,Shanghai,China,Unknown Building,,not-listed
+huawei_cloud,Huawei Cloud,China,f,Bangkok,China,Unknown Building,,not-listed
+huawei_cloud,Huawei Cloud,China,f,Buenos Aires,China,Unknown Building,,not-listed
+huawei_cloud,Huawei Cloud,China,f,Hong Kong,China,Unknown Building,,not-listed
+huawei_cloud,Huawei Cloud,China,f,Johannesburg,China,Unknown Building,,not-listed
+huawei_cloud,Huawei Cloud,China,f,Lima,China,Unknown Building,,not-listed
+huawei_cloud,Huawei Cloud,China,f,Mexico City,China,Unknown Building,,not-listed
+huawei_cloud,Huawei Cloud,China,f,Santiago,China,Unknown Building,,not-listed
+huawei_cloud,Huawei Cloud,China,f,Sao Paulo,China,Unknown Building,,not-listed
+huawei_cloud,Huawei Cloud,China,f,Seoul,China,Unknown Building,,not-listed
+huawei_cloud,Huawei Cloud,China,f,Singapore,China,Unknown Building,,not-listed
+huawei_cloud,Huawei Cloud,China,f,Tokyo,China,Unknown Building,,not-listed
+huawei_cloud,Huawei Cloud,China,f,Singapore,Singapore,Unknown Building,,not-listed
+jd_cloud,JD Cloud,China,f,Beijing,China,Unknown Building,,not-listed
+jd_cloud,JD Cloud,China,f,Guangzhou,China,Unknown Building,,not-listed
+jd_cloud,JD Cloud,China,f,Hong Kong,China,Unknown Building,,not-listed
+jd_cloud,JD Cloud,China,f,Seoul,China,Unknown Building,,not-listed
+jd_cloud,JD Cloud,China,f,Shanghai,China,Unknown Building,,not-listed
+jd_cloud,JD Cloud,China,f,Shenzhen,China,Unknown Building,,not-listed
+jd_cloud,JD Cloud,China,f,Singapore,China,Unknown Building,,not-listed
+jd_cloud,JD Cloud,China,f,Tokyo,China,Unknown Building,,not-listed
+kingsoft_cloud,Kingsoft Cloud,China,f,Beijing,China,Unknown Building,,not-listed
+kingsoft_cloud,Kingsoft Cloud,China,f,Hong Kong,China,Unknown Building,,not-listed
+kingsoft_cloud,Kingsoft Cloud,China,f,Shanghai,China,Unknown Building,,not-listed
+tencent_cloud,Tencent Cloud,China,f,Bangkok,China,Unknown Building,,not-listed
+tencent_cloud,Tencent Cloud,China,f,Frankfurt,China,Unknown Building,,not-listed
+tencent_cloud,Tencent Cloud,China,f,Hong Kong,China,Unknown Building,,not-listed
+tencent_cloud,Tencent Cloud,China,f,Jakarta,China,Unknown Building,,not-listed
+tencent_cloud,Tencent Cloud,China,f,London,China,Unknown Building,,not-listed
+tencent_cloud,Tencent Cloud,China,f,Mumbai,China,Unknown Building,,not-listed
+tencent_cloud,Tencent Cloud,China,f,Seoul,China,Unknown Building,,not-listed
+tencent_cloud,Tencent Cloud,China,f,Singapore,China,Unknown Building,,not-listed
+tencent_cloud,Tencent Cloud,China,f,Tokyo,China,Unknown Building,,not-listed
+tencent_cloud,Tencent Cloud,China,f,Singapore,Singapore,Unknown Building,,not-listed
+ucloud,UCloud,China,f,Beijing,China,Unknown Building,,not-listed
+ucloud,UCloud,China,f,Guangzhou,China,Unknown Building,,not-listed
+ucloud,UCloud,China,f,Hong Kong,China,Unknown Building,,not-listed
+ucloud,UCloud,China,f,Mumbai,China,Unknown Building,,not-listed
+ucloud,UCloud,China,f,Shanghai,China,Unknown Building,,not-listed
+ucloud,UCloud,China,f,Shenzhen,China,Unknown Building,,not-listed
+ucloud,UCloud,China,f,Singapore,China,Unknown Building,,not-listed
+ucloud,UCloud,China,f,Tokyo,China,Unknown Building,,not-listed
+volcano_engine,Volcano Engine,China,f,Bangkok,China,Unknown Building,,not-listed
+volcano_engine,Volcano Engine,China,f,Beijing,China,Unknown Building,,not-listed
+volcano_engine,Volcano Engine,China,f,Guangzhou,China,Unknown Building,,not-listed
+volcano_engine,Volcano Engine,China,f,Hong Kong,China,Unknown Building,,not-listed
+volcano_engine,Volcano Engine,China,f,Seoul,China,Unknown Building,,not-listed
+volcano_engine,Volcano Engine,China,f,Shanghai,China,Unknown Building,,not-listed
+volcano_engine,Volcano Engine,China,f,Shenzhen,China,Unknown Building,,not-listed
+volcano_engine,Volcano Engine,China,f,Singapore,China,Unknown Building,,not-listed
+volcano_engine,Volcano Engine,China,f,Tokyo,China,Unknown Building,,not-listed
+upcloud,UpCloud,Finland,f,Amsterdam (NL),Finland,Unknown Building,,not-listed
+upcloud,UpCloud,Finland,f,Chicago (US),Finland,Unknown Building,,not-listed
+upcloud,UpCloud,Finland,f,Frankfurt (DE),Finland,Unknown Building,,not-listed
+upcloud,UpCloud,Finland,f,Helsinki (FI),Finland,Unknown Building,,not-listed
+upcloud,UpCloud,Finland,f,London (UK),Finland,Unknown Building,,not-listed
+upcloud,UpCloud,Finland,f,New York (US),Finland,Unknown Building,,not-listed
+upcloud,UpCloud,Finland,f,San Jose (US),Finland,Unknown Building,,not-listed
+upcloud,UpCloud,Finland,f,Singapore (SG),Finland,Unknown Building,,not-listed
+upcloud,UpCloud,Finland,f,Stockholm (SE),Finland,Unknown Building,,not-listed
+upcloud,UpCloud,Finland,f,Sydney (AU),Finland,Unknown Building,,not-listed
+ovh,OVH,France,f,Beauharnois (CA),France,Unknown Building,,not-listed
+ovh,OVH,France,f,Gravelines (FR),France,Unknown Building,,not-listed
+ovh,OVH,France,f,Hillsboro (US),France,Unknown Building,,not-listed
+ovh,OVH,France,f,Mumbai (IN),France,Unknown Building,,not-listed
+ovh,OVH,France,f,Roubaix (FR),France,Unknown Building,,not-listed
+ovh,OVH,France,f,Singapore (SG),France,Unknown Building,,not-listed
+ovh,OVH,France,f,Strasbourg (FR),France,Unknown Building,,not-listed
+ovh,OVH,France,f,Sydney (AU),France,Unknown Building,,not-listed
+ovh,OVH,France,f,Vint Hill (US),France,Unknown Building,,not-listed
+ovh,OVH,France,f,Roubaix (FR),Global / Multi-Region,Unknown Building,,not-listed
+contabo,Contabo,Germany,f,Ashburn (US),Germany,Unknown Building,,not-listed
+contabo,Contabo,Germany,f,Düsseldorf (DE),Germany,Unknown Building,,not-listed
+contabo,Contabo,Germany,f,Frankfurt (DE),Germany,Unknown Building,,not-listed
+contabo,Contabo,Germany,f,Jaipur (IN),Germany,Unknown Building,,not-listed
+contabo,Contabo,Germany,f,London (UK),Germany,Unknown Building,,not-listed
+contabo,Contabo,Germany,f,Nuremberg (DE),Germany,Unknown Building,,not-listed
+contabo,Contabo,Germany,f,Seattle (US),Germany,Unknown Building,,not-listed
+contabo,Contabo,Germany,f,Singapore (SG),Germany,Unknown Building,,not-listed
+contabo,Contabo,Germany,f,St. Louis (US),Germany,Unknown Building,,not-listed
+contabo,Contabo,Germany,f,Sydney (AU),Germany,Unknown Building,,not-listed
+contabo,Contabo,Germany,f,São Paulo (BR),Germany,Unknown Building,,not-listed
+contabo,Contabo,Germany,f,Tokyo (JP),Germany,Unknown Building,,not-listed
+contabo,Contabo,Germany,f,Warsaw (PL),Germany,Unknown Building,,not-listed
+contabo,Contabo,Germany,f,Nuremberg,Global / Multi-Region,Unknown Building,,not-listed
+contabo,Contabo,Germany,f,São Paulo,Global / Multi-Region,Unknown Building,,not-listed
+hetzner_cloud,Hetzner Cloud,Germany,f,Ashburn (USA),Germany,Unknown Building,,not-listed
+hetzner_cloud,Hetzner Cloud,Germany,f,Falkenstein (Germany),Germany,Unknown Building,,not-listed
+hetzner_cloud,Hetzner Cloud,Germany,f,Helsinki (Finland),Germany,Unknown Building,,not-listed
+hetzner_cloud,Hetzner Cloud,Germany,f,Hillsboro (USA),Germany,Unknown Building,,not-listed
+hetzner_cloud,Hetzner Cloud,Germany,f,Nuremberg (Germany),Germany,Unknown Building,,not-listed
+hetzner_cloud,Hetzner Cloud,Germany,f,Frankfurt,Global / Multi-Region,Unknown Building,,not-listed
+hetzner_cloud,Hetzner Cloud,Germany,f,Helsinki,Global / Multi-Region,Unknown Building,,not-listed
+hetzner_cloud,Hetzner Cloud,Germany,f,Singapore,Global / Multi-Region,Unknown Building,,not-listed
+hkt_enterprise_cloud,HKT Enterprise Cloud,Hong Kong,f,Hong Kong,Hong Kong,Unknown Building,,not-listed
+kamatera,Kamatera,IL,f,Amsterdam (NL),IL,Unknown Building,,not-listed
+kamatera,Kamatera,IL,f,Dallas (US),IL,Unknown Building,,not-listed
+kamatera,Kamatera,IL,f,Frankfurt (DE),IL,Unknown Building,,not-listed
+kamatera,Kamatera,IL,f,Hong Kong (HK),IL,Unknown Building,,not-listed
+kamatera,Kamatera,IL,f,London (UK),IL,Unknown Building,,not-listed
+kamatera,Kamatera,IL,f,Los Angeles (US),IL,Unknown Building,,not-listed
+kamatera,Kamatera,IL,f,New York (US),IL,Unknown Building,,not-listed
+kamatera,Kamatera,IL,f,Tel Aviv (IL),IL,Unknown Building,,not-listed
+kamatera,Kamatera,IL,f,Toronto (CA),IL,Unknown Building,,not-listed
+cloud4c,Cloud4C,India,f,Auckland,India,Unknown Building,,not-listed
+cloud4c,Cloud4C,India,f,Bangkok,India,Unknown Building,,not-listed
+cloud4c,Cloud4C,India,f,Cairo,India,Unknown Building,,not-listed
+cloud4c,Cloud4C,India,f,Chicago,India,Unknown Building,,not-listed
+cloud4c,Cloud4C,India,f,Dallas,India,Unknown Building,,not-listed
+cloud4c,Cloud4C,India,f,Frankfurt,India,Unknown Building,,not-listed
+cloud4c,Cloud4C,India,f,Hong Kong,India,Unknown Building,,not-listed
+cloud4c,Cloud4C,India,f,Jakarta,India,Unknown Building,,not-listed
+cloud4c,Cloud4C,India,f,Johannesburg,India,Unknown Building,,not-listed
+cloud4c,Cloud4C,India,f,Kuala Lumpur,India,Unknown Building,,not-listed
+cloud4c,Cloud4C,India,f,London,India,Unknown Building,,not-listed
+cloud4c,Cloud4C,India,f,Madrid,India,Unknown Building,,not-listed
+cloud4c,Cloud4C,India,f,Manila,India,Unknown Building,,not-listed
+cloud4c,Cloud4C,India,f,Mexico City,India,Unknown Building,,not-listed
+cloud4c,Cloud4C,India,f,Mumbai,India,Unknown Building,,not-listed
+cloud4c,Cloud4C,India,f,New York,India,Unknown Building,,not-listed
+cloud4c,Cloud4C,India,f,Singapore,India,Unknown Building,,not-listed
+cloud4c,Cloud4C,India,f,Sydney,India,Unknown Building,,not-listed
+cloud4c,Cloud4C,India,f,São Paulo,India,Unknown Building,,not-listed
+cloud4c,Cloud4C,India,f,Tokyo,India,Unknown Building,,not-listed
+cloud4c,Cloud4C,India,f,Toronto,India,Unknown Building,,not-listed
+cyfuture_cloud,Cyfuture Cloud,India,f,Mumbai,India,Unknown Building,,not-listed
+cyfuture_cloud,Cyfuture Cloud,India,f,Noida,India,Unknown Building,,not-listed
+neevcloud,NeevCloud,India,f,Bangalore,India,Unknown Building,,not-listed
+neevcloud,NeevCloud,India,f,Delhi,India,Unknown Building,,not-listed
+neevcloud,NeevCloud,India,f,Mumbai,India,Unknown Building,,not-listed
+nxtgen_cloud,NxtGen Cloud,India,f,Bangalore,India,Unknown Building,,not-listed
+nxtgen_cloud,NxtGen Cloud,India,f,Delhi,India,Unknown Building,,not-listed
+nxtgen_cloud,NxtGen Cloud,India,f,Mumbai,India,Unknown Building,,not-listed
+gmo_cloud,GMO Cloud,Japan,f,Osaka,Japan,Unknown Building,,not-listed
+gmo_cloud,GMO Cloud,Japan,f,Tokyo,Japan,Unknown Building,,not-listed
+idc_frontier,IDC Frontier,Japan,f,Tokyo,Japan,Unknown Building,,not-listed
+iij_gio,IIJ GIO,Japan,f,Osaka,Japan,Unknown Building,,not-listed
+iij_gio,IIJ GIO,Japan,f,Tokyo,Japan,Unknown Building,,not-listed
+kddi_cloud,KDDI Cloud,Japan,f,Osaka,Japan,Unknown Building,,not-listed
+kddi_cloud,KDDI Cloud,Japan,f,Tokyo,Japan,Unknown Building,,not-listed
+ntt_enterprise_cloud,NTT Enterprise Cloud,Japan,f,Osaka,Japan,Unknown Building,,not-listed
+ntt_enterprise_cloud,NTT Enterprise Cloud,Japan,f,Tokyo,Japan,Unknown Building,,not-listed
+sakura_cloud,Sakura Cloud,Japan,f,Osaka,Japan,Unknown Building,,not-listed
+softbank_white_cloud,SoftBank White Cloud,Japan,f,Tokyo,Japan,Unknown Building,,not-listed
+hostinger,Hostinger,Lithuania,f,Singapore,Global / Multi-Region,Unknown Building,,not-listed
+hostinger,Hostinger,Lithuania,f,Amsterdam,Lithuania,Unknown Building,,not-listed
+hostinger,Hostinger,Lithuania,f,Frankfurt,Lithuania,Unknown Building,,not-listed
+hostinger,Hostinger,Lithuania,f,Jakarta (via Singapore),Lithuania,Unknown Building,,not-listed
+hostinger,Hostinger,Lithuania,f,London,Lithuania,Unknown Building,,not-listed
+hostinger,Hostinger,Lithuania,f,Mumbai,Lithuania,Unknown Building,,not-listed
+hostinger,Hostinger,Lithuania,f,Singapore,Lithuania,Unknown Building,,not-listed
+hostinger,Hostinger,Lithuania,f,São Paulo,Lithuania,Unknown Building,,not-listed
+cerebrium,Cerebrium,Netherlands,f,Global (multi-region),Global / GPU Marketplace,Unknown Building,,not-listed
+cerebrium,Cerebrium,Netherlands,f,Global (multi-region),Netherlands,Unknown Building,,not-listed
+catalyst_cloud,Catalyst Cloud,New Zealand,f,Auckland (NZ),New Zealand,Unknown Building,,not-listed
+catalyst_cloud,Catalyst Cloud,New Zealand,f,Christchurch (NZ),New Zealand,Unknown Building,,not-listed
+catalyst_cloud,Catalyst Cloud,New Zealand,f,Hamilton (NZ),New Zealand,Unknown Building,,not-listed
+catalyst_cloud,Catalyst Cloud,New Zealand,f,Kapuni (NZ),New Zealand,Unknown Building,,not-listed
+catalyst_cloud,Catalyst Cloud,New Zealand,f,Wellington (NZ),New Zealand,Unknown Building,,not-listed
+stc_cloud,stc Cloud,Saudi Arabia,f,Riyadh,SA,Unknown Building,,not-listed
+stc_cloud,stc Cloud,Saudi Arabia,f,Bahrain,Saudi Arabia,Unknown Building,,not-listed
+stc_cloud,stc Cloud,Saudi Arabia,f,Dammam,Saudi Arabia,Unknown Building,,not-listed
+stc_cloud,stc Cloud,Saudi Arabia,f,Jeddah,Saudi Arabia,Unknown Building,,not-listed
+stc_cloud,stc Cloud,Saudi Arabia,f,Riyadh,Saudi Arabia,Unknown Building,,not-listed
+internet_solutions_africa,Internet Solutions Africa,South Africa,f,Cape Town,South Africa,Unknown Building,,not-listed
+internet_solutions_africa,Internet Solutions Africa,South Africa,f,Johannesburg,South Africa,Unknown Building,,not-listed
+internet_solutions_africa,Internet Solutions Africa,South Africa,f,Nairobi,South Africa,Unknown Building,,not-listed
+internet_solutions_africa,Internet Solutions Africa,South Africa,f,Johannesburg,ZA,Unknown Building,,not-listed
+liquid_telecom,Liquid Telecom,South Africa,f,Nairobi (KE),Africa,Unknown Building,,not-listed
+liquid_telecom,Liquid Telecom,South Africa,f,Cairo (EG),South Africa,Unknown Building,,not-listed
+liquid_telecom,Liquid Telecom,South Africa,f,Cape Town (ZA),South Africa,Unknown Building,,not-listed
+liquid_telecom,Liquid Telecom,South Africa,f,Johannesburg (ZA),South Africa,Unknown Building,,not-listed
+liquid_telecom,Liquid Telecom,South Africa,f,Lagos (NG),South Africa,Unknown Building,,not-listed
+liquid_telecom,Liquid Telecom,South Africa,f,Nairobi (KE),South Africa,Unknown Building,,not-listed
+telkom_cloud_sa,Telkom Cloud SA,South Africa,f,Cape Town,South Africa,Unknown Building,,not-listed
+telkom_cloud_sa,Telkom Cloud SA,South Africa,f,Centurion,South Africa,Unknown Building,,not-listed
+telkom_cloud_sa,Telkom Cloud SA,South Africa,f,Centurion,ZA,Unknown Building,,not-listed
+douzone_cloud,Douzone Cloud,South Korea,f,Busan,South Korea,Unknown Building,,not-listed
+douzone_cloud,Douzone Cloud,South Korea,f,Seoul,South Korea,Unknown Building,,not-listed
+gabia_cloud,Gabia Cloud,South Korea,f,Seoul,South Korea,Unknown Building,,not-listed
+kt_cloud,KT Cloud,South Korea,f,Busan,South Korea,Unknown Building,,not-listed
+kt_cloud,KT Cloud,South Korea,f,Seoul,South Korea,Unknown Building,,not-listed
+kakao_cloud,Kakao Cloud,South Korea,f,Busan,South Korea,Unknown Building,,not-listed
+kakao_cloud,Kakao Cloud,South Korea,f,Seongnam,South Korea,Unknown Building,,not-listed
+kakao_cloud,Kakao Cloud,South Korea,f,Seoul (Gangnam),South Korea,Unknown Building,,not-listed
+lg_cns_cloud,LG CNS Cloud,South Korea,f,Busan,South Korea,Unknown Building,,not-listed
+lg_cns_cloud,LG CNS Cloud,South Korea,f,Seoul,South Korea,Unknown Building,,not-listed
+naver_cloud,NAVER Cloud,South Korea,f,Busan,South Korea,Unknown Building,,not-listed
+naver_cloud,NAVER Cloud,South Korea,f,Seoul,South Korea,Unknown Building,,not-listed
+nhn_cloud,NHN Cloud,South Korea,f,Busan,South Korea,Unknown Building,,not-listed
+nhn_cloud,NHN Cloud,South Korea,f,Pangyo,South Korea,Unknown Building,,not-listed
+nhn_cloud,NHN Cloud,South Korea,f,Seoul (Gasan),South Korea,Unknown Building,,not-listed
+sk_c_c_cloud_z,SK C&C Cloud Z,South Korea,f,Seoul,South Korea,Unknown Building,,not-listed
+samsung_sds,Samsung SDS,South Korea,f,Seoul,South Korea,Unknown Building,,not-listed
+chief_cloud,Chief Cloud,Taiwan,f,Taichung,Taiwan,Unknown Building,,not-listed
+chief_cloud,Chief Cloud,Taiwan,f,Taipei,Taiwan,Unknown Building,,not-listed
+far_eastone_cloud,Far EasTone Cloud,Taiwan,f,Taipei,Taiwan,Unknown Building,,not-listed
+hicloud,HiCloud,Taiwan,f,Hanoi,Taiwan,Unknown Building,,not-listed
+hicloud,HiCloud,Taiwan,f,Ho Chi Minh City,Taiwan,Unknown Building,,not-listed
+ecloudvalley,eCloudvalley,Taiwan,f,Taipei,Taiwan,Unknown Building,,not-listed
+oracle_cloud,Oracle Cloud,US,f,Oracle Cloud regions,Global / Multi-Region,Unknown Building,,not-listed
+oracle_cloud,Oracle Cloud,US,f,Amsterdam,US,Unknown Building,,not-listed
+oracle_cloud,Oracle Cloud,US,f,Ashburn,US,Unknown Building,,not-listed
+oracle_cloud,Oracle Cloud,US,f,Chennai,US,Unknown Building,,not-listed
+oracle_cloud,Oracle Cloud,US,f,Dubai,US,Unknown Building,,not-listed
+oracle_cloud,Oracle Cloud,US,f,Frankfurt,US,Unknown Building,,not-listed
+oracle_cloud,Oracle Cloud,US,f,Hyderabad,US,Unknown Building,,not-listed
+oracle_cloud,Oracle Cloud,US,f,Jakarta,US,Unknown Building,,not-listed
+oracle_cloud,Oracle Cloud,US,f,Jeddah,US,Unknown Building,,not-listed
+oracle_cloud,Oracle Cloud,US,f,London,US,Unknown Building,,not-listed
+oracle_cloud,Oracle Cloud,US,f,Madrid,US,Unknown Building,,not-listed
+oracle_cloud,Oracle Cloud,US,f,Marseille,US,Unknown Building,,not-listed
+oracle_cloud,Oracle Cloud,US,f,Melbourne,US,Unknown Building,,not-listed
+oracle_cloud,Oracle Cloud,US,f,Milan,US,Unknown Building,,not-listed
+oracle_cloud,Oracle Cloud,US,f,Montreal,US,Unknown Building,,not-listed
+oracle_cloud,Oracle Cloud,US,f,Mumbai,US,Unknown Building,,not-listed
+oracle_cloud,Oracle Cloud,US,f,Osaka,US,Unknown Building,,not-listed
+oracle_cloud,Oracle Cloud,US,f,Paris,US,Unknown Building,,not-listed
+oracle_cloud,Oracle Cloud,US,f,Phoenix,US,Unknown Building,,not-listed
+oracle_cloud,Oracle Cloud,US,f,Queretaro,US,Unknown Building,,not-listed
+oracle_cloud,Oracle Cloud,US,f,San Jose,US,Unknown Building,,not-listed
+oracle_cloud,Oracle Cloud,US,f,Santiago,US,Unknown Building,,not-listed
+oracle_cloud,Oracle Cloud,US,f,Seoul,US,Unknown Building,,not-listed
+oracle_cloud,Oracle Cloud,US,f,Singapore,US,Unknown Building,,not-listed
+oracle_cloud,Oracle Cloud,US,f,Stockholm,US,Unknown Building,,not-listed
+oracle_cloud,Oracle Cloud,US,f,Sydney,US,Unknown Building,,not-listed
+oracle_cloud,Oracle Cloud,US,f,São Paulo,US,Unknown Building,,not-listed
+oracle_cloud,Oracle Cloud,US,f,Tel Aviv,US,Unknown Building,,not-listed
+oracle_cloud,Oracle Cloud,US,f,Tokyo,US,Unknown Building,,not-listed
+oracle_cloud,Oracle Cloud,US,f,Toronto,US,Unknown Building,,not-listed
+oracle_cloud,Oracle Cloud,US,f,Vinhedo,US,Unknown Building,,not-listed
+oracle_cloud,Oracle Cloud,US,f,Zurich,US,Unknown Building,,not-listed
+aws_africa_cape_town,AWS Africa (Cape Town),USA,f,Cape Town (af-south-1),Africa,Unknown Building,,not-listed
+aws_middle_east_bahrain,AWS Middle East (Bahrain),USA,f,Bahrain (me-south-1),Middle East,Unknown Building,,not-listed
+anyscale,Anyscale,USA,f,Global (AWS/GCP backend),Global / GPU Marketplace,Unknown Building,,not-listed
+anyscale,Anyscale,USA,f,GCP backend),USA,Unknown Building,,not-listed
+anyscale,Anyscale,USA,f,Global (AWS,USA,Unknown Building,,not-listed
+digitalocean,DigitalOcean,USA,f,Bangalore,Global / Multi-Region,Unknown Building,,not-listed
+digitalocean,DigitalOcean,USA,f,New York (NYC1-3),Global / Multi-Region,Unknown Building,,not-listed
+digitalocean,DigitalOcean,USA,f,Singapore,Singapore,Unknown Building,,not-listed
+digitalocean,DigitalOcean,USA,f,Amsterdam (AMS2-3),USA,Unknown Building,,not-listed
+digitalocean,DigitalOcean,USA,f,Bangalore (BLR1),USA,Unknown Building,,not-listed
+digitalocean,DigitalOcean,USA,f,Frankfurt (FRA1),USA,Unknown Building,,not-listed
+digitalocean,DigitalOcean,USA,f,London (LON1),USA,Unknown Building,,not-listed
+digitalocean,DigitalOcean,USA,f,New York (NYC1-3),USA,Unknown Building,,not-listed
+digitalocean,DigitalOcean,USA,f,San Francisco (SFO1-3),USA,Unknown Building,,not-listed
+digitalocean,DigitalOcean,USA,f,Singapore (SGP1),USA,Unknown Building,,not-listed
+digitalocean,DigitalOcean,USA,f,Sydney (SYD1),USA,Unknown Building,,not-listed
+digitalocean,DigitalOcean,USA,f,Toronto (TOR1),USA,Unknown Building,,not-listed
+fireworks_ai,Fireworks AI,USA,f,Global (multi-region),Global / GPU Marketplace,Unknown Building,,not-listed
+fireworks_ai,Fireworks AI,USA,f,Global (multi-region),USA,Unknown Building,,not-listed
+google_cloud_qatar,Google Cloud Qatar,USA,f,Doha (Qatar),QA,Unknown Building,,not-listed
+google_cloud_uae,Google Cloud UAE,USA,f,Dubai (UAE),AE,Unknown Building,,not-listed
+linode_akamai,Linode (Akamai),USA,f,Newark (NJ),Global / Multi-Region,Unknown Building,,not-listed
+linode_akamai,Linode (Akamai),USA,f,Singapore,Global / Multi-Region,Unknown Building,,not-listed
+linode_akamai,Linode (Akamai),USA,f,Singapore,Singapore,Unknown Building,,not-listed
+linode_akamai,Linode (Akamai),USA,f,Amsterdam (NL),USA,Unknown Building,,not-listed
+linode_akamai,Linode (Akamai),USA,f,Atlanta (GA),USA,Unknown Building,,not-listed
+linode_akamai,Linode (Akamai),USA,f,Dallas (TX),USA,Unknown Building,,not-listed
+linode_akamai,Linode (Akamai),USA,f,Frankfurt (DE),USA,Unknown Building,,not-listed
+linode_akamai,Linode (Akamai),USA,f,Fremont (CA),USA,Unknown Building,,not-listed
+linode_akamai,Linode (Akamai),USA,f,London (UK),USA,Unknown Building,,not-listed
+linode_akamai,Linode (Akamai),USA,f,Los Angeles (CA),USA,Unknown Building,,not-listed
+linode_akamai,Linode (Akamai),USA,f,Madrid (ES),USA,Unknown Building,,not-listed
+linode_akamai,Linode (Akamai),USA,f,Mumbai (IN),USA,Unknown Building,,not-listed
+linode_akamai,Linode (Akamai),USA,f,Newark (NJ),USA,Unknown Building,,not-listed
+linode_akamai,Linode (Akamai),USA,f,Seattle (WA),USA,Unknown Building,,not-listed
+linode_akamai,Linode (Akamai),USA,f,Singapore (SG),USA,Unknown Building,,not-listed
+linode_akamai,Linode (Akamai),USA,f,Stockholm (SE),USA,Unknown Building,,not-listed
+linode_akamai,Linode (Akamai),USA,f,Sydney (AU),USA,Unknown Building,,not-listed
+linode_akamai,Linode (Akamai),USA,f,São Paulo (BR),USA,Unknown Building,,not-listed
+linode_akamai,Linode (Akamai),USA,f,Tokyo (JP),USA,Unknown Building,,not-listed
+linode_akamai,Linode (Akamai),USA,f,Toronto (CA),USA,Unknown Building,,not-listed
+microsoft_azure,Microsoft Azure,USA,f,Hong Kong,Global / Multi-Region,Unknown Building,,not-listed
+microsoft_azure,Microsoft Azure,USA,f,Australia East,USA,Unknown Building,,not-listed
+microsoft_azure,Microsoft Azure,USA,f,Australia Southeast,USA,Unknown Building,,not-listed
+microsoft_azure,Microsoft Azure,USA,f,Brazil South,USA,Unknown Building,,not-listed
+microsoft_azure,Microsoft Azure,USA,f,Canada Central,USA,Unknown Building,,not-listed
+microsoft_azure,Microsoft Azure,USA,f,Central India,USA,Unknown Building,,not-listed
+microsoft_azure,Microsoft Azure,USA,f,Central US,USA,Unknown Building,,not-listed
+microsoft_azure,Microsoft Azure,USA,f,East Asia,USA,Unknown Building,,not-listed
+microsoft_azure,Microsoft Azure,USA,f,East US,USA,Unknown Building,,not-listed
+microsoft_azure,Microsoft Azure,USA,f,France Central,USA,Unknown Building,,not-listed
+microsoft_azure,Microsoft Azure,USA,f,Germany West Central,USA,Unknown Building,,not-listed
+microsoft_azure,Microsoft Azure,USA,f,Israel Central,USA,Unknown Building,,not-listed
+microsoft_azure,Microsoft Azure,USA,f,Italy North,USA,Unknown Building,,not-listed
+microsoft_azure,Microsoft Azure,USA,f,Japan East,USA,Unknown Building,,not-listed
+microsoft_azure,Microsoft Azure,USA,f,Japan West,USA,Unknown Building,,not-listed
+microsoft_azure,Microsoft Azure,USA,f,Korea Central,USA,Unknown Building,,not-listed
+microsoft_azure,Microsoft Azure,USA,f,Korea South,USA,Unknown Building,,not-listed
+microsoft_azure,Microsoft Azure,USA,f,North Europe,USA,Unknown Building,,not-listed
+microsoft_azure,Microsoft Azure,USA,f,Norway East,USA,Unknown Building,,not-listed
+microsoft_azure,Microsoft Azure,USA,f,Poland Central,USA,Unknown Building,,not-listed
+microsoft_azure,Microsoft Azure,USA,f,Qatar Central,USA,Unknown Building,,not-listed
+microsoft_azure,Microsoft Azure,USA,f,South Africa North,USA,Unknown Building,,not-listed
+microsoft_azure,Microsoft Azure,USA,f,South India,USA,Unknown Building,,not-listed
+microsoft_azure,Microsoft Azure,USA,f,Southeast Asia,USA,Unknown Building,,not-listed
+microsoft_azure,Microsoft Azure,USA,f,Spain Central,USA,Unknown Building,,not-listed
+microsoft_azure,Microsoft Azure,USA,f,Sweden Central,USA,Unknown Building,,not-listed
+microsoft_azure,Microsoft Azure,USA,f,Switzerland North,USA,Unknown Building,,not-listed
+microsoft_azure,Microsoft Azure,USA,f,UAE North,USA,Unknown Building,,not-listed
+microsoft_azure,Microsoft Azure,USA,f,UK South,USA,Unknown Building,,not-listed
+microsoft_azure,Microsoft Azure,USA,f,West Europe,USA,Unknown Building,,not-listed
+microsoft_azure,Microsoft Azure,USA,f,West India,USA,Unknown Building,,not-listed
+microsoft_azure,Microsoft Azure,USA,f,West US,USA,Unknown Building,,not-listed
+microsoft_azure_south_africa,Microsoft Azure South Africa,USA,f,Cape Town (ZA),ZA,Unknown Building,,not-listed
+microsoft_azure_uae,Microsoft Azure UAE,USA,f,Dubai (UAE),AE,Unknown Building,,not-listed
+novita_ai,Novita AI,USA,f,Global,Global / GPU Marketplace,Unknown Building,,not-listed
+novita_ai,Novita AI,USA,f,Global,USA,Unknown Building,,not-listed
+vultr,Vultr,USA,f,New York (NJ),Global / Multi-Region,Unknown Building,,not-listed
+vultr,Vultr,USA,f,Amsterdam (NL),USA,Unknown Building,,not-listed
+vultr,Vultr,USA,f,Atlanta (GA),USA,Unknown Building,,not-listed
+vultr,Vultr,USA,f,Chicago (IL),USA,Unknown Building,,not-listed
+vultr,Vultr,USA,f,Dallas (TX),USA,Unknown Building,,not-listed
+vultr,Vultr,USA,f,Frankfurt (DE),USA,Unknown Building,,not-listed
+vultr,Vultr,USA,f,London (UK),USA,Unknown Building,,not-listed
+vultr,Vultr,USA,f,Los Angeles (CA),USA,Unknown Building,,not-listed
+vultr,Vultr,USA,f,Madrid (ES),USA,Unknown Building,,not-listed
+vultr,Vultr,USA,f,Mexico City (MX),USA,Unknown Building,,not-listed
+vultr,Vultr,USA,f,Miami (FL),USA,Unknown Building,,not-listed
+vultr,Vultr,USA,f,Mumbai (IN),USA,Unknown Building,,not-listed
+vultr,Vultr,USA,f,New York (NJ),USA,Unknown Building,,not-listed
+vultr,Vultr,USA,f,Paris (FR),USA,Unknown Building,,not-listed
+vultr,Vultr,USA,f,Seattle (WA),USA,Unknown Building,,not-listed
+vultr,Vultr,USA,f,Seoul (KR),USA,Unknown Building,,not-listed
+vultr,Vultr,USA,f,Silicon Valley (CA),USA,Unknown Building,,not-listed
+vultr,Vultr,USA,f,Singapore (SG),USA,Unknown Building,,not-listed
+vultr,Vultr,USA,f,Stockholm (SE),USA,Unknown Building,,not-listed
+vultr,Vultr,USA,f,Sydney (AU),USA,Unknown Building,,not-listed
+vultr,Vultr,USA,f,São Paulo (BR),USA,Unknown Building,,not-listed
+vultr,Vultr,USA,f,Tokyo (JP),USA,Unknown Building,,not-listed
+vultr,Vultr,USA,f,Toronto (CA),USA,Unknown Building,,not-listed
+vultr,Vultr,USA,f,Warsaw (PL),USA,Unknown Building,,not-listed

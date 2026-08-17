@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: http://100.65.31.68:3001/sitemap.xml
