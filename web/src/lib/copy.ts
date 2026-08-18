@@ -79,7 +79,7 @@ export const COPY = {
     pathH2: "Mulai dari kebutuhan, bukan dari merek",
     path1t: "Data harus di negara saya",
     path1:
-      "Kantor pusat di negara ASEAN yang relevan, pusat data fisik di tanah sendiri, bahasa yang Anda pakai, patuh PDP / PDPA / PDPD.",
+      "Kota DC tertulis di ASEAN, badan hukum yang jelas, dan gedung yang bisa dicek. Merek lokal tanpa lokasi bukan otomatis tinggi.",
     path1go: "Lihat penyedia lokal",
     path2t: "Sistem terbuka, jangan terkunci",
     path2:
@@ -150,7 +150,7 @@ export const COPY = {
       "Risiko yurisdiksi mengikuti perusahaan dan hukum yang berlaku, bukan hanya kota DC. Perusahaan AS dapat tunduk pada CLOUD Act meski raknya di ASEAN. Operator Tiongkok tunduk hukum siber Tiongkok. Ini pengantar, bukan nasihat hukum.",
     methGo: "Buka perbandingan",
     provBack: "Kembali ke perbandingan",
-    provSov: "Kontrol data",
+    provSov: "Kontrol & residensi",
     provOss: "Open technology",
     bldgKicker: "Direktori fasilitas",
     bldgH1: "Data center-nya benar ada di mana?",
@@ -160,7 +160,7 @@ export const COPY = {
     bldgUnknownH1: "Lokasi fasilitas belum terverifikasi",
     bldgUnknownSub: "Penyedia menyebut area ini, tetapi nama gedung, operator, atau alamat belum dapat dikonfirmasi dari sumber publik.",
     bldgUnknownBody: "Catatan ini dipertahankan agar kekosongan data terlihat, bukan untuk menyatakan bahwa penyedia berada di fasilitas tertentu.",
-    mapSov: "Kontrol data",
+    mapSov: "Kontrol & residensi",
     techH1: "Jangan cuma lihat harga. Lihat apa yang menjalankan cloud-nya.",
     techLede:
       "Hypervisor, storage, container runtime, dan control plane menentukan bagaimana sistem Anda berjalan, dipindah, dan dikelola. Di sini kami jelaskan teknologinya tanpa menganggap semua pembaca sudah hidup di terminal sejak lahir.",
@@ -212,10 +212,10 @@ export const COPY = {
     mapKicker: "Peta",
     mapH1: "Wilayah yang bisa diklik",
     mapLede:
-      "Bukan pin. Klik negara, lalu kota, untuk melihat siapa yang tersedia. Dua mode: seberapa ramai, dan seberapa berdaulat.",
+      "Bukan pin. Klik negara, lalu kota, untuk melihat siapa yang tersedia. Dua mode: seberapa ramai, dan seberapa kuat kontrol & residensi.",
     mapPop: "Populasi penyedia",
     mapHintPop: "Makin pekat tosca-nya, makin banyak penyedia di wilayah itu.",
-    mapHintSov: "Makin pekat tosca-nya, makin tinggi skor kedaulatan rata-rata.",
+    mapHintSov: "Makin pekat tosca-nya, makin tinggi indikator kontrol & residensi rata-rata.",
     mapClick: "Klik negara, atau pin gedung DC.",
     mapCables: "Kabel laut",
     mapProviders: "Penyedia di sini",
@@ -409,8 +409,8 @@ export const COPY = {
     pathH2: "Start from the need, not the brand",
     path1t: "Data must stay in my country",
     path1:
-      "ASEAN HQ, a physical DC on home soil, local language, PDP/PDPA.",
-    path1go: "See six local providers",
+      "A named ASEAN DC city, a clear legal home, and a hall you can check. A local brand with no location is not automatically high.",
+    path1go: "See local providers",
     path2t: "Open stack, no lock-in",
     path2:
       "KVM/Xen, Kubernetes, Ceph. Unstated hypervisors are incomplete, not zero.",
@@ -419,10 +419,10 @@ export const COPY = {
     path3:
       "Compare prices only among ASEAN clouds. Cheap in Frankfurt does not answer residency.",
     path3go: "See starting prices",
-    dataKicker: "Most sovereign for now",
+    dataKicker: "In this dataset",
     dataH2: "Local ASEAN providers",
     dataSub:
-      "Sorted by ASEAN HQ, local residency, and an open hypervisor. Scores are still provisional.",
+      "Sorted by named ASEAN DC city, legal home, and a listed hall. Scores are a screen, not a certificate.",
     filterAll: "All",
     filterCountry: "Country",
     cityKicker: "Where the data can live",
@@ -445,13 +445,13 @@ export const COPY = {
     bldgKicker: "Facility directory",
     bldgH1: "Where is the data centre, really?",
     bldgListed: "Verified facility name",
-    mapSov: "Data control",
+    mapSov: "Control & residency",
     aboutKicker: "About CloudinAsia",
     aboutH1: "Cloud in Asia helps people understand cloud before they buy cloud",
     aboutLede:
       "CloudinAsia is a media and ecosystem platform connecting people, knowledge, community, and opportunity in Asia’s cloud-technology industry.",
     arenaLede:
-      "Local ASEAN providers first. Global clouds are only a baseline. Pick a path: sovereignty, open source, price, coverage, or capacity.",
+      "ASEAN-first, then a global baseline. Sort by control & residency, open technology, price, coverage, or capacity. The list is a shortlist to check, not a winner.",
     tabCost: "Price",
     tabCover: "Coverage",
     tabPerf: "Capacity",
@@ -503,7 +503,7 @@ export const COPY = {
     provStack: "Stack",
     provCities: "DC cities",
     provPlans: "Plans",
-    provSov: "Sovereignty",
+    provSov: "Control & residency",
     provOss: "Open source",
     colPlan: "Plan",
     colCpu: "vCPU",
@@ -523,10 +523,10 @@ export const COPY = {
     mapKicker: "Map",
     mapH1: "Click a region",
     mapLede:
-      "No pins. Click a country, then a city, to see who is there. Two modes: how crowded, and how sovereign.",
+      "No pins. Click a country, then a city, to see who is there. Two modes: how crowded, and control & residency.",
     mapPop: "Provider density",
     mapHintPop: "Darker teal means more providers in that region.",
-    mapHintSov: "Darker teal means a higher average sovereignty score.",
+    mapHintSov: "Darker teal means a higher average control & residency score.",
     mapClick: "Click a country on the map.",
     mapCables: "Cables",
     mapProviders: "Providers here",
