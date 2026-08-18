@@ -211,6 +211,12 @@ h1 {
   background: linear-gradient(160deg, rgba(96,189,145,.28), rgba(255,222,89,.1));
 }
 html[data-theme="light"] .btn-cta { background: #fff; border-color: var(--line); color: #111; }
+.start-actions { margin-top: 1.75rem; }
+.start-back .btn-ico { transform: scaleX(-1); }
+@media (max-width: 900px) {
+  .start-actions { flex-direction: column-reverse; }
+  .start-actions .btn-cta { width: 100%; }
+}
 .tech-logo-well {
   width: 2.75rem; height: 2.75rem; border-radius: 8px;
   display: inline-flex; align-items: center; justify-content: center;

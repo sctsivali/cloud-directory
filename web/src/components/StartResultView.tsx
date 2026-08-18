@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useLang } from "./Language";
+import { Icon } from "./Icon";
 import { arenaHref, clearNeeds, deriveNeeds, emptyNeeds, loadNeeds, type DerivedNeeds, type NeedsState } from "@/lib/needs";
 
 export function StartResultView() {
@@ -61,13 +62,21 @@ export function StartResultView() {
           ))}
         </ul>
       </section>
-      <p>
-        <a className="go" href={href}>
+      <div className="cta-row start-actions">
+        <a className="btn-cta" href={href}>
+          <span className="btn-ico">
+            <Icon name="compare" size={18} />
+          </span>
           {t.resultArena}
         </a>
-        {" · "}
-        <a href="/start">{t.resultEdit}</a>
-        {" · "}
+        <a className="btn-cta ghost" href="/start">
+          <span className="btn-ico">
+            <Icon name="sliders" size={18} />
+          </span>
+          {t.resultEdit}
+        </a>
+      </div>
+      <p>
         <button
           type="button"
           className="map-cable-btn"

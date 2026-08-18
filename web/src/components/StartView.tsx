@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useLang } from "./Language";
+import { Icon } from "./Icon";
 import {
   COUNTRIES,
   DATA_LEVELS,
@@ -169,22 +170,31 @@ export function StartView() {
         </section>
       )}
 
-      <p>
+      <div className="cta-row start-actions">
         {step > 0 ? (
-          <button type="button" className="map-cable-btn" onClick={() => setStep((s) => s - 1)}>
+          <button type="button" className="btn-cta ghost start-back" onClick={() => setStep((s) => s - 1)}>
+            <span className="btn-ico">
+              <Icon name="arrow" size={18} />
+            </span>
             {lang === "en" ? "Back" : "Kembali"}
           </button>
-        ) : null}{" "}
+        ) : null}
         {step < last ? (
-          <button type="button" className="map-cable-btn active" onClick={() => setStep((s) => s + 1)}>
+          <button type="button" className="btn-cta" onClick={() => setStep((s) => s + 1)}>
+            <span className="btn-ico">
+              <Icon name="arrow" size={18} />
+            </span>
             {lang === "en" ? "Skip / next" : "Lewati dulu / lanjut"}
           </button>
         ) : (
-          <a className="go" href="/start/result">
+          <a className="btn-cta" href="/start/result">
+            <span className="btn-ico">
+              <Icon name="compass" size={18} />
+            </span>
             {t.startResultGo}
           </a>
         )}
-      </p>
+      </div>
     </>
   );
 }
