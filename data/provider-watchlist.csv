@@ -1,5 +1,5 @@
 priority,name,country,official_url,in_guide,action
-P0,Nevacloud,Indonesia,https://nevacloud.com/harga/,no,scrape_then_ingest
+P0,Nevacloud,Indonesia,https://nevacloud.com/harga/,yes,ingested_2026-08-18
 P0,Eranyacloud,Indonesia,https://eranyacloud.com/en/,no,scrape_then_ingest
 P0,JetOrbit Cloud VPS,Indonesia,https://www.jetorbit.com/cloud-vps/,no,scrape_then_ingest
 P0,Cloudmatika,Indonesia,https://cloudmatika.co.id/en/cloud-vps/,no,scrape_then_ingest

@@ -1,0 +1,48 @@
+{
+  "provider": {
+    "id": "nevacloud",
+    "name": "Nevacloud",
+    "hq_country": "Indonesia",
+    "hq_city": "Jakarta",
+    "origin": "local",
+    "provider_type": "IaaS",
+    "is_local_asean": true,
+    "website": "https://nevacloud.com/",
+    "legal_country": "Indonesia",
+    "legal_note": null
+  },
+  "sources": [
+    "https://nevacloud.com/",
+    "https://nevacloud.com/vps-murah/",
+    "https://nevacloud.com/harga/"
+  ],
+  "stack": {
+    "hypervisor": "KVM",
+    "source_url": "https://nevacloud.com/vps-murah/"
+  },
+  "sovereignty": {
+    "data_residency": "local"
+  },
+  "locations": [
+    {"city": "Jakarta", "country": "Indonesia"}
+  ],
+  "buildings": [20, 22],
+  "fx_idr_per_usd": 16000,
+  "tiers": [
+    {"id": "nevacloud-nevalite-1gb", "tier_name": "Nevalite 1GB", "vcpu": 1, "ram_gb": 1, "storage_gb": 20, "storage_type": "NVMe", "price_native": "Rp 42.240", "price_idr": 42240},
+    {"id": "nevacloud-nevalite-2gb", "tier_name": "Nevalite 2GB", "vcpu": 2, "ram_gb": 2, "storage_gb": 30, "storage_type": "NVMe", "price_native": "Rp 88.000", "price_idr": 88000},
+    {"id": "nevacloud-nevalite-4gb", "tier_name": "Nevalite 4GB", "vcpu": 3, "ram_gb": 4, "storage_gb": 60, "storage_type": "NVMe", "price_native": "Rp 237.600", "price_idr": 237600},
+    {"id": "nevacloud-nevalite-8gb", "tier_name": "Nevalite 8GB", "vcpu": 4, "ram_gb": 8, "storage_gb": 100, "storage_type": "NVMe", "price_native": "Rp 457.600", "price_idr": 457600},
+    {"id": "nevacloud-nevalite-12gb", "tier_name": "Nevalite 12GB", "vcpu": 4, "ram_gb": 12, "storage_gb": 150, "storage_type": "NVMe", "price_native": "Rp 624.800", "price_idr": 624800},
+    {"id": "nevacloud-nevalite-16gb", "tier_name": "Nevalite 16GB", "vcpu": 6, "ram_gb": 16, "storage_gb": 200, "storage_type": "NVMe", "price_native": "Rp 853.600", "price_idr": 853600},
+    {"id": "nevacloud-nevalite-24gb", "tier_name": "Nevalite 24GB", "vcpu": 8, "ram_gb": 24, "storage_gb": 300, "storage_type": "NVMe", "price_native": "Rp 1.249.600", "price_idr": 1249600},
+    {"id": "nevacloud-nevalite-32gb", "tier_name": "Nevalite 32GB", "vcpu": 10, "ram_gb": 32, "storage_gb": 400, "storage_type": "NVMe", "price_native": "Rp 1.645.600", "price_idr": 1645600},
+    {"id": "nevacloud-nevalite-48gb", "tier_name": "Nevalite 48GB", "vcpu": 12, "ram_gb": 48, "storage_gb": 600, "storage_type": "NVMe", "price_native": "Rp 2.376.000", "price_idr": 2376000},
+    {"id": "nevacloud-nevalite-64gb", "tier_name": "Nevalite 64GB", "vcpu": 16, "ram_gb": 64, "storage_gb": 800, "storage_type": "NVMe", "price_native": "Rp 3.168.000", "price_idr": 3168000}
+  ],
+  "dc_city": "Jakarta",
+  "dc_country": "Indonesia",
+  "dc_location": "Jakarta",
+  "scraped_from": "https://nevacloud.com/vps-murah/",
+  "notes": "Official FAQ names Cyber 2 Tower and Menara Tendean. Halls linked, not invented. Monthly list price used, not hourly×24×31."
+}
