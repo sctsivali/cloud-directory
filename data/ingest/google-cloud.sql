@@ -1,0 +1,15 @@
+BEGIN;
+INSERT INTO providers (id,name,hq_country,hq_city,origin,provider_type,is_local_asean,website,legal_country,legal_note) VALUES ('google_cloud','Google Cloud','United States',NULL,'global','IaaS',FALSE,'https://cloud.google.com/','United States','CLOUD Act + US Patriot Act. Otoritas AS bisa minta data dari operator AS, termasuk rak di ASEAN.') ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, hq_country=EXCLUDED.hq_country, hq_city=EXCLUDED.hq_city, origin=EXCLUDED.origin, provider_type=EXCLUDED.provider_type, is_local_asean=EXCLUDED.is_local_asean, website=EXCLUDED.website, legal_country=EXCLUDED.legal_country, legal_note=EXCLUDED.legal_note;
+INSERT INTO stacks (provider_id, hypervisor, source_url) VALUES ('google_cloud',NULL,'https://cloud.google.com/, https://cloud.google.com/about/locations, https://docs.cloud.google.com/compute/docs/regions-zones') ON CONFLICT (provider_id) DO UPDATE SET hypervisor=EXCLUDED.hypervisor, source_url=EXCLUDED.source_url;
+INSERT INTO sovereignty (provider_id, data_residency) VALUES ('google_cloud','regional') ON CONFLICT (provider_id) DO UPDATE SET data_residency=EXCLUDED.data_residency;
+DELETE FROM sources WHERE provider_id = 'google_cloud';
+INSERT INTO sources (provider_id, url, scraped_at, status) VALUES ('google_cloud','https://cloud.google.com/', now(), 'OK');
+INSERT INTO sources (provider_id, url, scraped_at, status) VALUES ('google_cloud','https://cloud.google.com/about/locations', now(), 'OK');
+INSERT INTO sources (provider_id, url, scraped_at, status) VALUES ('google_cloud','https://docs.cloud.google.com/compute/docs/regions-zones', now(), 'OK');
+INSERT INTO locations (city, country) VALUES ('Jakarta','Indonesia') ON CONFLICT (city, country) DO NOTHING;
+INSERT INTO provider_locations (provider_id, location_id) SELECT 'google_cloud', id FROM locations WHERE city='Jakarta' AND country='Indonesia' ON CONFLICT DO NOTHING;
+INSERT INTO locations (city, country) VALUES ('Singapore','Singapore') ON CONFLICT (city, country) DO NOTHING;
+INSERT INTO provider_locations (provider_id, location_id) SELECT 'google_cloud', id FROM locations WHERE city='Singapore' AND country='Singapore' ON CONFLICT DO NOTHING;
+INSERT INTO locations (city, country) VALUES ('Bangkok','Thailand') ON CONFLICT (city, country) DO NOTHING;
+INSERT INTO provider_locations (provider_id, location_id) SELECT 'google_cloud', id FROM locations WHERE city='Bangkok' AND country='Thailand' ON CONFLICT DO NOTHING;
+COMMIT;

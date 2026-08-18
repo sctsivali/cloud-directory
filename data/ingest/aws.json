@@ -1,0 +1,32 @@
+{
+  "allow_no_tiers": true,
+  "provider": {
+    "id": "aws",
+    "name": "Amazon Web Services",
+    "hq_country": "United States",
+    "hq_city": null,
+    "origin": "global",
+    "provider_type": "IaaS",
+    "is_local_asean": false,
+    "website": "https://aws.amazon.com/",
+    "legal_country": "United States",
+    "legal_note": "CLOUD Act + US Patriot Act. Otoritas AS bisa minta data dari operator AS, termasuk rak di ASEAN."
+  },
+  "sources": [
+    "https://aws.amazon.com/",
+    "https://aws.amazon.com/about-aws/global-infrastructure/regions_az/"
+  ],
+  "stack": {"hypervisor": null, "source_url": "https://aws.amazon.com/about-aws/global-infrastructure/regions_az/"},
+  "sovereignty": {"data_residency": "regional"},
+  "locations": [
+    {"city": "Jakarta", "country": "Indonesia"},
+    {"city": "Singapore", "country": "Singapore"}
+  ],
+  "buildings": [],
+  "tiers": [],
+  "dc_city": "Jakarta",
+  "dc_country": "Indonesia",
+  "dc_location": "Jakarta",
+  "scraped_from": "https://aws.amazon.com/about-aws/global-infrastructure/regions_az/",
+  "notes": "Official compute regions Asia Pacific (Jakarta) and Asia Pacific (Singapore). Malaysia/Thailand regions exist but city names are not written. No EC2 SKU prices invented. Existing aws_africa_* rows left untouched."
+}

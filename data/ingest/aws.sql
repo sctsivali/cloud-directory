@@ -1,0 +1,12 @@
+BEGIN;
+INSERT INTO providers (id,name,hq_country,hq_city,origin,provider_type,is_local_asean,website,legal_country,legal_note) VALUES ('aws','Amazon Web Services','United States',NULL,'global','IaaS',FALSE,'https://aws.amazon.com/','United States','CLOUD Act + US Patriot Act. Otoritas AS bisa minta data dari operator AS, termasuk rak di ASEAN.') ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, hq_country=EXCLUDED.hq_country, hq_city=EXCLUDED.hq_city, origin=EXCLUDED.origin, provider_type=EXCLUDED.provider_type, is_local_asean=EXCLUDED.is_local_asean, website=EXCLUDED.website, legal_country=EXCLUDED.legal_country, legal_note=EXCLUDED.legal_note;
+INSERT INTO stacks (provider_id, hypervisor, source_url) VALUES ('aws',NULL,'https://aws.amazon.com/, https://aws.amazon.com/about-aws/global-infrastructure/regions_az/') ON CONFLICT (provider_id) DO UPDATE SET hypervisor=EXCLUDED.hypervisor, source_url=EXCLUDED.source_url;
+INSERT INTO sovereignty (provider_id, data_residency) VALUES ('aws','regional') ON CONFLICT (provider_id) DO UPDATE SET data_residency=EXCLUDED.data_residency;
+DELETE FROM sources WHERE provider_id = 'aws';
+INSERT INTO sources (provider_id, url, scraped_at, status) VALUES ('aws','https://aws.amazon.com/', now(), 'OK');
+INSERT INTO sources (provider_id, url, scraped_at, status) VALUES ('aws','https://aws.amazon.com/about-aws/global-infrastructure/regions_az/', now(), 'OK');
+INSERT INTO locations (city, country) VALUES ('Jakarta','Indonesia') ON CONFLICT (city, country) DO NOTHING;
+INSERT INTO provider_locations (provider_id, location_id) SELECT 'aws', id FROM locations WHERE city='Jakarta' AND country='Indonesia' ON CONFLICT DO NOTHING;
+INSERT INTO locations (city, country) VALUES ('Singapore','Singapore') ON CONFLICT (city, country) DO NOTHING;
+INSERT INTO provider_locations (provider_id, location_id) SELECT 'aws', id FROM locations WHERE city='Singapore' AND country='Singapore' ON CONFLICT DO NOTHING;
+COMMIT;

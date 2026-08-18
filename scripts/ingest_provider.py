@@ -59,7 +59,10 @@ def validate(doc: dict) -> None:
         t["_usd"] = round(usd, 2)
         t["_status"] = "OK"
     if not doc.get("tiers"):
-        die("no VPS tiers — refuse empty provider")
+        if not doc.get("allow_no_tiers"):
+            die("no VPS tiers — refuse empty provider")
+        if not (doc.get("locations") or []):
+            die("no-tier provider still needs official locations")
 
 
 def emit_sql(doc: dict) -> str:

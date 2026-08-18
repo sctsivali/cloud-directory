@@ -1,0 +1,34 @@
+{
+  "allow_no_tiers": true,
+  "provider": {
+    "id": "google_cloud",
+    "name": "Google Cloud",
+    "hq_country": "United States",
+    "hq_city": null,
+    "origin": "global",
+    "provider_type": "IaaS",
+    "is_local_asean": false,
+    "website": "https://cloud.google.com/",
+    "legal_country": "United States",
+    "legal_note": "CLOUD Act + US Patriot Act. Otoritas AS bisa minta data dari operator AS, termasuk rak di ASEAN."
+  },
+  "sources": [
+    "https://cloud.google.com/",
+    "https://cloud.google.com/about/locations",
+    "https://docs.cloud.google.com/compute/docs/regions-zones"
+  ],
+  "stack": {"hypervisor": null, "source_url": "https://docs.cloud.google.com/compute/docs/regions-zones"},
+  "sovereignty": {"data_residency": "regional"},
+  "locations": [
+    {"city": "Jakarta", "country": "Indonesia"},
+    {"city": "Singapore", "country": "Singapore"},
+    {"city": "Bangkok", "country": "Thailand"}
+  ],
+  "buildings": [],
+  "tiers": [],
+  "dc_city": "Jakarta",
+  "dc_country": "Indonesia",
+  "dc_location": "Jakarta",
+  "scraped_from": "https://docs.cloud.google.com/compute/docs/regions-zones",
+  "notes": "Official Compute Engine regions asia-southeast1 Singapore, asia-southeast2 Jakarta, asia-southeast3 Bangkok. No SKU prices invented. Existing google_cloud_uae/qatar rows left untouched."
+}
