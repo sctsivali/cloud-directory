@@ -16,3 +16,5 @@ web/.next/
 web/node_modules/
 *.tsbuildinfo
 .cloudflared/
+data/.discover-state.json
+

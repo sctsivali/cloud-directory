@@ -1,0 +1,13 @@
+priority,id,name,country,official_url,skip_if
+P2,cloudhm,Cloud HM,Thailand,https://cloudhm.co.th/,
+P2,rukcom,Ruk-Com Cloud,Thailand,https://www.ruk-com.in.th/,
+P2,zcom_th,Z.com Cloud TH,Thailand,https://www.z.com/th/cloud/,
+P2,hostatom,HostAtom,Thailand,https://www.hostatom.com/,
+P2,rise_ph,RISE,Philippines,https://www.rise.ph/,
+P2,epldt,ePLDT,Philippines,https://www.epldt.com/,
+P2,ip_converge,IP Converge,Philippines,https://www.ip-converge.com/,
+P2,cloud_ph,CloudPH,Philippines,https://www.cloud.ph/,
+P2,azdigi,AZDIGI,Vietnam,https://www.azdigi.com/,
+P2,inet_vn,iNET,Vietnam,https://inet.vn/,
+P2,warnahosting,WarnaHosting,Indonesia,https://warnahosting.com/,
+P2,masterweb,Masterweb,Indonesia,https://www.masterweb.com/,
