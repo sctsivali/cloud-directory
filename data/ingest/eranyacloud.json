@@ -1,0 +1,49 @@
+{
+  "provider": {
+    "id": "eranyacloud",
+    "name": "Eranyacloud",
+    "hq_country": "Indonesia",
+    "hq_city": "Jakarta",
+    "origin": "local",
+    "provider_type": "IaaS",
+    "is_local_asean": true,
+    "website": "https://eranyacloud.com/",
+    "legal_country": "Indonesia",
+    "legal_note": null
+  },
+  "sources": [
+    "https://eranyacloud.com/",
+    "https://eranyacloud.com/en/pricing/"
+  ],
+  "stack": {
+    "hypervisor": null,
+    "source_url": "https://eranyacloud.com/en/pricing/"
+  },
+  "sovereignty": {
+    "data_residency": "local"
+  },
+  "locations": [
+    {"city": "Undisclosed", "country": "Indonesia"}
+  ],
+  "buildings": [],
+  "fx_idr_per_usd": 16000,
+  "tiers": [
+    {"id": "eranyacloud-compute-small-1", "tier_name": "Compute Small Package 1", "vcpu": 1, "ram_gb": 2, "price_native": "Rp 282.000", "price_idr": 282000},
+    {"id": "eranyacloud-compute-small-2", "tier_name": "Compute Small Package 2", "vcpu": 1, "ram_gb": 4, "price_native": "Rp 426.000", "price_idr": 426000},
+    {"id": "eranyacloud-compute-medium-2", "tier_name": "Compute Medium Package 2", "vcpu": 2, "ram_gb": 4, "price_native": "Rp 564.000", "price_idr": 564000},
+    {"id": "eranyacloud-compute-medium-3", "tier_name": "Compute Medium Package 3", "vcpu": 2, "ram_gb": 8, "price_native": "Rp 852.000", "price_idr": 852000},
+    {"id": "eranyacloud-compute-large-2", "tier_name": "Compute Large Package 2", "vcpu": 4, "ram_gb": 8, "price_native": "Rp 1.128.000", "price_idr": 1128000},
+    {"id": "eranyacloud-compute-large-3", "tier_name": "Compute Large Package 3", "vcpu": 4, "ram_gb": 16, "price_native": "Rp 1.704.000", "price_idr": 1704000},
+    {"id": "eranyacloud-compute-xl-2", "tier_name": "Compute Extra Large Package 2", "vcpu": 8, "ram_gb": 16, "price_native": "Rp 2.256.000", "price_idr": 2256000},
+    {"id": "eranyacloud-compute-xl-3", "tier_name": "Compute Extra Large Package 3", "vcpu": 8, "ram_gb": 32, "price_native": "Rp 3.408.000", "price_idr": 3408000},
+    {"id": "eranyacloud-compute-xxl-2", "tier_name": "Compute Double Extra Large Package 2", "vcpu": 16, "ram_gb": 32, "price_native": "Rp 4.512.000", "price_idr": 4512000},
+    {"id": "eranyacloud-compute-xxl-3", "tier_name": "Compute Double Extra Large Package 3", "vcpu": 16, "ram_gb": 64, "price_native": "Rp 6.816.000", "price_idr": 6816000},
+    {"id": "eranyacloud-compute-xxxl-2", "tier_name": "Compute Triple Extra Large Package 2", "vcpu": 32, "ram_gb": 64, "price_native": "Rp 9.024.000", "price_idr": 9024000},
+    {"id": "eranyacloud-compute-xxxl-4", "tier_name": "Compute Triple Extra Large Package 4", "vcpu": 32, "ram_gb": 128, "price_native": "Rp 13.632.000", "price_idr": 13632000}
+  ],
+  "dc_city": "Undisclosed",
+  "dc_country": "Indonesia",
+  "dc_location": "Undisclosed building",
+  "scraped_from": "https://eranyacloud.com/en/pricing/",
+  "notes": "Official Compute table has no disk size. HQ Cikini is office, not a named hall. Site says Tier 4 facility in Indonesia without naming the building."
+}

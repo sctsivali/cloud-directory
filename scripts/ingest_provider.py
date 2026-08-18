@@ -41,11 +41,16 @@ def validate(doc: dict) -> None:
             die("dc_city must appear in official locations")
     fx = float(doc.get("fx_idr_per_usd") or 16000)
     for t in doc.get("tiers") or []:
-        for k in ("id", "tier_name", "vcpu", "ram_gb", "storage_gb", "price_idr"):
+        for k in ("id", "tier_name", "vcpu", "ram_gb", "price_idr"):
             if t.get(k) in (None, ""):
                 die(f"tier {t.get('id')} missing {k}")
-        if int(t["vcpu"]) < 1 or float(t["ram_gb"]) < 1 or float(t["storage_gb"]) <= 0:
+        if int(t["vcpu"]) < 1 or float(t["ram_gb"]) < 1:
             die(f"tier {t['id']} bad specs")
+        if t.get("storage_gb") not in (None, ""):
+            if float(t["storage_gb"]) <= 0:
+                die(f"tier {t['id']} bad storage")
+        else:
+            t["storage_gb"] = None
         usd = float(t["price_idr"]) / fx
         if usd <= 0:
             die(f"tier {t['id']} non-positive price")
@@ -109,12 +114,13 @@ def emit_sql(doc: dict) -> str:
     hv = (doc.get("stack") or {}).get("hypervisor")
     for t in doc["tiers"]:
         raw = json.dumps({"source": doc.get("scraped_from"), "price_idr": t["price_idr"], "fx": fx}, ensure_ascii=False)
+        stor = "NULL" if t.get("storage_gb") is None else str(float(t["storage_gb"]))
         lines.append(
             f"INSERT INTO tiers (id, provider_id, tier_name, vcpu, ram_gb, storage_gb, storage_type, "
             f"price_native, currency, price_usd_month, billing_period, dc_location, dc_city, dc_country, "
             f"hypervisor, status, raw) VALUES ("
             f"{sql_str(t['id'])},{sql_str(p['id'])},{sql_str(t['tier_name'])},{int(t['vcpu'])},"
-            f"{float(t['ram_gb'])},{float(t['storage_gb'])},{sql_str(t.get('storage_type'))},"
+            f"{float(t['ram_gb'])},{stor},{sql_str(t.get('storage_type'))},"
             f"{sql_str(t['price_native'])},'IDR',{t['_usd']},'monthly',"
             f"{sql_str(dc_loc)},{sql_str(dc_city)},{sql_str(dc_country)},"
             f"{sql_str(hv)},{sql_str(t['_status'])},{sql_str(raw)}) "
