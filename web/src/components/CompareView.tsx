@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useLang } from "./Language";
+import { Icon } from "./Icon";
 import type { ArenaRow } from "@/lib/db";
 import { loadCompare, saveCompare } from "@/lib/needs";
 
@@ -24,11 +25,14 @@ export function CompareView({ rows }: { rows: ArenaRow[] }) {
       <>
         <h1>{t.compareH1}</h1>
         <p className="lede">{t.compareEmpty}</p>
-        <p>
-          <a className="go" href="/arena">
+        <div className="cta-row start-actions">
+          <a className="btn-cta" href="/arena">
+            <span className="btn-ico">
+              <Icon name="compare" size={18} />
+            </span>
             {t.navCompare}
           </a>
-        </p>
+        </div>
       </>
     );
   }

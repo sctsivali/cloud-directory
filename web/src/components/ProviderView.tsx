@@ -211,11 +211,14 @@ export function ProviderView({ data }: { data: ProviderDetail }) {
             ))}
           </ol>
         )}
-        <p>
-          <a className="go" href="/arena">
-            {t.provBack} <Icon name="arrow" size={16} />
+        <div className="cta-row start-actions">
+          <a className="btn-cta" href="/arena">
+            <span className="btn-ico">
+              <Icon name="compare" size={18} />
+            </span>
+            {t.provBack}
           </a>
-        </p>
+        </div>
       </section>
     </>
   );

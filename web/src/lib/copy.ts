@@ -108,7 +108,7 @@ export const COPY = {
     arenaH1: "Jangan bandingkan semua cloud. Cari yang relevan dulu.",
     arenaLede:
       "Filter membantu mempersempit kandidat berdasarkan hal yang benar-benar penting. Setelah itu buka detailnya dan cek bukti di balik setiap indikator. Hasil adalah shortlist untuk investigasi lanjut, bukan rekomendasi final.",
-    tabSov: "Kontrol data",
+    tabSov: "Kontrol & residensi",
     tabOss: "Open technology",
     tabCost: "Harga",
     tabCover: "Jangkauan",
@@ -436,7 +436,7 @@ export const COPY = {
     navCompare: "Compare",
     arenaKicker: "Provider comparison",
     arenaH1: "Do not compare every cloud. Find the relevant ones first.",
-    tabSov: "Data control",
+    tabSov: "Control & residency",
     tabOss: "Open technology",
     scopeAsean: "ASEAN headquarters",
     scoreSov: "Control & residency indicator",

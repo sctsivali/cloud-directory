@@ -61,11 +61,14 @@ export function MethodologyView() {
         <IconWell name="shield" />
         <h2>{t.methLawT}</h2>
         <p className="section-sub">{t.methLaw}</p>
-        <p>
-          <a className="go" href="/arena">
-            {t.methGo} <Icon name="arrow" size={16} />
+        <div className="cta-row start-actions">
+          <a className="btn-cta" href="/arena">
+            <span className="btn-ico">
+              <Icon name="compare" size={18} />
+            </span>
+            {t.methGo}
           </a>
-        </p>
+        </div>
       </section>
     </>
   );
