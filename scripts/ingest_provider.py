@@ -39,7 +39,7 @@ def validate(doc: dict) -> None:
     if city and city != "Undisclosed":
         if not any(l.get("city") == city for l in loc):
             die("dc_city must appear in official locations")
-    FX = {"IDR": 16000, "VND": 25000, "THB": 35, "SGD": 1.35, "USD": 1}
+    FX = {"IDR": 16000, "VND": 25000, "THB": 35, "SGD": 1.35, "USD": 1, "PHP": 56}
     default_fx = float(doc.get("fx_idr_per_usd") or 16000)
     for t in doc.get("tiers") or []:
         for k in ("id", "tier_name", "vcpu", "ram_gb"):

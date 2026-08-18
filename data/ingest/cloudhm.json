@@ -1,0 +1,38 @@
+{
+  "allow_no_tiers": true,
+  "provider": {
+    "id": "cloudhm",
+    "name": "Cloud HM",
+    "hq_country": "Thailand",
+    "hq_city": null,
+    "origin": "local",
+    "provider_type": "IaaS",
+    "is_local_asean": true,
+    "website": "https://cloudhm.co.th/",
+    "legal_country": "Thailand",
+    "legal_note": null
+  },
+  "sources": [
+    "https://cloudhm.co.th/"
+  ],
+  "stack": {
+    "hypervisor": null,
+    "source_url": "https://cloudhm.co.th/"
+  },
+  "sovereignty": {
+    "data_residency": "local"
+  },
+  "locations": [
+    {
+      "city": "Undisclosed",
+      "country": "Thailand"
+    }
+  ],
+  "buildings": [],
+  "tiers": [],
+  "dc_city": "Undisclosed",
+  "dc_country": "Thailand",
+  "dc_location": "Undisclosed building",
+  "scraped_from": "https://cloudhm.co.th/",
+  "notes": "Auto-ingest via 15m cron. No invented halls. SKUs only if parser saw a complete public card."
+}
