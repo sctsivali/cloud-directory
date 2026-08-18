@@ -1,0 +1,37 @@
+{
+  "allow_no_tiers": true,
+  "provider": {
+    "id": "hostatom",
+    "name": "HostAtom",
+    "hq_country": "Thailand",
+    "hq_city": null,
+    "origin": "local",
+    "provider_type": "IaaS",
+    "is_local_asean": true,
+    "website": "https://www.hostatom.com/",
+    "legal_country": "Thailand",
+    "legal_note": null
+  },
+  "sources": [
+    "https://www.hostatom.com/",
+    "https://www.hostatom.com/cloud-vps/"
+  ],
+  "stack": {"hypervisor": null, "source_url": "https://www.hostatom.com/cloud-vps/"},
+  "sovereignty": {"data_residency": "local"},
+  "locations": [{"city": "Bangkok", "country": "Thailand"}],
+  "buildings_named": [
+    {
+      "name": "The Cloud Tower (Kaset-Nawamin)",
+      "city": "Bangkok",
+      "country": "Thailand",
+      "operator": null,
+      "source": "https://www.hostatom.com/cloud-vps/"
+    }
+  ],
+  "tiers": [],
+  "dc_city": "Bangkok",
+  "dc_country": "Thailand",
+  "dc_location": "The Cloud Tower (Kaset-Nawamin)",
+  "scraped_from": "https://www.hostatom.com/cloud-vps/",
+  "notes": "Official page names The Cloud Tower Kaset-Nawamin Tier 3. SSD1–SSD5 cards have no numeric THB in HTML (JS). Hypervisor not named."
+}

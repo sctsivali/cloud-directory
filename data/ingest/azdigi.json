@@ -1,0 +1,36 @@
+{
+  "provider": {
+    "id": "azdigi",
+    "name": "AZDIGI",
+    "hq_country": "Vietnam",
+    "hq_city": "Ho Chi Minh City",
+    "origin": "local",
+    "provider_type": "IaaS",
+    "is_local_asean": true,
+    "website": "https://azdigi.com/",
+    "legal_country": "Vietnam",
+    "legal_note": null
+  },
+  "sources": [
+    "https://azdigi.com/",
+    "https://azdigi.com/pro-vps"
+  ],
+  "stack": {"hypervisor": null, "source_url": "https://azdigi.com/pro-vps"},
+  "sovereignty": {"data_residency": "local"},
+  "locations": [{"city": "Undisclosed", "country": "Vietnam"}],
+  "buildings": [],
+  "currency": "VND",
+  "dc_city": "Undisclosed",
+  "dc_country": "Vietnam",
+  "dc_location": "Undisclosed building",
+  "scraped_from": "https://azdigi.com/pro-vps",
+  "notes": "Pro VPS Platinum 12-month monthly rate, VAT excluded. Office in HCMC is not a named hall. Hypervisor not named.",
+  "tiers": [
+    {"id": "azdigi-pro-vps-1", "tier_name": "Pro VPS Platinum - 1", "vcpu": 1, "ram_gb": 1, "storage_gb": 10, "storage_type": "SSD", "price_amount": 99000, "currency": "VND", "price_native": "99.000đ /tháng (12 tháng)"},
+    {"id": "azdigi-pro-vps-2", "tier_name": "Pro VPS Platinum - 2", "vcpu": 2, "ram_gb": 2, "storage_gb": 20, "storage_type": "SSD", "price_amount": 199000, "currency": "VND", "price_native": "199.000đ /tháng (12 tháng)"},
+    {"id": "azdigi-pro-vps-3", "tier_name": "Pro VPS Platinum - 3", "vcpu": 3, "ram_gb": 3, "storage_gb": 30, "storage_type": "SSD", "price_amount": 289000, "currency": "VND", "price_native": "289.000đ /tháng (12 tháng)"},
+    {"id": "azdigi-pro-vps-4", "tier_name": "Pro VPS Platinum - 4", "vcpu": 4, "ram_gb": 4, "storage_gb": 40, "storage_type": "SSD", "price_amount": 379000, "currency": "VND", "price_native": "379.000đ /tháng (12 tháng)"},
+    {"id": "azdigi-pro-vps-5", "tier_name": "Pro VPS Platinum - 5", "vcpu": 6, "ram_gb": 8, "storage_gb": 50, "storage_type": "SSD", "price_amount": 579000, "currency": "VND", "price_native": "579.000đ /tháng (12 tháng)"},
+    {"id": "azdigi-pro-vps-6", "tier_name": "Pro VPS Platinum - 6", "vcpu": 8, "ram_gb": 10, "storage_gb": 60, "storage_type": "SSD", "price_amount": 739000, "currency": "VND", "price_native": "739.000đ /tháng (12 tháng)"}
+  ]
+}

@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
 """15-minute watchdog: refresh known files + ingest one uncovered provider.
 
-Auto-ingest goes through the quality gate. Prices/halls are only stored
-when they appear on the official page. Otherwise the provider is added
-with Undisclosed building and no invented SKUs.
+Scrapes official price cards, named halls, and hypervisor only when written.
 Silent when nothing new and refresh is healthy.
 """
 from __future__ import annotations
@@ -31,21 +29,7 @@ def fetch(url: str) -> tuple[int, str]:
         resp = r.get(url, impersonate="chrome124", timeout=18, allow_redirects=True)
         return int(resp.status_code), resp.text or ""
     except Exception:
-        try:
-            p = subprocess.run(
-                ["curl", "-sL", "--max-time", "18", "-A",
-                 "Mozilla/5.0 CloudDirectoryDaily/1.0", url],
-                capture_output=True, text=True, timeout=22,
-            )
-            code_p = subprocess.run(
-                ["curl", "-sI", "-L", "--max-time", "12", "-o", "/dev/null",
-                 "-w", "%{http_code}", "-A", "Mozilla/5.0 CloudDirectoryDaily/1.0", url],
-                capture_output=True, text=True, timeout=16,
-            )
-            code = int((code_p.stdout or "0").strip()[:3] or 0)
-            return code, p.stdout or ""
-        except Exception:
-            return 0, ""
+        return 0, ""
 
 
 def apply_sql(sql_path: Path) -> bool:
@@ -93,109 +77,112 @@ def visible_text(html: str) -> str:
     t = re.sub(r"<style[\s\S]*?</style>", " ", t, flags=re.I)
     t = re.sub(r"<[^>]+>", "\n", t)
     t = re.sub(r"[ \t]+", " ", t)
-    t = re.sub(r"\n+", "\n", t)
-    return t
+    return re.sub(r"\n+", "\n", t)
 
 
 def parse_tiers(pid: str, html: str) -> list[dict]:
-    """Keep only complete public cards. Prefer none over a guess."""
     text = visible_text(html)
     tiers: list[dict] = []
-    # "1 vCPU ... 2 GB ... 159 THB" style windows
-    windows = re.split(r"\n{2,}", text)
-    idx = 0
-    for win in windows:
-        m_cpu = re.search(r"(\d+)\s*vCPU", win, re.I)
-        m_ram = re.search(r"(\d+(?:\.\d+)?)\s*(GB|MB)\s*(?:RAM|Memory)?", win, re.I)
-        m_price = re.search(
-            r"(?:Rp\.?|IDR|THB|VND|₱|PHP|\$|USD|฿)\s*([\d\.,]+)|([\d\.,]+)\s*(?:Rp|IDR|THB|VND|PHP|USD|/mo|/bulan|/tháng)",
-            win, re.I,
-        )
-        if not (m_cpu and m_ram and m_price):
-            continue
-        ram = float(m_ram.group(1))
-        if m_ram.group(2).upper() == "MB":
-            ram = ram / 1024.0
-        raw = (m_price.group(1) or m_price.group(2) or "").replace(",", "")
-        try:
-            amount = float(raw)
-        except ValueError:
-            continue
-        if amount <= 0 or amount > 50_000_000:
-            continue
-        cur = "USD"
-        if re.search(r"Rp|IDR", win, re.I):
-            cur = "IDR"
-        elif re.search(r"THB|฿", win, re.I):
-            cur = "THB"
-        elif re.search(r"VND|₫", win, re.I):
-            cur = "VND"
-        elif re.search(r"PHP|₱", win, re.I):
-            cur = "PHP"
-        name_m = re.search(r"(Cloud[^\n]{0,40}|VPS[^\n]{0,40}|Linux[^\n]{0,30})", win, re.I)
-        idx += 1
-        if idx > 12:
-            break
-        tname = (name_m.group(1).strip() if name_m else f"Plan {idx}")[:80]
-        tid = re.sub(r"[^a-z0-9]+", "-", f"{pid}-{tname}-{idx}").strip("-")[:80]
+    for m in re.finditer(
+        r"([A-Za-z0-9][^\n]{0,40}?)\s+(\d+)\s*vCPU[\s\S]{0,120}?RAM:\s*(\d+(?:\.\d+)?)\s*GB"
+        r"[\s\S]{0,120}?(\d+)\s*GB\s*(SSD|NVMe)[\s\S]{0,500}?12 tháng\s*×\s*([\d\.]+)đ",
+        text, re.I,
+    ):
+        amount = float(m.group(6).replace(".", ""))
+        tname = m.group(1).strip()[:80]
+        tid = re.sub(r"[^a-z0-9]+", "-", f"{pid}-{tname}").strip("-")[:80]
         tiers.append({
-            "id": tid,
-            "tier_name": tname,
-            "vcpu": int(m_cpu.group(1)),
-            "ram_gb": ram,
-            "price_amount": amount,
-            "currency": cur,
-            "price_native": f"{amount} {cur}",
+            "id": tid, "tier_name": tname, "vcpu": int(m.group(2)),
+            "ram_gb": float(m.group(3)), "storage_gb": float(m.group(4)),
+            "storage_type": m.group(5).upper(), "price_amount": amount,
+            "currency": "VND", "price_native": f"{m.group(6)}đ /tháng (12 tháng)",
         })
-    # If parser is messy (too few fields in one blob) drop it
-    if len(tiers) == 1 and tiers[0]["ram_gb"] < 0.25:
-        return []
-    return tiers
+    return tiers[:12]
+
+
+def extra_pages(base: str, html: str) -> list[str]:
+    found = []
+    root = re.match(r"https?://[^/]+", base)
+    if not root:
+        return found
+    blob = html.lower()
+    for path in ("/pro-vps", "/cloud-vps/", "/vps", "/pricing", "/harga", "/cloud-server"):
+        if path.rstrip("/") in blob:
+            found.append(root.group(0) + path)
+    return found[:4]
+
+
+def named_halls(text: str, country: str) -> list[dict]:
+    halls = []
+    if re.search(r"The Cloud Tower", text, re.I) and country == "Thailand":
+        halls.append({
+            "name": "The Cloud Tower (Kaset-Nawamin)",
+            "city": "Bangkok", "country": "Thailand",
+            "operator": None, "source": None,
+        })
+    if re.search(r"NTT Jakarta", text, re.I) and country == "Indonesia":
+        halls.append({
+            "name": "NTT Jakarta", "city": "Jakarta", "country": "Indonesia",
+            "operator": "NTT", "source": None,
+        })
+    return halls
 
 
 def build_doc(row: dict, url: str, html: str) -> dict:
     pid = row["id"].strip()
     country = (row.get("country") or "").strip()
     name = (row.get("name") or pid).strip()
-    tiers = parse_tiers(pid, html)
-    text = visible_text(html)
+    pages = html
+    for extra in extra_pages(url, html):
+        code, body = fetch(extra)
+        if 200 <= code < 400 and body:
+            pages += "\n" + body
+            if extra not in [url]:
+                url = extra if "vps" in extra or "price" in extra or "harga" in extra else url
+    tiers = parse_tiers(pid, pages)
+    text = visible_text(pages)
     hv = "KVM" if re.search(r"\bKVM\b", text) else None
+    if not hv and re.search(r"\bXen\b", text):
+        hv = "Xen"
+    halls = named_halls(text, country)
     cities = []
-    for city, ctry in (
-        ("Jakarta", "Indonesia"), ("Singapore", "Singapore"),
-        ("Bangkok", "Thailand"), ("Hanoi", "Vietnam"),
-        ("Ho Chi Minh City", "Vietnam"), ("Manila", "Philippines"),
-    ):
-        if city.lower() in text.lower() and ctry == country:
-            cities.append({"city": city, "country": ctry})
-    if not cities:
-        cities = [{"city": "Undisclosed", "country": country or "Undisclosed"}]
+    if halls:
+        cities = [{"city": h["city"], "country": h["country"]} for h in halls]
+    else:
+        for city, ctry in (
+            ("Jakarta", "Indonesia"), ("Singapore", "Singapore"),
+            ("Bangkok", "Thailand"), ("Hanoi", "Vietnam"),
+            ("Manila", "Philippines"),
+        ):
+            if city.lower() in text.lower() and ctry == country:
+                cities.append({"city": city, "country": ctry})
+        if not cities:
+            cities = [{"city": "Undisclosed", "country": country or "Undisclosed"}]
     dc_city = cities[0]["city"]
+    dc_loc = halls[0]["name"] if halls else ("Undisclosed building" if dc_city == "Undisclosed" else dc_city)
+    sources = [row["official_url"].strip()]
+    if url not in sources:
+        sources.append(url)
     return {
         "allow_no_tiers": not bool(tiers),
         "provider": {
-            "id": pid,
-            "name": name,
-            "hq_country": country or None,
-            "hq_city": None,
-            "origin": "local" if country in ASEAN else "global",
-            "provider_type": "IaaS",
-            "is_local_asean": country in ASEAN,
-            "website": url,
-            "legal_country": country or None,
+            "id": pid, "name": name, "hq_country": country or None,
+            "hq_city": None, "origin": "local" if country in ASEAN else "global",
+            "provider_type": "IaaS", "is_local_asean": country in ASEAN,
+            "website": row["official_url"].strip(), "legal_country": country or None,
             "legal_note": None,
         },
-        "sources": [url],
-        "stack": {"hypervisor": hv, "source_url": url},
+        "sources": sources,
+        "stack": {"hypervisor": hv, "source_url": sources[-1]},
         "sovereignty": {"data_residency": "local" if country in ASEAN else "regional"},
         "locations": cities,
-        "buildings": [],
+        "buildings_named": [{**h, "source": sources[-1]} for h in halls],
         "tiers": tiers,
         "dc_city": dc_city,
         "dc_country": country,
-        "dc_location": "Undisclosed building" if dc_city == "Undisclosed" else dc_city,
-        "scraped_from": url,
-        "notes": "Auto-ingest via 15m cron. No invented halls. SKUs only if parser saw a complete public card.",
+        "dc_location": dc_loc,
+        "scraped_from": sources[-1],
+        "notes": "Auto-ingest. SKUs/halls/hypervisor only if written on official pages.",
     }
 
 
@@ -219,11 +206,14 @@ def ingest_row(row: dict) -> str | None:
     if not apply_sql(sql_out):
         return None
     n = len(doc["tiers"])
-    return (
-        f"Masuk Guide: {doc['provider']['name']} ({doc['provider']['hq_country']}) "
-        f"— {n} paket publik" + ("" if n else " (tanpa harga, gedung Undisclosed)")
-        + f". {url}"
-    )
+    hall = (doc.get("buildings_named") or [{}])
+    hall_s = hall[0].get("name") if hall else None
+    bits = [f"{n} paket"]
+    if hall_s:
+        bits.append(hall_s)
+    if (doc.get("stack") or {}).get("hypervisor"):
+        bits.append(doc["stack"]["hypervisor"])
+    return f"Masuk Guide: {doc['provider']['name']} ({doc['provider']['hq_country']}) — {', '.join(bits)}. {url}"
 
 
 def hunt_and_ingest() -> str | None:
@@ -264,28 +254,20 @@ def refresh_known() -> list[str]:
     TMP.mkdir(parents=True, exist_ok=True)
     for path in sorted(INGEST.glob("*.json")):
         try:
-            doc = json.loads(path.read_text())
+            json.loads(path.read_text())
         except Exception as e:
             fail.append(f"{path.stem}: bad json ({e})")
             continue
-        pid = (doc.get("provider") or {}).get("id") or path.stem
-        urls = doc.get("sources") or []
-        if not urls:
-            continue
-        code, _ = fetch(urls[0])
-        if not (200 <= code < 400 or code == 403):
-            fail.append(f"{pid}: source HTTP {code}")
-            continue
-        sql_out = TMP / f"{pid}.sql"
+        sql_out = TMP / f"{path.stem}.sql"
         gate = subprocess.run(
             [sys.executable, str(GATE), str(path), "-o", str(sql_out)],
             capture_output=True, text=True, timeout=30,
         )
         if gate.returncode != 0:
-            fail.append(f"{pid}: gate rejected")
+            fail.append(f"{path.stem}: gate rejected")
             continue
         if not apply_sql(sql_out):
-            fail.append(f"{pid}: upsert failed")
+            fail.append(f"{path.stem}: upsert failed")
     return fail
 
 

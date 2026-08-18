@@ -1,0 +1,12 @@
+BEGIN;
+INSERT INTO providers (id,name,hq_country,hq_city,origin,provider_type,is_local_asean,website,legal_country,legal_note) VALUES ('hostatom','HostAtom','Thailand',NULL,'local','IaaS',TRUE,'https://www.hostatom.com/','Thailand',NULL) ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, hq_country=EXCLUDED.hq_country, hq_city=EXCLUDED.hq_city, origin=EXCLUDED.origin, provider_type=EXCLUDED.provider_type, is_local_asean=EXCLUDED.is_local_asean, website=EXCLUDED.website, legal_country=EXCLUDED.legal_country, legal_note=EXCLUDED.legal_note;
+INSERT INTO stacks (provider_id, hypervisor, source_url) VALUES ('hostatom',NULL,'https://www.hostatom.com/, https://www.hostatom.com/cloud-vps/') ON CONFLICT (provider_id) DO UPDATE SET hypervisor=EXCLUDED.hypervisor, source_url=EXCLUDED.source_url;
+INSERT INTO sovereignty (provider_id, data_residency) VALUES ('hostatom','local') ON CONFLICT (provider_id) DO UPDATE SET data_residency=EXCLUDED.data_residency;
+DELETE FROM sources WHERE provider_id = 'hostatom';
+INSERT INTO sources (provider_id, url, scraped_at, status) VALUES ('hostatom','https://www.hostatom.com/', now(), 'OK');
+INSERT INTO sources (provider_id, url, scraped_at, status) VALUES ('hostatom','https://www.hostatom.com/cloud-vps/', now(), 'OK');
+INSERT INTO locations (city, country) VALUES ('Bangkok','Thailand') ON CONFLICT (city, country) DO NOTHING;
+INSERT INTO provider_locations (provider_id, location_id) SELECT 'hostatom', id FROM locations WHERE city='Bangkok' AND country='Thailand' ON CONFLICT DO NOTHING;
+INSERT INTO buildings (name, city, country, source, listed, operator) VALUES ('The Cloud Tower (Kaset-Nawamin)','Bangkok','Thailand','https://www.hostatom.com/cloud-vps/', TRUE, NULL) ON CONFLICT (name, city, country) DO UPDATE SET listed=TRUE, source=COALESCE(buildings.source, EXCLUDED.source);
+INSERT INTO provider_buildings (provider_id, building_id) SELECT 'hostatom', id FROM buildings WHERE name='The Cloud Tower (Kaset-Nawamin)' AND city='Bangkok' AND country='Thailand' ON CONFLICT DO NOTHING;
+COMMIT;
