@@ -75,16 +75,19 @@ def main() -> int:
             continue
         ok.append(f"{pid} ({code})")
 
+    # Quiet on success so a 15-minute watchdog does not spam Telegram.
+    if not fail:
+        return 0
     now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
-    lines = [f"Cloud Directory daily refresh — {now}", f"OK {len(ok)} · gagal {len(fail)} · skip {len(skip)}"]
-    if fail:
-        lines.append("Gagal: " + "; ".join(fail[:8]))
+    lines = [
+        f"Cloud Directory refresh — {now}",
+        f"OK {len(ok)} · gagal {len(fail)} · skip {len(skip)}",
+        "Gagal: " + "; ".join(fail[:8]),
+    ]
     if skip:
         lines.append("Skip: " + "; ".join(skip[:6]))
-    if ok and fail:
-        lines.append("Lolos: " + ", ".join(ok[:12]))
     print("\n".join(lines))
-    return 1 if fail else 0
+    return 1
 
 
 if __name__ == "__main__":
