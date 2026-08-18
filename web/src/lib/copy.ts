@@ -133,12 +133,12 @@ export const COPY = {
     methLede:
       "Setiap indikator dibangun dari field yang bisa ditelusuri ke dataset dan sumbernya. Skor membantu membandingkan kandidat dengan cara yang konsisten. Skor bukan sertifikat keamanan, kepatuhan, atau kedaulatan.",
     methSovT: "Indikator kontrol & residensi data (0–100)",
-    methSov1: "+40 kalau kantor pusat di ASEAN",
-    methSov2: "+30 kalau data dinyatakan tinggal di dalam negeri",
-    methSov3: "+20 kalau origin-nya local, bukan anak perusahaan asing",
-    methSov4: "+10 kalau hypervisor terbuka (KVM, Proxmox, Xen, OpenStack)",
+    methSov1: "+40 residensi: paket OK dengan kota DC di ASEAN, bukan Undisclosed building",
+    methSov2: "+25 kontrol hukum: HQ atau badan hukum di ASEAN",
+    methSov3: "+15 tambahan: badan hukum ASEAN dan negara hukum = negara DC paket",
+    methSov4: "+20 fasilitas: ada gedung listed dengan nama resmi",
     methSovNote:
-      "Kantor pusat adalah konteks yurisdiksi, bukan sertifikat keamanan. DC di Jakarta tidak otomatis 100. Control plane, entitas kontrak, dan subprocessor belum masuk rumus ini.",
+      "Perusahaan lokal tanpa lokasi DC yang tertulis tidak otomatis tinggi. Rak di Jakarta milik operator AS bukan 100: data bisa di ASEAN, kontrol hukum tidak. Hypervisor terbuka masuk indikator open technology, bukan di sini.",
     methOssT: "Indikator open technology (0–100)",
     methOss5: "+15 control plane yang dapat dijalankan sendiri (Proxmox, OpenStack)",
     methOssNote:
@@ -242,7 +242,7 @@ export const COPY = {
     correctGo: "Buka CloudinAsia",
     methVerT: "Versi rumus",
     methVer:
-      "Formula 2026.08.17. Indikator kontrol memakai kantor pusat, lokasi DC paket, origin, dan hypervisor terbuka. Itu konteks yurisdiksi dan keterlacakan—bukan nilai nasionalitas. Field kosong tidak dihukum sebagai buruk; ditampilkan sebagai belum terbukti. Changelog berikutnya akan memisahkan skor bukti dari skor karakteristik.",
+      "Formula 2026.08.18. Indikator kontrol = residensi data 40 · kontrol hukum 40 · fasilitas bernama 20. Bukan nilai paspor perusahaan. Field kosong = 0, tidak dikurangi. Open technology dan kualitas bukti dihitung terpisah.",
     techVaried: "Bervariasi",
     techCountNote: "Jumlah berdasarkan field yang ditulis penyedia; inferensi tidak dihitung.",
     lastUpdated: "Dataset ditinjau 18 Agustus 2026",
@@ -470,13 +470,13 @@ export const COPY = {
     methH1: "Where do the scores come from?",
     methLede:
       "We do not sell rankings. Arena numbers come from the same database. Incomplete data means a lower score — that is a signal, not a penalty for sport.",
-    methSovT: "Digital sovereignty (0–100)",
-    methSov1: "+40 if headquarters is in ASEAN",
-    methSov2: "+30 if residency is declared local",
-    methSov3: "+20 if origin is local, not a foreign subsidiary",
-    methSov4: "+10 for an open hypervisor (KVM, Proxmox, Xen, OpenStack)",
+    methSovT: "Control & data-residency indicator (0–100)",
+    methSov1: "+40 residency: an OK plan with an ASEAN DC city, not Undisclosed building",
+    methSov2: "+25 legal control: HQ or legal entity in ASEAN",
+    methSov3: "+15 extra: ASEAN legal home matches the plan’s stated DC country",
+    methSov4: "+20 facility: a listed building with an official name",
     methSovNote:
-      "A Jakarta rack is not 100 by itself. If the control plane is abroad, PDP Law Article 56 still applies: personal data leaving the country needs equivalent protection or a binding safeguard.",
+      "A local brand with an Undisclosed DC is not automatically high. A US operator’s Jakarta rack is not 100: data may sit in ASEAN, legal control does not. Open hypervisors belong in the open-technology indicator, not here.",
     methOssT: "Open source (0–100)",
     methOss1: "+30 KVM / Proxmox / Xen hypervisor",
     methOss2: "+20 Docker or Kubernetes",
@@ -575,7 +575,7 @@ export const COPY = {
     correctGo: "Open CloudinAsia",
     methVerT: "Formula version",
     methVer:
-      "Formula 2026.08.17. The control indicator uses headquarters, plan DC location, origin, and an open hypervisor. That is jurisdiction context and traceability—not a nationality prize. Empty fields are shown as unproven, not as a penalty. A later changelog will split evidence score from characteristic score.",
+      "Formula 2026.08.18. Control indicator = data residency 40 · legal control 40 · named facility 20. Not a company-passport prize. Empty fields score 0, never minus. Open technology and evidence quality stay separate.",
     techVaried: "Varies",
     techCountNote: "Counts use fields the provider wrote; inferences are not counted.",
     lastUpdated: "Dataset reviewed 18 August 2026",

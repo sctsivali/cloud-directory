@@ -11,12 +11,31 @@ export const pool =
 
 if (!globalForPg.pool) globalForPg.pool = pool;
 
+const ASEAN = `'Indonesia','Malaysia','Singapore','Thailand','Vietnam','Philippines','Cambodia','Laos','Myanmar','Brunei'`;
+
 const SOV = `
   (
-    CASE WHEN p.is_local_asean THEN 40 ELSE 0 END
-    + CASE WHEN COALESCE(s.data_residency,'') IN ('local','Indonesia') THEN 30 ELSE 0 END
-    + CASE WHEN p.origin = 'local' THEN 20 ELSE 0 END
-    + CASE WHEN COALESCE(st.hypervisor,'') ~* 'kvm|proxmox|xen|openstack' THEN 10 ELSE 0 END
+    CASE WHEN EXISTS (
+      SELECT 1 FROM tiers tx
+      WHERE tx.provider_id = p.id
+        AND tx.status = 'OK'
+        AND COALESCE(tx.dc_city,'') <> 'Undisclosed'
+        AND COALESCE(tx.dc_country,'') IN (${ASEAN})
+    ) THEN 40 ELSE 0 END
+    + CASE WHEN COALESCE(NULLIF(p.legal_country,''), p.hq_country, '') IN (${ASEAN})
+      THEN 25 ELSE 0 END
+    + CASE WHEN COALESCE(p.legal_country,'') IN (${ASEAN}) AND EXISTS (
+        SELECT 1 FROM tiers tx
+        WHERE tx.provider_id = p.id
+          AND tx.status = 'OK'
+          AND COALESCE(tx.dc_city,'') <> 'Undisclosed'
+          AND tx.dc_country = p.legal_country
+      ) THEN 15 ELSE 0 END
+    + CASE WHEN EXISTS (
+        SELECT 1 FROM provider_buildings pb
+        JOIN buildings b ON b.id = pb.building_id
+        WHERE pb.provider_id = p.id AND b.listed
+      ) THEN 20 ELSE 0 END
   )
 `;
 
