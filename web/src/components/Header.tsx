@@ -16,6 +16,7 @@ export function Header() {
     { href: "/arena", label: t.navCompare, active: path.startsWith("/arena") },
     { href: "/buildings", label: t.navBuildings, active: path.startsWith("/building") },
     { href: "/tech", label: t.navTech, active: path.startsWith("/tech") },
+    { href: "/updates", label: t.navUpdates, active: path.startsWith("/updates") },
     { href: "/about", label: t.navAbout, active: path.startsWith("/about") },
     { href: "/methodology", label: t.navMethod, active: path.startsWith("/methodology") },
     { href: "/#patuh", label: t.navLaw, active: false },

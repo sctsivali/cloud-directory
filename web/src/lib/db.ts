@@ -480,3 +480,26 @@ export async function getMapSites(): Promise<MapSite[]> {
   `);
   return rows;
 }
+
+export type DirectoryUpdate = {
+  id: number;
+  kind: "discovered" | "updated";
+  provider_id: string | null;
+  title_id: string;
+  title_en: string;
+  summary_id: string | null;
+  summary_en: string | null;
+  href: string | null;
+  occurred_at: string;
+};
+
+export async function getDirectoryUpdates(): Promise<DirectoryUpdate[]> {
+  const { rows } = await pool.query<DirectoryUpdate>(`
+    SELECT id, kind, provider_id, title_id, title_en, summary_id, summary_en, href,
+           occurred_at::text AS occurred_at
+    FROM directory_updates
+    ORDER BY occurred_at DESC, id DESC
+    LIMIT 80
+  `);
+  return rows;
+}

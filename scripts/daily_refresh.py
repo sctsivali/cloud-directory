@@ -245,8 +245,48 @@ def hunt_and_ingest() -> str | None:
         ingested = set(st.get("ingested") or [])
         ingested.add(row["id"].strip())
         st["ingested"] = sorted(ingested)
+        name = (row.get("name") or row["id"]).strip()
+        log_update(
+            "discovered", row["id"].strip(),
+            f"{name} masuk Guide",
+            f"{name} added to the Guide",
+            "Ditemukan dari situs resmi. Harga dan gedung hanya yang tertulis.",
+            "Found from the official site. Prices and halls only when written.",
+            f"/provider/{row['id'].strip()}",
+        )
     save_state(st)
     return msg
+
+
+def sql_lit(s: str | None) -> str:
+    if s is None:
+        return "NULL"
+    return "'" + str(s).replace("'", "''") + "'"
+
+
+def snap(pid: str) -> str:
+    r = subprocess.run(
+        ["sg", "docker", "-c",
+         "docker exec arena-db psql -U arena -d arena -At -c "
+         f"\"SELECT count(*)::text||'|'||coalesce(min(price_usd_month)::text,'')||'|'||"
+         f"coalesce(max(price_usd_month)::text,'') FROM tiers WHERE provider_id={sql_lit(pid)};\""],
+        capture_output=True, text=True, timeout=20,
+    )
+    return (r.stdout or "").strip()
+
+
+def log_update(kind: str, pid: str, title_id: str, title_en: str,
+               summary_id: str, summary_en: str, href: str) -> None:
+    sql = (
+        "INSERT INTO directory_updates "
+        "(kind, provider_id, title_id, title_en, summary_id, summary_en, href) VALUES ("
+        f"{sql_lit(kind)},{sql_lit(pid)},{sql_lit(title_id)},{sql_lit(title_en)},"
+        f"{sql_lit(summary_id)},{sql_lit(summary_en)},{sql_lit(href)});"
+    )
+    p = TMP / "log-update.sql"
+    TMP.mkdir(parents=True, exist_ok=True)
+    p.write_text(sql)
+    apply_sql(p)
 
 
 def refresh_known() -> list[str]:
@@ -254,10 +294,12 @@ def refresh_known() -> list[str]:
     TMP.mkdir(parents=True, exist_ok=True)
     for path in sorted(INGEST.glob("*.json")):
         try:
-            json.loads(path.read_text())
+            doc = json.loads(path.read_text())
         except Exception as e:
             fail.append(f"{path.stem}: bad json ({e})")
             continue
+        pid = (doc.get("provider") or {}).get("id") or path.stem
+        before = snap(pid)
         sql_out = TMP / f"{path.stem}.sql"
         gate = subprocess.run(
             [sys.executable, str(GATE), str(path), "-o", str(sql_out)],
@@ -268,6 +310,18 @@ def refresh_known() -> list[str]:
             continue
         if not apply_sql(sql_out):
             fail.append(f"{path.stem}: upsert failed")
+            continue
+        after = snap(pid)
+        if before and after and before != after:
+            name = (doc.get("provider") or {}).get("name") or pid
+            log_update(
+                "updated", pid,
+                f"{name}: data publik berubah",
+                f"{name}: public data changed",
+                "Harga atau jumlah paket di situs resmi berbeda dari catatan sebelumnya.",
+                "Official prices or plan count differ from the previous record.",
+                f"/provider/{pid}",
+            )
     return fail
 
 

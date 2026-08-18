@@ -128,3 +128,16 @@ CREATE TABLE sources (
   scraped_at   TIMESTAMPTZ,
   status       TEXT
 );
+
+CREATE TABLE directory_updates (
+  id           SERIAL PRIMARY KEY,
+  kind         TEXT NOT NULL CHECK (kind IN ('discovered', 'updated')),
+  provider_id  TEXT REFERENCES providers(id) ON DELETE SET NULL,
+  title_id     TEXT NOT NULL,
+  title_en     TEXT NOT NULL,
+  summary_id   TEXT,
+  summary_en   TEXT,
+  href         TEXT,
+  occurred_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX idx_directory_updates_at ON directory_updates (occurred_at DESC);

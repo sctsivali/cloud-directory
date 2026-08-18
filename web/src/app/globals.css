@@ -225,6 +225,16 @@ html[data-theme="light"] .risk-banner {
   background: #fff8e1;
   color: #111;
 }
+.update-list { list-style: none; padding: 0; margin: 1.5rem 0 0; }
+.update-item { border-top: 1px solid var(--line); padding: 1.1rem 0; }
+.update-link { display: block; color: inherit; text-decoration: none; }
+.update-link:hover .update-title { color: var(--cia); }
+.update-meta {
+  display: flex; flex-wrap: wrap; gap: 0.5rem 1rem;
+  font-size: 0.82rem; color: var(--muted); margin: 0 0 0.35rem;
+}
+.update-kind { color: var(--cia); letter-spacing: 0.04em; text-transform: uppercase; font-size: 0.72rem; }
+.update-title { font-size: 1.1rem; margin: 0 0 0.35rem; font-weight: 600; }
 .start-actions { margin-top: 1.75rem; }
 .start-back .btn-ico { transform: scaleX(-1); }
 @media (max-width: 900px) {
