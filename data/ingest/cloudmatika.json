@@ -1,0 +1,47 @@
+{
+  "provider": {
+    "id": "cloudmatika",
+    "name": "Cloudmatika",
+    "hq_country": "Indonesia",
+    "hq_city": "Jakarta",
+    "origin": "local",
+    "provider_type": "IaaS",
+    "is_local_asean": true,
+    "website": "https://cloudmatika.co.id/",
+    "legal_country": "Indonesia",
+    "legal_note": null
+  },
+  "sources": [
+    "https://cloudmatika.co.id/",
+    "https://cloudmatika.co.id/en/cloud-vps/",
+    "https://my.cloudmatika.com/index.php?rp=/store/vps"
+  ],
+  "stack": {"hypervisor": null, "source_url": "https://cloudmatika.co.id/en/cloud-vps/"},
+  "sovereignty": {"data_residency": "local"},
+  "locations": [{"city": "Jakarta", "country": "Indonesia"}],
+  "buildings_named": [
+    {
+      "name": "NTT Jakarta",
+      "city": "Jakarta",
+      "country": "Indonesia",
+      "operator": "NTT",
+      "source": "https://cloudmatika.co.id/en/cloud-vps/"
+    }
+  ],
+  "fx_idr_per_usd": 16000,
+  "dc_city": "Jakarta",
+  "dc_country": "Indonesia",
+  "dc_location": "NTT Jakarta",
+  "scraped_from": "https://my.cloudmatika.com/index.php?rp=/store/vps",
+  "notes": "Linux VM monthly from official WHMCS store. Storage size not published. Hall name from marketing page: NTT Jakarta Tier III. No hypervisor name on first-party pages.",
+  "tiers": [
+    {"id": "cloudmatika-vps-1g-linux", "tier_name": "Cloud VPS 1G Linux", "vcpu": 2, "ram_gb": 1, "price_native": "154,000 IDR", "price_idr": 154000},
+    {"id": "cloudmatika-vps-2g-linux", "tier_name": "Cloud VPS 2G Linux", "vcpu": 3, "ram_gb": 2, "price_native": "233,750 IDR", "price_idr": 233750},
+    {"id": "cloudmatika-vps-4g-linux", "tier_name": "Cloud VPS 4G Linux", "vcpu": 4, "ram_gb": 4, "price_native": "453,750 IDR", "price_idr": 453750},
+    {"id": "cloudmatika-vps-8g-linux", "tier_name": "Cloud VPS 8G Linux", "vcpu": 6, "ram_gb": 8, "price_native": "893,750 IDR", "price_idr": 893750},
+    {"id": "cloudmatika-vps-16g-linux", "tier_name": "Cloud VPS 16G Linux", "vcpu": 8, "ram_gb": 16, "price_native": "1,636,250 IDR", "price_idr": 1636250},
+    {"id": "cloudmatika-vps-32g-linux", "tier_name": "Cloud VPS 32G Linux", "vcpu": 12, "ram_gb": 32, "price_native": "3,011,250 IDR", "price_idr": 3011250},
+    {"id": "cloudmatika-vps-48g-linux", "tier_name": "Cloud VPS 48G Linux", "vcpu": 14, "ram_gb": 48, "price_native": "5,761,250 IDR", "price_idr": 5761250},
+    {"id": "cloudmatika-vps-64g-linux", "tier_name": "Cloud VPS 64G Linux", "vcpu": 20, "ram_gb": 64, "price_native": "6,201,250 IDR", "price_idr": 6201250}
+  ]
+}

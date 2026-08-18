@@ -1,0 +1,48 @@
+{
+  "provider": {
+    "id": "jetorbit",
+    "name": "JetOrbit",
+    "hq_country": "Indonesia",
+    "hq_city": null,
+    "origin": "local",
+    "provider_type": "IaaS",
+    "is_local_asean": true,
+    "website": "https://www.jetorbit.com/",
+    "legal_country": "Indonesia",
+    "legal_note": null
+  },
+  "sources": [
+    "https://www.jetorbit.com/",
+    "https://www.jetorbit.com/cloud-vps/"
+  ],
+  "stack": {"hypervisor": "KVM", "source_url": "https://www.jetorbit.com/cloud-vps/"},
+  "sovereignty": {"data_residency": "local"},
+  "locations": [
+    {"city": "Jakarta", "country": "Indonesia"},
+    {"city": "Singapore", "country": "Singapore"}
+  ],
+  "buildings": [],
+  "fx_idr_per_usd": 16000,
+  "dc_city": "Jakarta",
+  "dc_country": "Indonesia",
+  "dc_location": "Jakarta",
+  "scraped_from": "https://www.jetorbit.com/cloud-vps/",
+  "notes": "Regular monthly price (first figure). Promo 20% not used. No named hall.",
+  "tiers": [
+    {"id": "jetorbit-id-cloud-mini", "tier_name": "Cloud Mini", "vcpu": 1, "ram_gb": 1, "storage_gb": 10, "storage_type": "NVMe", "price_native": "Rp 59.000", "price_idr": 59000, "dc_city": "Jakarta", "dc_country": "Indonesia", "dc_location": "Jakarta"},
+    {"id": "jetorbit-id-cloud-1", "tier_name": "Cloud 1", "vcpu": 1, "ram_gb": 2, "storage_gb": 25, "storage_type": "NVMe", "price_native": "Rp 99.000", "price_idr": 99000, "dc_city": "Jakarta", "dc_country": "Indonesia", "dc_location": "Jakarta"},
+    {"id": "jetorbit-id-cloud-2", "tier_name": "Cloud 2", "vcpu": 1, "ram_gb": 4, "storage_gb": 50, "storage_type": "NVMe", "price_native": "Rp 150.000", "price_idr": 150000, "dc_city": "Jakarta", "dc_country": "Indonesia", "dc_location": "Jakarta"},
+    {"id": "jetorbit-id-cloud-3x", "tier_name": "Cloud 3x", "vcpu": 2, "ram_gb": 4, "storage_gb": 60, "storage_type": "NVMe", "price_native": "Rp 225.000", "price_idr": 225000, "dc_city": "Jakarta", "dc_country": "Indonesia", "dc_location": "Jakarta"},
+    {"id": "jetorbit-id-cloud-3", "tier_name": "Cloud 3", "vcpu": 2, "ram_gb": 8, "storage_gb": 80, "storage_type": "NVMe", "price_native": "Rp 300.000", "price_idr": 300000, "dc_city": "Jakarta", "dc_country": "Indonesia", "dc_location": "Jakarta"},
+    {"id": "jetorbit-id-cloud-4x", "tier_name": "Cloud 4x", "vcpu": 4, "ram_gb": 8, "storage_gb": 120, "storage_type": "NVMe", "price_native": "Rp 450.000", "price_idr": 450000, "dc_city": "Jakarta", "dc_country": "Indonesia", "dc_location": "Jakarta"},
+    {"id": "jetorbit-id-cloud-4", "tier_name": "Cloud 4", "vcpu": 4, "ram_gb": 16, "storage_gb": 160, "storage_type": "NVMe", "price_native": "Rp 600.000", "price_idr": 600000, "dc_city": "Jakarta", "dc_country": "Indonesia", "dc_location": "Jakarta"},
+    {"id": "jetorbit-id-cloud-5", "tier_name": "Cloud 5", "vcpu": 6, "ram_gb": 32, "storage_gb": 320, "storage_type": "NVMe", "price_native": "Rp 1.200.000", "price_idr": 1200000, "dc_city": "Jakarta", "dc_country": "Indonesia", "dc_location": "Jakarta"},
+    {"id": "jetorbit-id-cloud-6", "tier_name": "Cloud 6", "vcpu": 8, "ram_gb": 64, "storage_gb": 640, "storage_type": "NVMe", "price_native": "Rp 2.400.000", "price_idr": 2400000, "dc_city": "Jakarta", "dc_country": "Indonesia", "dc_location": "Jakarta"},
+    {"id": "jetorbit-id-cloud-7", "tier_name": "Cloud 7", "vcpu": 16, "ram_gb": 96, "storage_gb": 1280, "storage_type": "NVMe", "price_native": "Rp 4.800.000", "price_idr": 4800000, "dc_city": "Jakarta", "dc_country": "Indonesia", "dc_location": "Jakarta"},
+    {"id": "jetorbit-sg-cloud-mini", "tier_name": "Cloud Mini (Singapore)", "vcpu": 1, "ram_gb": 1, "storage_gb": 10, "storage_type": "NVMe", "price_native": "Rp 79.000", "price_idr": 79000, "dc_city": "Singapore", "dc_country": "Singapore", "dc_location": "Singapore"},
+    {"id": "jetorbit-sg-cloud-1", "tier_name": "Cloud 1 (Singapore)", "vcpu": 1, "ram_gb": 2, "storage_gb": 25, "storage_type": "NVMe", "price_native": "Rp 119.000", "price_idr": 119000, "dc_city": "Singapore", "dc_country": "Singapore", "dc_location": "Singapore"},
+    {"id": "jetorbit-sg-cloud-2", "tier_name": "Cloud 2 (Singapore)", "vcpu": 1, "ram_gb": 4, "storage_gb": 50, "storage_type": "NVMe", "price_native": "Rp 180.000", "price_idr": 180000, "dc_city": "Singapore", "dc_country": "Singapore", "dc_location": "Singapore"},
+    {"id": "jetorbit-sg-cloud-3", "tier_name": "Cloud 3 (Singapore)", "vcpu": 2, "ram_gb": 8, "storage_gb": 80, "storage_type": "NVMe", "price_native": "Rp 360.000", "price_idr": 360000, "dc_city": "Singapore", "dc_country": "Singapore", "dc_location": "Singapore"},
+    {"id": "jetorbit-sg-cloud-4", "tier_name": "Cloud 4 (Singapore)", "vcpu": 4, "ram_gb": 16, "storage_gb": 160, "storage_type": "NVMe", "price_native": "Rp 720.000", "price_idr": 720000, "dc_city": "Singapore", "dc_country": "Singapore", "dc_location": "Singapore"}
+  ]
+}

@@ -108,6 +108,20 @@ def emit_sql(doc: dict) -> str:
             f"INSERT INTO provider_buildings (provider_id, building_id) VALUES ({sql_str(p['id'])},{int(bid)}) "
             f"ON CONFLICT DO NOTHING;"
         )
+    for b in doc.get("buildings_named") or []:
+        if not b.get("name") or not b.get("city") or not b.get("country"):
+            continue
+        lines.append(
+            f"INSERT INTO buildings (name, city, country, source, listed, operator) VALUES ("
+            f"{sql_str(b['name'])},{sql_str(b['city'])},{sql_str(b['country'])},"
+            f"{sql_str(b.get('source'))}, TRUE, {sql_str(b.get('operator'))}) "
+            f"ON CONFLICT (name, city, country) DO UPDATE SET listed=TRUE, source=COALESCE(buildings.source, EXCLUDED.source);"
+        )
+        lines.append(
+            f"INSERT INTO provider_buildings (provider_id, building_id) "
+            f"SELECT {sql_str(p['id'])}, id FROM buildings WHERE name={sql_str(b['name'])} AND city={sql_str(b['city'])} AND country={sql_str(b['country'])} "
+            f"ON CONFLICT DO NOTHING;"
+        )
     dc_city = doc.get("dc_city") or "Undisclosed"
     dc_country = doc.get("dc_country") or ""
     dc_loc = doc.get("dc_location") or ("Undisclosed building" if dc_city == "Undisclosed" else dc_city)
@@ -115,6 +129,9 @@ def emit_sql(doc: dict) -> str:
     for t in doc["tiers"]:
         raw = json.dumps({"source": doc.get("scraped_from"), "price_idr": t["price_idr"], "fx": fx}, ensure_ascii=False)
         stor = "NULL" if t.get("storage_gb") is None else str(float(t["storage_gb"]))
+        dc_c = t.get("dc_city") or dc_city
+        dc_co = t.get("dc_country") or dc_country
+        dc_l = t.get("dc_location") or ("Undisclosed building" if dc_c == "Undisclosed" else dc_c)
         lines.append(
             f"INSERT INTO tiers (id, provider_id, tier_name, vcpu, ram_gb, storage_gb, storage_type, "
             f"price_native, currency, price_usd_month, billing_period, dc_location, dc_city, dc_country, "
@@ -122,7 +139,7 @@ def emit_sql(doc: dict) -> str:
             f"{sql_str(t['id'])},{sql_str(p['id'])},{sql_str(t['tier_name'])},{int(t['vcpu'])},"
             f"{float(t['ram_gb'])},{stor},{sql_str(t.get('storage_type'))},"
             f"{sql_str(t['price_native'])},'IDR',{t['_usd']},'monthly',"
-            f"{sql_str(dc_loc)},{sql_str(dc_city)},{sql_str(dc_country)},"
+            f"{sql_str(dc_l)},{sql_str(dc_c)},{sql_str(dc_co)},"
             f"{sql_str(hv)},{sql_str(t['_status'])},{sql_str(raw)}) "
             f"ON CONFLICT (id) DO UPDATE SET tier_name=EXCLUDED.tier_name, vcpu=EXCLUDED.vcpu, ram_gb=EXCLUDED.ram_gb, "
             f"storage_gb=EXCLUDED.storage_gb, storage_type=EXCLUDED.storage_type, price_native=EXCLUDED.price_native, "

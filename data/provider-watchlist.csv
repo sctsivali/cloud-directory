@@ -1,8 +1,8 @@
 priority,name,country,official_url,in_guide,action
 P0,Nevacloud,Indonesia,https://nevacloud.com/harga/,yes,ingested_2026-08-18
 P0,Eranyacloud,Indonesia,https://eranyacloud.com/en/,yes,ingested_2026-08-18
-P0,JetOrbit Cloud VPS,Indonesia,https://www.jetorbit.com/cloud-vps/,no,scrape_then_ingest
-P0,Cloudmatika,Indonesia,https://cloudmatika.co.id/en/cloud-vps/,no,scrape_then_ingest
+P0,JetOrbit Cloud VPS,Indonesia,https://www.jetorbit.com/cloud-vps/,yes,ingested_2026-08-18
+P0,Cloudmatika,Indonesia,https://cloudmatika.co.id/en/cloud-vps/,yes,ingested_2026-08-18
 P0,AWS Asia Pacific,United States,https://aws.amazon.com/,partial,add_sg_jakarta_regions
 P0,Google Cloud Asia,United States,https://cloud.google.com/about/locations,partial,add_sg_jakarta_bangkok
 P1,CMC Cloud,Vietnam,https://cmccloud.vn/,no,scrape_then_ingest
