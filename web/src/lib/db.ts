@@ -35,9 +35,14 @@ const CONF = `
       ) THEN 15 ELSE 0 END
     + CASE WHEN EXISTS (
         SELECT 1 FROM tiers tx
-        WHERE tx.provider_id = p.id AND COALESCE(tx.dc_country,'') <> ''
+        WHERE tx.provider_id = p.id
+          AND COALESCE(tx.dc_country,'') <> ''
+          AND COALESCE(tx.dc_city,'') <> 'Undisclosed'
       ) THEN 15 ELSE 0 END
-    + CASE WHEN COALESCE(st.source_url,'') <> '' THEN 15 ELSE 0 END
+    + CASE WHEN EXISTS (
+        SELECT 1 FROM sources so
+        WHERE so.provider_id = p.id AND COALESCE(so.url,'') <> ''
+      ) THEN 15 ELSE 0 END
     + CASE WHEN COALESCE(p.legal_country,'') <> '' THEN 15 ELSE 0 END
   )
 `;
@@ -190,7 +195,8 @@ export type ProviderDetail = {
   sov_score: number;
   oss_score: number;
   conf_score: number;
-  cities: { id: number; city: string; country: string; building: string; listed: boolean; address: string | null; operator: string | null }[];
+  cities: { id: number | null; city: string; country: string; building: string; listed: boolean; address: string | null; operator: string | null }[];
+  sources: { url: string; status: string | null }[];
   tiers: {
     id: string;
     tier_name: string;
@@ -239,13 +245,27 @@ export async function getProvider(id: string): Promise<ProviderDetail | null> {
   );
   if (!rows[0]) return null;
   const p = rows[0];
-  const [locs, tiers] = await Promise.all([
+  const [locs, tiers, srcs] = await Promise.all([
     pool.query(
-      `SELECT b.id, b.city, b.country, b.name AS building, b.listed, b.address, b.operator
-       FROM provider_buildings pb
-       JOIN buildings b ON b.id = pb.building_id
-       WHERE pb.provider_id = $1
-       ORDER BY b.listed DESC, b.country, b.city, b.name`,
+      `SELECT * FROM (
+         SELECT b.id, b.city, b.country, b.name AS building, b.listed, b.address, b.operator
+         FROM provider_buildings pb
+         JOIN buildings b ON b.id = pb.building_id
+         WHERE pb.provider_id = $1 AND b.listed
+         UNION ALL
+         SELECT NULL::int AS id, l.city, l.country, 'Undisclosed building' AS building,
+                FALSE AS listed, NULL::text AS address, NULL::text AS operator
+         FROM provider_locations pl
+         JOIN locations l ON l.id = pl.location_id
+         WHERE pl.provider_id = $1
+           AND NOT EXISTS (
+             SELECT 1
+             FROM provider_buildings pb2
+             JOIN buildings b2 ON b2.id = pb2.building_id AND b2.listed
+             WHERE pb2.provider_id = $1 AND b2.city = l.city AND b2.country = l.country
+           )
+       ) loc
+       ORDER BY listed DESC, country, city, building`,
       [id]
     ),
     pool.query(
@@ -258,10 +278,17 @@ export async function getProvider(id: string): Promise<ProviderDetail | null> {
        LIMIT 40`,
       [id]
     ),
+    pool.query(
+      `SELECT url, status FROM sources
+       WHERE provider_id = $1 AND url IS NOT NULL
+       ORDER BY id`,
+      [id]
+    ),
   ]);
   return {
     ...p,
     cities: locs.rows,
+    sources: srcs.rows,
     tiers: tiers.rows,
   };
 }
@@ -288,6 +315,7 @@ export async function getBuildings(): Promise<BuildingRow[]> {
       COUNT(DISTINCT pb.provider_id)::int AS provider_count
     FROM buildings b
     LEFT JOIN provider_buildings pb ON pb.building_id = b.id
+    WHERE b.listed
     GROUP BY b.id
     ORDER BY b.listed DESC, provider_count DESC, b.country, b.city, b.name
   `);

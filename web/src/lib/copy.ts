@@ -245,7 +245,7 @@ export const COPY = {
       "Formula 2026.08.17. Indikator kontrol memakai kantor pusat, lokasi DC paket, origin, dan hypervisor terbuka. Itu konteks yurisdiksi dan keterlacakan—bukan nilai nasionalitas. Field kosong tidak dihukum sebagai buruk; ditampilkan sebagai belum terbukti. Changelog berikutnya akan memisahkan skor bukti dari skor karakteristik.",
     techVaried: "Bervariasi",
     techCountNote: "Jumlah berdasarkan field yang ditulis penyedia; inferensi tidak dihitung.",
-    lastUpdated: "Dataset ditinjau 17 Agustus 2026",
+    lastUpdated: "Dataset ditinjau 18 Agustus 2026",
     scoreConf: "Kualitas bukti",
     evClaimed: "Dinyatakan penyedia",
     evInferred: "Terindikasi",
@@ -332,6 +332,7 @@ export const COPY = {
     footSource: "Kode terbuka",
     footGithub: "Lihat di GitHub",
     footLicense: "Dataset dan metode bisa ditinjau. Pull request dan koreksi diterima.",
+    undisclosedBuilding: "Undisclosed building",
   },
   en: {
     brand: "Cloud in Asia",
@@ -577,7 +578,7 @@ export const COPY = {
       "Formula 2026.08.17. The control indicator uses headquarters, plan DC location, origin, and an open hypervisor. That is jurisdiction context and traceability—not a nationality prize. Empty fields are shown as unproven, not as a penalty. A later changelog will split evidence score from characteristic score.",
     techVaried: "Varies",
     techCountNote: "Counts use fields the provider wrote; inferences are not counted.",
-    lastUpdated: "Dataset reviewed 17 August 2026",
+    lastUpdated: "Dataset reviewed 18 August 2026",
     scoreConf: "Evidence quality",
     evClaimed: "Provider-stated",
     evInferred: "Inferred",
@@ -664,6 +665,7 @@ export const COPY = {
     footSource: "Open source",
     footGithub: "View on GitHub",
     footLicense: "Dataset and method can be reviewed. Pull requests and corrections welcome.",
+    undisclosedBuilding: "Undisclosed building",
   },
 } as const;
 

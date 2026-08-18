@@ -75,9 +75,12 @@ export function ProviderView({ data }: { data: ProviderDetail }) {
           <div className="city">
             <b>{t.fieldSrc}</b>
             <span>
-              {data.source_url ? (
-                <a href={data.source_url.split(",")[0].trim().startsWith("http") ? data.source_url.split(",")[0].trim() : `https://${data.source_url.split(",")[0].trim()}`} rel="noopener noreferrer">
-                  {t.openSource}
+              {data.sources.length > 0 ? (
+                <a
+                  href={data.sources[0].url}
+                  rel="noopener noreferrer"
+                >
+                  {t.evVerified}
                 </a>
               ) : (
                 t.evUnknown
@@ -90,9 +93,24 @@ export function ProviderView({ data }: { data: ProviderDetail }) {
           </div>
           <div className="city">
             <b>{t.fieldDc}</b>
-            <span>{data.tiers.some((x) => x.dc_country) ? t.evClaimed : t.evUnknown}</span>
+            <span>
+              {data.tiers.some((x) => x.dc_city && x.dc_city !== "Undisclosed")
+                ? t.evClaimed
+                : t.evUnknown}
+            </span>
           </div>
         </div>
+        {data.sources.length > 0 ? (
+          <ul className="section-sub" style={{ listStyle: "none", padding: 0 }}>
+            {data.sources.map((s) => (
+              <li key={s.url}>
+                <a href={s.url} rel="noopener noreferrer">
+                  {s.url.replace(/^https?:\/\//, "").replace(/\/$/, "")}
+                </a>
+              </li>
+            ))}
+          </ul>
+        ) : null}
         <p>
           <a className="go" href="/correct">
             {t.navCorrect}
@@ -128,13 +146,13 @@ export function ProviderView({ data }: { data: ProviderDetail }) {
       <section className="section">
         <h2>{t.provCities}</h2>
         {data.cities.length === 0 ? (
-          <p className="section-sub">—</p>
+          <p className="section-sub">{t.undisclosedBuilding}</p>
         ) : (
           <div className="city-grid">
             {data.cities.slice(0, 24).map((c) => (
               <div className="city" key={`${c.building}-${c.city}-${c.country}`}>
                 <b>
-                  <a href={`/building/${c.id}`}>{c.building}</a>
+                  {c.id ? <a href={`/building/${c.id}`}>{c.building}</a> : c.building}
                 </b>
                 <span>
                   {c.city}, {c.country}
@@ -159,7 +177,9 @@ export function ProviderView({ data }: { data: ProviderDetail }) {
                 <div className="arena-main">
                   <div className="name">{tier.tier_name}</div>
                   <div className="meta">
-                    {tier.dc_location || tier.dc_city || "—"}
+                    {tier.dc_city === "Undisclosed" || tier.dc_location === "Undisclosed building"
+                      ? t.undisclosedBuilding
+                      : tier.dc_location || tier.dc_city || t.undisclosedBuilding}
                     {tier.dc_country ? ` · ${tier.dc_country}` : ""}
                     {tier.currency ? ` · ${tier.currency}` : ""}
                     {tier.cpu_family ? ` · ${tier.cpu_family}` : ""}
