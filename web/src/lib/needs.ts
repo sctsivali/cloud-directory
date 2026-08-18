@@ -125,6 +125,142 @@ export const PRIORITIES: { id: string; idLabel: string; enLabel: string }[] = [
   { id: "simple", idLabel: "Tim kecil; ingin yang mudah dioperasikan", enLabel: "Small team; keep it simple" },
 ];
 
+export type ExtraQ = {
+  key: string;
+  idTitle: string;
+  enTitle: string;
+  options: { id: string; idLabel: string; enLabel: string }[];
+};
+
+export const SECTOR_EXTRAS: Record<Sector, ExtraQ[]> = {
+  public: [
+    {
+      key: "residency",
+      idTitle: "Apakah data utama harus tinggal di negara instansi?",
+      enTitle: "Must primary data stay in the agency’s country?",
+      options: [
+        { id: "must_in_country", idLabel: "Ya, di negara instansi", enLabel: "Yes, in the agency’s country" },
+        { id: "can_region", idLabel: "Cukup di ASEAN", enLabel: "ASEAN is enough" },
+        { id: "unknown", idLabel: "Belum tahu", enLabel: "Not sure yet" },
+      ],
+    },
+    {
+      key: "hall",
+      idTitle: "Perlu nama gedung yang bisa dicek?",
+      enTitle: "Do you need a named hall you can check?",
+      options: [
+        { id: "need_hall", idLabel: "Ya, fasilitas bernama", enLabel: "Yes, a named facility" },
+        { id: "city_enough", idLabel: "Kota saja cukup", enLabel: "City is enough" },
+        { id: "unknown", idLabel: "Belum tahu", enLabel: "Not sure yet" },
+      ],
+    },
+  ],
+  fsi: [
+    {
+      key: "residency",
+      idTitle: "Data nasabah atau transaksi harus di yurisdiksi tertentu?",
+      enTitle: "Must customer or transaction data stay in a given jurisdiction?",
+      options: [
+        { id: "must_in_country", idLabel: "Ya, di negara operasi", enLabel: "Yes, in the operating country" },
+        { id: "can_region", idLabel: "Cukup di ASEAN", enLabel: "ASEAN is enough" },
+        { id: "unknown", idLabel: "Belum tahu", enLabel: "Not sure yet" },
+      ],
+    },
+    {
+      key: "hall",
+      idTitle: "Perlu fasilitas bernama untuk audit?",
+      enTitle: "Do you need a named facility for audit?",
+      options: [
+        { id: "need_hall", idLabel: "Ya, gedung harus tertulis", enLabel: "Yes, the hall must be named" },
+        { id: "city_enough", idLabel: "Kota saja cukup", enLabel: "City is enough" },
+        { id: "unknown", idLabel: "Belum tahu", enLabel: "Not sure yet" },
+      ],
+    },
+  ],
+  regulated: [
+    {
+      key: "residency",
+      idTitle: "Kontrak mensyaratkan lokasi data yang tertulis?",
+      enTitle: "Does the contract require a written data location?",
+      options: [
+        { id: "must_in_country", idLabel: "Ya, harus tertulis", enLabel: "Yes, it must be written" },
+        { id: "can_region", idLabel: "Cukup region ASEAN", enLabel: "An ASEAN region is enough" },
+        { id: "unknown", idLabel: "Belum tahu", enLabel: "Not sure yet" },
+      ],
+    },
+    {
+      key: "entity",
+      idTitle: "Entitas kontrak harus badan lokal?",
+      enTitle: "Must the contracting entity be a local company?",
+      options: [
+        { id: "local_entity", idLabel: "Ya, badan lokal", enLabel: "Yes, a local entity" },
+        { id: "unknown", idLabel: "Belum tahu", enLabel: "Not sure yet" },
+      ],
+    },
+  ],
+  edu: [
+    {
+      key: "campus",
+      idTitle: "Cloud ini terutama untuk apa?",
+      enTitle: "What is this cloud mainly for?",
+      options: [
+        { id: "sis", idLabel: "Data siswa atau pegawai", enLabel: "Student or staff data" },
+        { id: "lab", idLabel: "Lab, kelas, atau riset", enLabel: "Lab, class or research" },
+        { id: "web", idLabel: "Situs kampus atau publikasi", enLabel: "Campus site or publishing" },
+      ],
+    },
+    {
+      key: "campus_prio",
+      idTitle: "Yang paling penting di kampus?",
+      enTitle: "What matters most on campus?",
+      options: [
+        { id: "stay_in_country", idLabel: "Data tinggal di negara kampus", enLabel: "Data stays in the campus country" },
+        { id: "open_stack", idLabel: "Stack yang bisa diajarkan / dibuka", enLabel: "A stack we can teach or inspect" },
+        { id: "cheap", idLabel: "Biaya lab yang terprediksi", enLabel: "Predictable lab cost" },
+      ],
+    },
+  ],
+  biz: [
+    {
+      key: "market",
+      idTitle: "Pelanggan utama Anda di mana?",
+      enTitle: "Where are your main customers?",
+      options: [
+        { id: "domestic", idLabel: "Dalam negeri", enLabel: "Domestic" },
+        { id: "asean", idLabel: "ASEAN", enLabel: "ASEAN" },
+        { id: "global", idLabel: "Global", enLabel: "Global" },
+      ],
+    },
+    {
+      key: "ops",
+      idTitle: "Siapa yang akan mengoperasi cloud ini?",
+      enTitle: "Who will operate this cloud?",
+      options: [
+        { id: "no_it", idLabel: "Belum ada tim IT", enLabel: "No IT team yet" },
+        { id: "small", idLabel: "Tim kecil", enLabel: "A small team" },
+        { id: "has_ops", idLabel: "Ada tim operasi", enLabel: "There is an ops team" },
+      ],
+    },
+  ],
+  learn: [
+    {
+      key: "learn_focus",
+      idTitle: "Anda ingin memahami yang mana dulu?",
+      enTitle: "What do you want to understand first?",
+      options: [
+        { id: "control", idLabel: "Di mana data duduk dan siapa yang pegang kunci hukum", enLabel: "Where data sits and who holds legal control" },
+        { id: "price", idLabel: "Harga publik yang bisa dibanding", enLabel: "Public prices you can compare" },
+        { id: "stack", idLabel: "Stack terbuka vs tertutup", enLabel: "Open vs closed stack" },
+      ],
+    },
+  ],
+};
+
+export function extrasFor(sector: NeedsState["sector"]): ExtraQ[] {
+  if (!sector) return [];
+  return SECTOR_EXTRAS[sector];
+}
+
 export type DerivedNeeds = {
   summary: { id: string; en: string };
   priorities: { id: string; en: string }[];
@@ -154,6 +290,9 @@ export function deriveNeeds(state: NeedsState): DerivedNeeds {
 
   if (sensitive) priorities.push({ id: "Lokasi data, backup, dan alur data", en: "Data location, backup and data flow" });
   if (critical) priorities.push({ id: "Pemulihan layanan dan dukungan eskalasi", en: "Service recovery and escalation support" });
+  if (["public", "fsi", "regulated"].includes(state.sector) || state.extras.residency === "must_in_country" || state.extras.campus_prio === "stay_in_country" || state.extras.learn_focus === "control" || state.extras.market === "domestic") {
+    priorities.unshift({ id: "Kontrol hukum dan residensi data di ASEAN", en: "Legal control and data residency in ASEAN" });
+  }
   if (state.priorities.includes("cost") || state.workloads.includes("web")) priorities.push({ id: "Biaya yang dapat dijelaskan", en: "Cost that can be explained" });
   if (state.priorities.includes("support") || state.priorities.includes("simple")) priorities.push({ id: "Dukungan dan kemudahan operasi", en: "Support and ease of operations" });
   if (state.priorities.includes("portability")) priorities.push({ id: "Portabilitas dan rencana keluar", en: "Portability and an exit plan" });
@@ -193,17 +332,36 @@ export function deriveNeeds(state: NeedsState): DerivedNeeds {
     });
   }
 
+  const wantControl =
+    ["public", "fsi", "regulated"].includes(state.sector) ||
+    sensitive ||
+    state.extras.residency === "must_in_country" ||
+    state.extras.hall === "need_hall" ||
+    state.extras.entity === "local_entity" ||
+    state.extras.campus_prio === "stay_in_country" ||
+    state.extras.campus === "sis" ||
+    state.extras.market === "domestic" ||
+    state.extras.learn_focus === "control" ||
+    state.priorities.includes("location");
+
   let sort: DerivedNeeds["sort"] = "cost";
-  if (highImpact || state.priorities.includes("docs") || sensitive) sort = "conf";
-  else if (state.priorities.includes("portability")) sort = "oss";
+  if (wantControl) sort = "sov";
+  else if (state.extras.learn_focus === "stack" || state.extras.campus_prio === "open_stack" || state.priorities.includes("portability")) sort = "oss";
   else if (state.priorities.includes("perf")) sort = "perf";
-  else if (state.priorities.includes("location")) sort = "cover";
-  else if (state.priorities.includes("cost") || state.workloads.includes("web")) sort = "cost";
+  else if (state.priorities.includes("docs")) sort = "conf";
+  else if (state.extras.learn_focus === "price" || state.extras.campus_prio === "cheap" || state.priorities.includes("cost") || state.workloads.includes("web")) sort = "cost";
 
   const aseanOnly = COUNTRIES.filter((c) => c !== "Timor-Leste" && c !== "Myanmar");
   const pickedAsean = state.countries.filter((c) => aseanOnly.includes(c) || c === "Timor-Leste");
   const country = pickedAsean.length === 1 ? pickedAsean[0] : "all";
-  const scope: DerivedNeeds["scope"] = state.priorities.includes("support") || state.sector === "public" || country !== "all" ? "asean" : "all";
+  const scope: DerivedNeeds["scope"] =
+    state.priorities.includes("support") ||
+    state.sector === "public" ||
+    wantControl ||
+    state.extras.market === "asean" ||
+    country !== "all"
+      ? "asean"
+      : "all";
 
   const summary = {
     id: `Karena Anda memilih ${labelJoin(state, "id")}, fokus awal adalah ${priorities
@@ -216,20 +374,28 @@ export function deriveNeeds(state: NeedsState): DerivedNeeds {
       .join(", ")}. This is screening, not a final decision.`,
   };
 
-  const why = {
-    id: "Muncul karena cocok dengan batas yang Anda pilih dan punya data publik yang dapat ditelusuri.",
-    en: "Shown because it matches your chosen limits and has public, traceable data.",
-  };
+  const why = wantControl
+    ? {
+        id: "Diurutkan dari indikator kontrol & residensi: kota DC ASEAN, badan hukum, dan gedung yang bisa dicek.",
+        en: "Sorted by the control & residency indicator: ASEAN DC city, legal home, and a checkable hall.",
+      }
+    : {
+        id: "Muncul karena cocok dengan batas yang Anda pilih dan punya data publik yang dapat ditelusuri.",
+        en: "Shown because it matches your chosen limits and has public, traceable data.",
+      };
 
   const checklist: DerivedNeeds["checklist"] = [
-    { id: "Konfirmasi lokasi data utama, backup, metadata, dan control plane.", en: "Confirm primary data, backup, metadata and control-plane locations." },
+    { id: "Pastikan paket menyebut kota DC, bukan Undisclosed building.", en: "Confirm the plan names a DC city, not Undisclosed building." },
+    { id: "Cek negara badan hukum — merek lokal tidak otomatis berarti kontrol lokal.", en: "Check the legal-entity country — a local brand is not automatically local control." },
+    { id: "Kalau perlu audit fisik, pastikan ada gedung listed dengan nama resmi.", en: "If you need a physical audit, require a listed hall with an official name." },
+    { id: "Konfirmasi lokasi backup, metadata, dan control plane.", en: "Confirm backup, metadata and control-plane locations." },
     { id: "Tanyakan entitas kontrak dan daftar subprocessor.", en: "Ask for the contracting entity and subprocessor list." },
     { id: "Periksa harga: storage, backup, traffic keluar, support, pajak, kurs.", en: "Check price extras: storage, backup, egress, support, tax, FX." },
-    { id: "Minta bukti sumber primer yang masih berlaku untuk layanan dan region yang dipilih.", en: "Ask for current primary evidence for the chosen service and region." },
   ];
-  if (sensitive) checklist.push({ id: "DPA, retensi/penghapusan, akses admin, dan logging.", en: "DPA, retention/deletion, admin access and logging." });
+  if (sensitive || state.extras.campus === "sis") checklist.push({ id: "DPA, retensi/penghapusan, akses admin, dan logging.", en: "DPA, retention/deletion, admin access and logging." });
   if (critical) checklist.push({ id: "SLA, uji restore, eskalasi insiden, dan rencana DR.", en: "SLA, restore tests, incident escalation and a DR plan." });
-  if (state.priorities.includes("portability")) checklist.push({ id: "Format ekspor, biaya keluar, dan bantuan migrasi.", en: "Export format, exit cost and migration help." });
+  if (state.priorities.includes("portability") || state.extras.campus_prio === "open_stack") checklist.push({ id: "Format ekspor, biaya keluar, dan bantuan migrasi.", en: "Export format, exit cost and migration help." });
+  if (state.extras.ops === "no_it" || state.extras.ops === "small") checklist.push({ id: "Tanya dukungan lokal dan siapa yang dihubungi saat gangguan.", en: "Ask about local support and who to call during an outage." });
 
   return { summary, priorities, unknowns, validate, sort, scope, country, why, checklist, highImpact };
 }

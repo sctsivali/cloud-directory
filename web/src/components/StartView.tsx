@@ -10,6 +10,7 @@ import {
   SECTORS,
   WORKLOADS,
   emptyNeeds,
+  extrasFor,
   loadNeeds,
   saveNeeds,
   type NeedsState,
@@ -38,7 +39,10 @@ export function StartView() {
     });
   }
 
-  const steps = lang === "en" ? ["Organisation", "Workload", "Impact", "Data", "Country", "Priorities"] : ["Organisasi", "Sistem", "Dampak", "Data", "Negara", "Prioritas"];
+  const extraQs = extrasFor(state.sector);
+  const last = 5 + extraQs.length;
+  const coreSteps = lang === "en" ? ["Organisation", "Workload", "Impact", "Data", "Country", "Priorities"] : ["Organisasi", "Sistem", "Dampak", "Data", "Negara", "Prioritas"];
+  const steps = [...coreSteps, ...extraQs.map((q) => (lang === "en" ? q.enTitle : q.idTitle))];
 
   return (
     <>
@@ -56,7 +60,7 @@ export function StartView() {
           <p className="section-sub">{t.qOrgHelp}</p>
           <div className="city-chips" role="group">
             {SECTORS.map((s) => (
-              <button key={s.id} type="button" className={state.sector === s.id ? "active" : ""} onClick={() => patch({ sector: s.id })}>
+              <button key={s.id} type="button" className={state.sector === s.id ? "active" : ""} onClick={() => patch({ sector: s.id, extras: {} })}>
                 {lang === "en" ? s.enLabel : s.idLabel}
               </button>
             ))}
@@ -147,13 +151,31 @@ export function StartView() {
         </section>
       )}
 
+      {step >= 6 && extraQs[step - 6] && (
+        <section className="section">
+          <h2>{lang === "en" ? extraQs[step - 6].enTitle : extraQs[step - 6].idTitle}</h2>
+          <div className="city-chips" role="group">
+            {extraQs[step - 6].options.map((w) => (
+              <button
+                key={w.id}
+                type="button"
+                className={state.extras[extraQs[step - 6].key] === w.id ? "active" : ""}
+                onClick={() => patch({ extras: { ...state.extras, [extraQs[step - 6].key]: w.id } })}
+              >
+                {lang === "en" ? w.enLabel : w.idLabel}
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
+
       <p>
         {step > 0 ? (
           <button type="button" className="map-cable-btn" onClick={() => setStep((s) => s - 1)}>
             {lang === "en" ? "Back" : "Kembali"}
           </button>
         ) : null}{" "}
-        {step < 5 ? (
+        {step < last ? (
           <button type="button" className="map-cable-btn active" onClick={() => setStep((s) => s + 1)}>
             {lang === "en" ? "Skip / next" : "Lewati dulu / lanjut"}
           </button>
