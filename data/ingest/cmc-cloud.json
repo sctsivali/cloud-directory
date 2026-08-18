@@ -1,0 +1,29 @@
+{
+  "allow_no_tiers": true,
+  "provider": {
+    "id": "cmc_cloud",
+    "name": "CMC Cloud",
+    "hq_country": "Vietnam",
+    "hq_city": "Hanoi",
+    "origin": "local",
+    "provider_type": "IaaS",
+    "is_local_asean": true,
+    "website": "https://cmccloud.vn/",
+    "legal_country": "Vietnam",
+    "legal_note": null
+  },
+  "sources": ["https://cmccloud.vn/", "https://cmccloud.vn/en"],
+  "stack": {"hypervisor": "KVM", "source_url": "https://cmccloud.vn/"},
+  "sovereignty": {"data_residency": "local"},
+  "locations": [
+    {"city": "Hanoi", "country": "Vietnam"},
+    {"city": "Ho Chi Minh City", "country": "Vietnam"}
+  ],
+  "buildings": [],
+  "tiers": [],
+  "dc_city": "Hanoi",
+  "dc_country": "Vietnam",
+  "dc_location": "Hanoi",
+  "scraped_from": "https://cmccloud.vn/",
+  "notes": "Official site: KVM; infrastructure in Hanoi or HCMC. No public VPS price table. No named hall."
+}

@@ -1,0 +1,38 @@
+{
+  "currency": "THB",
+  "provider": {
+    "id": "bangmod_cloud",
+    "name": "Bangmod.Cloud",
+    "hq_country": "Thailand",
+    "hq_city": null,
+    "origin": "local",
+    "provider_type": "IaaS",
+    "is_local_asean": true,
+    "website": "https://bangmod.cloud/",
+    "legal_country": "Thailand",
+    "legal_note": null
+  },
+  "sources": ["https://bangmod.cloud/", "https://bangmod.cloud/cloud-server/"],
+  "stack": {"hypervisor": null, "source_url": "https://bangmod.cloud/cloud-server/"},
+  "sovereignty": {"data_residency": "local"},
+  "locations": [{"city": "Undisclosed", "country": "Thailand"}],
+  "buildings": [],
+  "dc_city": "Undisclosed",
+  "dc_country": "Thailand",
+  "dc_location": "Undisclosed building",
+  "scraped_from": "https://bangmod.cloud/cloud-server/",
+  "notes": "Only Linux-512MB-20GB had a complete public card. Other THB figures not paired to specs. DC in Thailand, hall unnamed.",
+  "tiers": [
+    {
+      "id": "bangmod-linux-512mb-20gb",
+      "tier_name": "Linux-512MB-20GB",
+      "vcpu": 1,
+      "ram_gb": 0.5,
+      "storage_gb": 20,
+      "storage_type": "SSD",
+      "price_amount": 159,
+      "currency": "THB",
+      "price_native": "159 THB"
+    }
+  ]
+}

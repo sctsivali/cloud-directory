@@ -5,8 +5,8 @@ P0,JetOrbit Cloud VPS,Indonesia,https://www.jetorbit.com/cloud-vps/,yes,ingested
 P0,Cloudmatika,Indonesia,https://cloudmatika.co.id/en/cloud-vps/,yes,ingested_2026-08-18
 P0,AWS Asia Pacific,United States,https://aws.amazon.com/,yes,regions_only_2026-08-18
 P0,Google Cloud Asia,United States,https://cloud.google.com/about/locations,yes,regions_only_2026-08-18
-P1,CMC Cloud,Vietnam,https://cmccloud.vn/,no,scrape_then_ingest
-P1,Bangmod.Cloud,Thailand,https://bangmod.cloud/,no,scrape_then_ingest
-P1,ReadySpace,Singapore,https://readyspace.com.sg/,no,scrape_then_ingest
+P1,CMC Cloud,Vietnam,https://cmccloud.vn/,yes,ingested_2026-08-18
+P1,Bangmod.Cloud,Thailand,https://bangmod.cloud/,yes,ingested_2026-08-18
+P1,ReadySpace,Singapore,https://readyspace.com.sg/,yes,ingested_2026-08-18
 P2,Microsoft Azure,United States,https://azure.microsoft.com/en-us/,yes,refresh_asean_skus
 P2,Vultr,United States,https://www.vultr.com/,yes,refresh_singapore_skus

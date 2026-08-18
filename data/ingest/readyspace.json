@@ -1,0 +1,29 @@
+{
+  "allow_no_tiers": true,
+  "provider": {
+    "id": "readyspace",
+    "name": "ReadySpace",
+    "hq_country": "Singapore",
+    "hq_city": "Singapore",
+    "origin": "local",
+    "provider_type": "IaaS",
+    "is_local_asean": true,
+    "website": "https://readyspace.com.sg/",
+    "legal_country": "Singapore",
+    "legal_note": null
+  },
+  "sources": [
+    "https://readyspace.com.sg/",
+    "https://readyspace.com.sg/vps-hosting-singapore-unleashing-the-power-of-digital-presence/"
+  ],
+  "stack": {"hypervisor": null, "source_url": "https://readyspace.com.sg/"},
+  "sovereignty": {"data_residency": "local"},
+  "locations": [{"city": "Singapore", "country": "Singapore"}],
+  "buildings": [],
+  "tiers": [],
+  "dc_city": "Singapore",
+  "dc_country": "Singapore",
+  "dc_location": "Singapore",
+  "scraped_from": "https://readyspace.com.sg/",
+  "notes": "Singapore local. Office at Great World City is not a named DC hall. No public VPS price table. KVM string in homepage JS is not a product claim."
+}

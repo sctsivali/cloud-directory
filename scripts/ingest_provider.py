@@ -39,25 +39,37 @@ def validate(doc: dict) -> None:
     if city and city != "Undisclosed":
         if not any(l.get("city") == city for l in loc):
             die("dc_city must appear in official locations")
-    fx = float(doc.get("fx_idr_per_usd") or 16000)
+    FX = {"IDR": 16000, "VND": 25000, "THB": 35, "SGD": 1.35, "USD": 1}
+    default_fx = float(doc.get("fx_idr_per_usd") or 16000)
     for t in doc.get("tiers") or []:
-        for k in ("id", "tier_name", "vcpu", "ram_gb", "price_idr"):
+        for k in ("id", "tier_name", "vcpu", "ram_gb"):
             if t.get(k) in (None, ""):
                 die(f"tier {t.get('id')} missing {k}")
-        if int(t["vcpu"]) < 1 or float(t["ram_gb"]) < 1:
+        if int(t["vcpu"]) < 1 or float(t["ram_gb"]) < 0.25:
             die(f"tier {t['id']} bad specs")
         if t.get("storage_gb") not in (None, ""):
             if float(t["storage_gb"]) <= 0:
                 die(f"tier {t['id']} bad storage")
         else:
             t["storage_gb"] = None
-        usd = float(t["price_idr"]) / fx
+        cur = (t.get("currency") or doc.get("currency") or "IDR").upper()
+        if t.get("price_idr") not in (None, ""):
+            amount = float(t["price_idr"])
+            cur = "IDR"
+            usd = amount / default_fx
+        elif t.get("price_amount") not in (None, ""):
+            amount = float(str(t["price_amount"]).replace(",", ""))
+            usd = amount / FX.get(cur, default_fx)
+        else:
+            die(f"tier {t['id']} missing price")
         if usd <= 0:
             die(f"tier {t['id']} non-positive price")
         if int(t["vcpu"]) >= 8 and usd < int(t["vcpu"]) * 0.2:
             die(f"tier {t['id']} price looks invalid (${usd:.2f} for {t['vcpu']} vCPU)")
         t["_usd"] = round(usd, 2)
         t["_status"] = "OK"
+        t["_cur"] = cur
+        t["_native"] = t.get("price_native") or f"{amount} {cur}"
     if not doc.get("tiers"):
         if not doc.get("allow_no_tiers"):
             die("no VPS tiers — refuse empty provider")
@@ -130,7 +142,7 @@ def emit_sql(doc: dict) -> str:
     dc_loc = doc.get("dc_location") or ("Undisclosed building" if dc_city == "Undisclosed" else dc_city)
     hv = (doc.get("stack") or {}).get("hypervisor")
     for t in doc["tiers"]:
-        raw = json.dumps({"source": doc.get("scraped_from"), "price_idr": t["price_idr"], "fx": fx}, ensure_ascii=False)
+        raw = json.dumps({"source": doc.get("scraped_from"), "native": t.get("_native"), "usd": t.get("_usd")}, ensure_ascii=False)
         stor = "NULL" if t.get("storage_gb") is None else str(float(t["storage_gb"]))
         dc_c = t.get("dc_city") or dc_city
         dc_co = t.get("dc_country") or dc_country
@@ -141,7 +153,7 @@ def emit_sql(doc: dict) -> str:
             f"hypervisor, status, raw) VALUES ("
             f"{sql_str(t['id'])},{sql_str(p['id'])},{sql_str(t['tier_name'])},{int(t['vcpu'])},"
             f"{float(t['ram_gb'])},{stor},{sql_str(t.get('storage_type'))},"
-            f"{sql_str(t['price_native'])},'IDR',{t['_usd']},'monthly',"
+            f"{sql_str(t.get('_native') or t.get('price_native'))},{sql_str(t.get('_cur') or 'IDR')},{t['_usd']},'monthly',"
             f"{sql_str(dc_l)},{sql_str(dc_c)},{sql_str(dc_co)},"
             f"{sql_str(hv)},{sql_str(t['_status'])},{sql_str(raw)}) "
             f"ON CONFLICT (id) DO UPDATE SET tier_name=EXCLUDED.tier_name, vcpu=EXCLUDED.vcpu, ram_gb=EXCLUDED.ram_gb, "
