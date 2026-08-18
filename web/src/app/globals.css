@@ -211,6 +211,20 @@ h1 {
   background: linear-gradient(160deg, rgba(96,189,145,.28), rgba(255,222,89,.1));
 }
 html[data-theme="light"] .btn-cta { background: #fff; border-color: var(--line); color: #111; }
+.risk-banner {
+  margin: 0 0 1.25rem;
+  padding: 12px 14px;
+  border: 1px solid #6a5a2a;
+  background: #2a2618;
+  border-radius: 8px;
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+html[data-theme="light"] .risk-banner {
+  border-color: #c4a035;
+  background: #fff8e1;
+  color: #111;
+}
 .start-actions { margin-top: 1.75rem; }
 .start-back .btn-ico { transform: scaleX(-1); }
 @media (max-width: 900px) {

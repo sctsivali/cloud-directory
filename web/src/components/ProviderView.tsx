@@ -49,6 +49,8 @@ export function ProviderView({ data }: { data: ProviderDetail }) {
         </div>
       </div>
         <p className="section-sub">{t.scoreDisclaimer}</p>
+        {data.legal_country === "United States" ? <p className="risk-banner">{t.riskBannerUs}</p> : null}
+        {data.legal_country === "China" ? <p className="risk-banner">{t.riskBannerCn}</p> : null}
         {data.legal_note ? <p className="section-sub">{data.legal_note}</p> : null}
 
       <section className="section">

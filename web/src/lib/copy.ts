@@ -22,6 +22,10 @@ export const COPY = {
     lede: "Ceritakan apa yang mau Anda jalankan. Kami pecah jadi pertanyaan yang lebih berguna: data tinggal di mana, siapa yang pegang akses, bagaimana backup-nya, berapa biayanya, dan seberapa mudah pindah kalau suatu hari perlu.",
     trustNote: "Berdasarkan sumber publik. Untuk screening awal, bukan keputusan legal atau endorsement.",
     scoreDisclaimer: "Indikator untuk membantu screening, bukan sertifikat.",
+    riskBannerUs:
+      "Kota DC di ASEAN tidak meniadakan CLOUD Act. Otoritas AS masih bisa memaksa operator AS. Residensi data bukan kontrol hukum.",
+    riskBannerCn:
+      "Kota DC di ASEAN tidak meniadakan hukum siber Tiongkok (CSL/PIPL). Residensi data bukan kontrol hukum.",
     factLocal: "penyedia berkantor di ASEAN",
     factAll: "semua di basis data",
     factTiers: "paket yang tercatat",
@@ -133,7 +137,7 @@ export const COPY = {
     methLede:
       "Setiap indikator dibangun dari field yang bisa ditelusuri ke dataset dan sumbernya. Skor membantu membandingkan kandidat dengan cara yang konsisten. Skor bukan sertifikat keamanan, kepatuhan, atau kedaulatan.",
     methSovT: "Indikator kontrol & residensi data (0–100)",
-    methSov1: "+40 residensi: paket OK dengan kota DC di ASEAN, bukan Undisclosed building",
+    methSov1: "+40 residensi: kota DC ASEAN pada paket OK, atau kota resmi di halaman region — bukan Undisclosed",
     methSov2: "+25 kontrol hukum: HQ atau badan hukum di ASEAN",
     methSov3: "+15 tambahan: badan hukum ASEAN dan negara hukum = negara DC paket",
     methSov4: "+20 fasilitas: ada gedung listed dengan nama resmi",
@@ -355,6 +359,10 @@ export const COPY = {
     lede: "Tell us briefly what you want to run. We help turn that into data location, access, backup, cost, support, portability and evidence quality.",
     trustNote: "Based on public sources · Unknowns stay visible · Education and first screening, not legal advice or an endorsement",
     scoreDisclaimer: "A screening indicator, not a compliance certificate.",
+    riskBannerUs:
+      "An ASEAN DC city does not cancel the CLOUD Act. US authorities can still compel a US operator. Data residency is not legal control.",
+    riskBannerCn:
+      "An ASEAN DC city does not cancel China’s cyber laws (CSL/PIPL). Data residency is not legal control.",
     factLocal: "providers headquartered in ASEAN",
     factOss: "mention KVM / Proxmox / Xen",
     factBuildings: "named facilities",
@@ -471,7 +479,7 @@ export const COPY = {
     methLede:
       "We do not sell rankings. Arena numbers come from the same database. Incomplete data means a lower score — that is a signal, not a penalty for sport.",
     methSovT: "Control & data-residency indicator (0–100)",
-    methSov1: "+40 residency: an OK plan with an ASEAN DC city, not Undisclosed building",
+    methSov1: "+40 residency: an ASEAN DC city on an OK plan, or an official region-page city — not Undisclosed",
     methSov2: "+25 legal control: HQ or legal entity in ASEAN",
     methSov3: "+15 extra: ASEAN legal home matches the plan’s stated DC country",
     methSov4: "+20 facility: a listed building with an official name",

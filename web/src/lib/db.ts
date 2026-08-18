@@ -21,6 +21,12 @@ const SOV = `
         AND tx.status = 'OK'
         AND COALESCE(tx.dc_city,'') <> 'Undisclosed'
         AND COALESCE(tx.dc_country,'') IN (${ASEAN})
+    ) OR EXISTS (
+      SELECT 1 FROM provider_locations pl
+      JOIN locations l ON l.id = pl.location_id
+      WHERE pl.provider_id = p.id
+        AND COALESCE(l.city,'') <> 'Undisclosed'
+        AND l.country IN (${ASEAN})
     ) THEN 40 ELSE 0 END
     + CASE WHEN COALESCE(NULLIF(p.legal_country,''), p.hq_country, '') IN (${ASEAN})
       THEN 25 ELSE 0 END
