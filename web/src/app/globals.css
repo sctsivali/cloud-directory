@@ -63,6 +63,27 @@ html[data-theme="light"] .brand-logo-light { display: block; }
 }
 .top-link:hover { color: var(--text); }
 .top-link.active { color: var(--text); border-bottom-color: var(--cia); }
+.nav-more { position: relative; }
+.nav-more-btn {
+  background: transparent; border: 0; cursor: pointer;
+  font-family: inherit; font-size: inherit;
+}
+.nav-caret {
+  width: 0; height: 0; margin-left: 6px;
+  border-left: 4px solid transparent; border-right: 4px solid transparent;
+  border-top: 4px solid currentColor; opacity: 0.7;
+}
+.nav-more-panel {
+  position: absolute; top: 3.5rem; left: 0; min-width: 12.5rem;
+  background: #1a1a1a; border: 1px solid #333; padding: 0.3rem 0;
+  z-index: 850;
+}
+.nav-more-panel .top-link {
+  display: flex; width: 100%; height: auto;
+  padding: 0.55rem 1rem; border-bottom: 0;
+}
+.nav-more-panel .top-link.active { box-shadow: inset 2px 0 0 var(--cia); }
+.mobile-more-label { padding: 0.6rem 1.25rem 0.15rem; margin: 0; }
 .top-tools { display: flex; align-items: center; gap: 8px; flex: none; }
 .menu-btn, .mobile-nav { display: none; }
 .nav-label {
