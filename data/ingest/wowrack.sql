@@ -1,0 +1,17 @@
+BEGIN;
+INSERT INTO providers (id,name,hq_country,hq_city,origin,provider_type,is_local_asean,website,legal_country,legal_note) VALUES ('wowrack','Wowrack','United States','Seattle','global','IaaS',FALSE,'https://www.wowrack.com/','United States','CLOUD Act + US Patriot Act. Otoritas AS bisa minta data dari operator AS, termasuk rak di ASEAN.') ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, hq_country=EXCLUDED.hq_country, hq_city=EXCLUDED.hq_city, origin=EXCLUDED.origin, provider_type=EXCLUDED.provider_type, is_local_asean=EXCLUDED.is_local_asean, website=EXCLUDED.website, legal_country=EXCLUDED.legal_country, legal_note=EXCLUDED.legal_note;
+INSERT INTO stacks (provider_id, hypervisor, source_url) VALUES ('wowrack',NULL,'https://www.wowrack.com/, https://www.wowrack.com/id-id/service/cloud-services/public-cloud/, https://www.wowrack.com/id-id/about/') ON CONFLICT (provider_id) DO UPDATE SET hypervisor=EXCLUDED.hypervisor, source_url=EXCLUDED.source_url;
+INSERT INTO sovereignty (provider_id, data_residency) VALUES ('wowrack','regional') ON CONFLICT (provider_id) DO UPDATE SET data_residency=EXCLUDED.data_residency;
+DELETE FROM sources WHERE provider_id = 'wowrack';
+INSERT INTO sources (provider_id, url, scraped_at, status) VALUES ('wowrack','https://www.wowrack.com/', now(), 'OK');
+INSERT INTO sources (provider_id, url, scraped_at, status) VALUES ('wowrack','https://www.wowrack.com/id-id/service/cloud-services/public-cloud/', now(), 'OK');
+INSERT INTO sources (provider_id, url, scraped_at, status) VALUES ('wowrack','https://www.wowrack.com/id-id/about/', now(), 'OK');
+INSERT INTO locations (city, country) VALUES ('Jakarta','Indonesia') ON CONFLICT (city, country) DO NOTHING;
+INSERT INTO provider_locations (provider_id, location_id) SELECT 'wowrack', id FROM locations WHERE city='Jakarta' AND country='Indonesia' ON CONFLICT DO NOTHING;
+INSERT INTO locations (city, country) VALUES ('Surabaya','Indonesia') ON CONFLICT (city, country) DO NOTHING;
+INSERT INTO provider_locations (provider_id, location_id) SELECT 'wowrack', id FROM locations WHERE city='Surabaya' AND country='Indonesia' ON CONFLICT DO NOTHING;
+INSERT INTO locations (city, country) VALUES ('Bali','Indonesia') ON CONFLICT (city, country) DO NOTHING;
+INSERT INTO provider_locations (provider_id, location_id) SELECT 'wowrack', id FROM locations WHERE city='Bali' AND country='Indonesia' ON CONFLICT DO NOTHING;
+INSERT INTO locations (city, country) VALUES ('Medan','Indonesia') ON CONFLICT (city, country) DO NOTHING;
+INSERT INTO provider_locations (provider_id, location_id) SELECT 'wowrack', id FROM locations WHERE city='Medan' AND country='Indonesia' ON CONFLICT DO NOTHING;
+COMMIT;

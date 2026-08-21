@@ -1,0 +1,35 @@
+{
+  "allow_no_tiers": true,
+  "provider": {
+    "id": "wowrack",
+    "name": "Wowrack",
+    "hq_country": "United States",
+    "hq_city": "Seattle",
+    "origin": "global",
+    "provider_type": "IaaS",
+    "is_local_asean": false,
+    "website": "https://www.wowrack.com/",
+    "legal_country": "United States",
+    "legal_note": "CLOUD Act + US Patriot Act. Otoritas AS bisa minta data dari operator AS, termasuk rak di ASEAN."
+  },
+  "sources": [
+    "https://www.wowrack.com/",
+    "https://www.wowrack.com/id-id/service/cloud-services/public-cloud/",
+    "https://www.wowrack.com/id-id/about/"
+  ],
+  "stack": {"hypervisor": null, "source_url": "https://www.wowrack.com/id-id/service/cloud-services/"},
+  "sovereignty": {"data_residency": "regional"},
+  "locations": [
+    {"city": "Jakarta", "country": "Indonesia"},
+    {"city": "Surabaya", "country": "Indonesia"},
+    {"city": "Bali", "country": "Indonesia"},
+    {"city": "Medan", "country": "Indonesia"}
+  ],
+  "buildings": [],
+  "tiers": [],
+  "dc_city": "Jakarta",
+  "dc_country": "Indonesia",
+  "dc_location": "Jakarta",
+  "scraped_from": "https://www.wowrack.com/id-id/service/cloud-services/public-cloud/",
+  "notes": "Official public-cloud page lists DC cities Jakarta, Surabaya, Bali, Medan. No public VPS SKU prices. No named halls. Dedicated page lists example specs without Rp. Offices (Surabaya HQ, Menara BCA sales) are not halls. Hypervisor not a single named product (VMware/Hyper-V/Proxmox as options on dedicated)."
+}
