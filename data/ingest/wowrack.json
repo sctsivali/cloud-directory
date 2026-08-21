@@ -1,5 +1,4 @@
 {
-  "allow_no_tiers": true,
   "provider": {
     "id": "wowrack",
     "name": "Wowrack",
@@ -10,16 +9,18 @@
     "is_local_asean": true,
     "website": "https://www.wowrack.com/",
     "legal_country": "Indonesia",
-    "legal_note": "Kantor pusat Surabaya (Jl. Genteng Kali No. 8). Didirikan di Seattle; operasi dan basis tercatat di Indonesia."
+    "legal_note": "Kantor pusat Surabaya. Public cloud self-serve dijual sebagai CloudRaya (dikembangkan dan dikelola Wowrack)."
   },
   "sources": [
     "https://www.wowrack.com/",
     "https://www.wowrack.com/id-id/about/",
-    "https://www.wowrack.com/id-id/service/cloud-services/public-cloud/"
+    "https://www.wowrack.com/id-id/service/cloud-services/public-cloud/",
+    "https://cloudraya.com/id/harga/",
+    "https://cloudraya.com/id/tentang-kami/"
   ],
   "stack": {
     "hypervisor": "OpenStack",
-    "source_url": "https://www.wowrack.com/id-id/service/cloud-services/public-cloud/"
+    "source_url": "https://cloudraya.com/id/harga/"
   },
   "sovereignty": {"data_residency": "local"},
   "locations": [
@@ -29,10 +30,23 @@
     {"city": "Medan", "country": "Indonesia"}
   ],
   "buildings": [],
-  "tiers": [],
+  "fx_idr_per_usd": 16000,
   "dc_city": "Jakarta",
   "dc_country": "Indonesia",
   "dc_location": "Jakarta",
-  "scraped_from": "https://www.wowrack.com/id-id/service/cloud-services/public-cloud/",
-  "notes": "HQ Surabaya from official Kantor Pusat. OpenStack per operator correction 2026-08-19 (site public-cloud page does not name the hypervisor; dedicated lists VMware/Hyper-V/Proxmox as options). No public VPS SKUs or named halls."
+  "scraped_from": "https://cloudraya.com/id/harga/",
+  "notes": "Linux VM SKUs from CloudRaya official harga (Wowrack public cloud). Monthly estimate = 720 hours as written. SSD included. Windows SKUs omitted (license add-on). No named hall. OpenStack remains per operator note; CloudRaya pages name Kubernetes (KubeRaya) not OpenStack.",
+  "tiers": [
+    {"id": "wowrack-cr-x-small", "tier_name": "CloudRaya x-small", "vcpu": 1, "ram_gb": 1, "storage_gb": 20, "storage_type": "SSD", "price_idr": 85000, "price_native": "IDR 85,000/bulan"},
+    {"id": "wowrack-cr-small-r2", "tier_name": "CloudRaya small-r2", "vcpu": 1, "ram_gb": 2, "storage_gb": 40, "storage_type": "SSD", "price_idr": 170000, "price_native": "IDR 170,000/bulan"},
+    {"id": "wowrack-cr-small-c2", "tier_name": "CloudRaya small-c2", "vcpu": 2, "ram_gb": 2, "storage_gb": 80, "storage_type": "SSD", "price_idr": 200000, "price_native": "IDR 200,000/bulan"},
+    {"id": "wowrack-cr-small-r4", "tier_name": "CloudRaya small-r4", "vcpu": 2, "ram_gb": 4, "storage_gb": 80, "storage_type": "SSD", "price_idr": 350000, "price_native": "IDR 350,000/bulan"},
+    {"id": "wowrack-cr-medium-r8", "tier_name": "CloudRaya medium-r8", "vcpu": 4, "ram_gb": 8, "storage_gb": 100, "storage_type": "SSD", "price_idr": 700000, "price_native": "IDR 700,000/bulan"},
+    {"id": "wowrack-cr-medium-c6", "tier_name": "CloudRaya medium-c6", "vcpu": 6, "ram_gb": 8, "storage_gb": 100, "storage_type": "SSD", "price_idr": 720000, "price_native": "IDR 720,000/bulan"},
+    {"id": "wowrack-cr-large-r16", "tier_name": "CloudRaya large-r16", "vcpu": 6, "ram_gb": 16, "storage_gb": 200, "storage_type": "SSD", "price_idr": 1200000, "price_native": "IDR 1,200,000/bulan"},
+    {"id": "wowrack-cr-large-c8", "tier_name": "CloudRaya large-c8", "vcpu": 8, "ram_gb": 16, "storage_gb": 200, "storage_type": "SSD", "price_idr": 1500000, "price_native": "IDR 1,500,000/bulan"},
+    {"id": "wowrack-cr-xlarge-r24", "tier_name": "CloudRaya xlarge-r24", "vcpu": 6, "ram_gb": 24, "storage_gb": 240, "storage_type": "SSD", "price_idr": 1950000, "price_native": "IDR 1,950,000/bulan"},
+    {"id": "wowrack-cr-xlarge-c8", "tier_name": "CloudRaya xlarge-c8", "vcpu": 8, "ram_gb": 24, "storage_gb": 240, "storage_type": "SSD", "price_idr": 2150000, "price_native": "IDR 2,150,000/bulan"},
+    {"id": "wowrack-cr-xlarge-r32", "tier_name": "CloudRaya xlarge-r32", "vcpu": 8, "ram_gb": 32, "storage_gb": 320, "storage_type": "SSD", "price_idr": 2700000, "price_native": "IDR 2,700,000/bulan"}
+  ]
 }
