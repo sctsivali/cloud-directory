@@ -1,0 +1,38 @@
+{
+  "allow_no_tiers": true,
+  "provider": {
+    "id": "epldt",
+    "name": "ePLDT",
+    "hq_country": "Philippines",
+    "hq_city": null,
+    "origin": "local",
+    "provider_type": "IaaS",
+    "is_local_asean": true,
+    "website": "https://www.epldt.com/",
+    "legal_country": "Philippines",
+    "legal_note": null
+  },
+  "sources": [
+    "https://www.epldt.com/"
+  ],
+  "stack": {
+    "hypervisor": null,
+    "source_url": "https://www.epldt.com/"
+  },
+  "sovereignty": {
+    "data_residency": "local"
+  },
+  "locations": [
+    {
+      "city": "Undisclosed",
+      "country": "Philippines"
+    }
+  ],
+  "buildings_named": [],
+  "tiers": [],
+  "dc_city": "Undisclosed",
+  "dc_country": "Philippines",
+  "dc_location": "Undisclosed building",
+  "scraped_from": "https://www.epldt.com/",
+  "notes": "Auto-ingest. SKUs/halls/hypervisor only if written on official pages."
+}

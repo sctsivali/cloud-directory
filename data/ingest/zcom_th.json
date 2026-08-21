@@ -1,0 +1,38 @@
+{
+  "allow_no_tiers": true,
+  "provider": {
+    "id": "zcom_th",
+    "name": "Z.com Cloud TH",
+    "hq_country": "Thailand",
+    "hq_city": null,
+    "origin": "local",
+    "provider_type": "IaaS",
+    "is_local_asean": true,
+    "website": "https://www.z.com/th/cloud/",
+    "legal_country": "Thailand",
+    "legal_note": null
+  },
+  "sources": [
+    "https://www.z.com/th/cloud/"
+  ],
+  "stack": {
+    "hypervisor": null,
+    "source_url": "https://www.z.com/th/cloud/"
+  },
+  "sovereignty": {
+    "data_residency": "local"
+  },
+  "locations": [
+    {
+      "city": "Undisclosed",
+      "country": "Thailand"
+    }
+  ],
+  "buildings": [],
+  "tiers": [],
+  "dc_city": "Undisclosed",
+  "dc_country": "Thailand",
+  "dc_location": "Undisclosed building",
+  "scraped_from": "https://www.z.com/th/cloud/",
+  "notes": "Auto-ingest via 15m cron. No invented halls. SKUs only if parser saw a complete public card."
+}

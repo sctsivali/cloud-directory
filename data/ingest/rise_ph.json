@@ -1,0 +1,38 @@
+{
+  "allow_no_tiers": true,
+  "provider": {
+    "id": "rise_ph",
+    "name": "RISE",
+    "hq_country": "Philippines",
+    "hq_city": null,
+    "origin": "local",
+    "provider_type": "IaaS",
+    "is_local_asean": true,
+    "website": "https://www.rise.ph/",
+    "legal_country": "Philippines",
+    "legal_note": null
+  },
+  "sources": [
+    "https://www.rise.ph/"
+  ],
+  "stack": {
+    "hypervisor": null,
+    "source_url": "https://www.rise.ph/"
+  },
+  "sovereignty": {
+    "data_residency": "local"
+  },
+  "locations": [
+    {
+      "city": "Manila",
+      "country": "Philippines"
+    }
+  ],
+  "buildings_named": [],
+  "tiers": [],
+  "dc_city": "Manila",
+  "dc_country": "Philippines",
+  "dc_location": "Manila",
+  "scraped_from": "https://www.rise.ph/",
+  "notes": "Auto-ingest. SKUs/halls/hypervisor only if written on official pages."
+}

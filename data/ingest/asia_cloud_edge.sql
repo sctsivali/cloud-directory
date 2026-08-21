@@ -1,0 +1,12 @@
+BEGIN;
+INSERT INTO providers (id,name,hq_country,hq_city,origin,provider_type,is_local_asean,website,legal_country,legal_note) VALUES ('asia_cloud_edge','Asia Cloud Edge','Myanmar','Yangon','local','IaaS',TRUE,'https://asiacloudedge.com/','Myanmar','Homepage names MAIN SERVICE CENTER – YGN DC. Public VPS/VPC is contact-sales; no public SKU table.') ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, hq_country=EXCLUDED.hq_country, hq_city=EXCLUDED.hq_city, origin=EXCLUDED.origin, provider_type=EXCLUDED.provider_type, is_local_asean=EXCLUDED.is_local_asean, website=EXCLUDED.website, legal_country=EXCLUDED.legal_country, legal_note=EXCLUDED.legal_note;
+INSERT INTO stacks (provider_id, hypervisor, orchestration, storage, container_runtime, control_plane, source_url) VALUES ('asia_cloud_edge',NULL,NULL,NULL,NULL,NULL,'https://asiacloudedge.com/, https://asiacloudedge.com/about-us/, https://asiacloudedge.com/private-public-cloud-services/, https://asiacloudedge.com/datacenter-service/') ON CONFLICT (provider_id) DO UPDATE SET hypervisor=EXCLUDED.hypervisor, orchestration=EXCLUDED.orchestration, storage=EXCLUDED.storage, container_runtime=EXCLUDED.container_runtime, control_plane=EXCLUDED.control_plane, source_url=EXCLUDED.source_url;
+INSERT INTO sovereignty (provider_id, data_residency) VALUES ('asia_cloud_edge','local') ON CONFLICT (provider_id) DO UPDATE SET data_residency=EXCLUDED.data_residency;
+DELETE FROM sources WHERE provider_id = 'asia_cloud_edge';
+INSERT INTO sources (provider_id, url, scraped_at, status) VALUES ('asia_cloud_edge','https://asiacloudedge.com/', now(), 'OK');
+INSERT INTO sources (provider_id, url, scraped_at, status) VALUES ('asia_cloud_edge','https://asiacloudedge.com/about-us/', now(), 'OK');
+INSERT INTO sources (provider_id, url, scraped_at, status) VALUES ('asia_cloud_edge','https://asiacloudedge.com/private-public-cloud-services/', now(), 'OK');
+INSERT INTO sources (provider_id, url, scraped_at, status) VALUES ('asia_cloud_edge','https://asiacloudedge.com/datacenter-service/', now(), 'OK');
+INSERT INTO locations (city, country) VALUES ('Yangon','Myanmar') ON CONFLICT (city, country) DO NOTHING;
+INSERT INTO provider_locations (provider_id, location_id) SELECT 'asia_cloud_edge', id FROM locations WHERE city='Yangon' AND country='Myanmar' ON CONFLICT DO NOTHING;
+COMMIT;
