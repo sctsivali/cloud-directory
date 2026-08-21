@@ -16,11 +16,19 @@
     "https://www.wowrack.com/id-id/about/",
     "https://www.wowrack.com/id-id/service/cloud-services/public-cloud/",
     "https://cloudraya.com/id/harga/",
-    "https://cloudraya.com/id/tentang-kami/"
+    "https://cloudraya.com/id/tentang-kami/",
+    "https://cloudraya.com/id/produk/vps-mikrotik-murah/",
+    "https://cloudraya.com/en/blog/kvm-2/",
+    "https://cloudraya.com/id/feature/kuberaya/",
+    "https://cloudraya.com/id/feature/storageraya/"
   ],
   "stack": {
-    "hypervisor": "OpenStack",
-    "source_url": "https://cloudraya.com/id/harga/"
+    "hypervisor": "KVM",
+    "orchestration": "Kubernetes (KubeRaya)",
+    "storage": "S3-compatible object storage (StorageRaya)",
+    "container_runtime": null,
+    "control_plane": null,
+    "source_url": "https://cloudraya.com/id/produk/vps-mikrotik-murah/"
   },
   "sovereignty": {"data_residency": "local"},
   "locations": [

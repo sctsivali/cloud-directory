@@ -93,9 +93,12 @@ def emit_sql(doc: dict) -> str:
     st = doc.get("stack") or {}
     src = ", ".join(doc["sources"])
     lines.append(
-        f"INSERT INTO stacks (provider_id, hypervisor, source_url) VALUES "
-        f"({sql_str(p['id'])},{sql_str(st.get('hypervisor'))},{sql_str(src)}) "
-        f"ON CONFLICT (provider_id) DO UPDATE SET hypervisor=EXCLUDED.hypervisor, source_url=EXCLUDED.source_url;"
+        f"INSERT INTO stacks (provider_id, hypervisor, orchestration, storage, container_runtime, control_plane, source_url) VALUES "
+        f"({sql_str(p['id'])},{sql_str(st.get('hypervisor'))},{sql_str(st.get('orchestration'))},"
+        f"{sql_str(st.get('storage'))},{sql_str(st.get('container_runtime'))},{sql_str(st.get('control_plane'))},{sql_str(src)}) "
+        f"ON CONFLICT (provider_id) DO UPDATE SET hypervisor=EXCLUDED.hypervisor, orchestration=EXCLUDED.orchestration, "
+        f"storage=EXCLUDED.storage, container_runtime=EXCLUDED.container_runtime, control_plane=EXCLUDED.control_plane, "
+        f"source_url=EXCLUDED.source_url;"
     )
     lines.append(
         f"INSERT INTO sovereignty (provider_id, data_residency) VALUES "
