@@ -1,0 +1,41 @@
+{
+  "provider": {
+    "id": "unn",
+    "name": "UNN",
+    "hq_country": "Brunei",
+    "hq_city": "Bandar Seri Begawan",
+    "origin": "local",
+    "provider_type": "IaaS",
+    "is_local_asean": true,
+    "website": "https://unn.com.bn/cloud-hosting",
+    "legal_country": "Brunei",
+    "legal_note": "Unified National Networks Sdn Bhd. 100% owned by the Government of Brunei Darussalam; GLC under Darussalam Assets. HQ: Knowledge Hub (KHub), Kg Anggerek Desa, Bandar Seri Begawan. IaaS page does not name the compute hall."
+  },
+  "sources": [
+    "https://unn.com.bn/cloud-hosting",
+    "https://unn.com.bn/about",
+    "https://unn.com.bn/index.php/unn-launches-bruneis-first-locally-hosted-commercial-cloud-service"
+  ],
+  "stack": {
+    "hypervisor": null,
+    "orchestration": null,
+    "storage": null,
+    "container_runtime": null,
+    "control_plane": null,
+    "source_url": "https://unn.com.bn/cloud-hosting"
+  },
+  "sovereignty": {"data_residency": "local"},
+  "locations": [
+    {"city": "Undisclosed", "country": "Brunei"}
+  ],
+  "buildings": [],
+  "buildings_named": [],
+  "dc_city": "Undisclosed",
+  "dc_country": "Brunei",
+  "dc_location": "Undisclosed building",
+  "scraped_from": "https://unn.com.bn/cloud-hosting",
+  "notes": "Public IaaS VM packages. Development is the only card with a printed monthly amount (page: packages from B$26/month). Standard 2/4/60 and Premium 8/16/120 have no individual price — omitted. Hypervisor not named. Tungku cable station is listed under offices, not as the IaaS hall. ISO 27001 is claimed for cloud hosting + colocation; not stored as a cert row (no certs table).",
+  "tiers": [
+    {"id": "unn-development", "tier_name": "Development", "vcpu": 1, "ram_gb": 2, "storage_gb": 40, "storage_type": null, "price_amount": 26, "currency": "BND", "price_native": "from B$26/month"}
+  ]
+}

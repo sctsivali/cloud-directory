@@ -1,0 +1,43 @@
+{
+  "provider": {
+    "id": "zeus_cloud",
+    "name": "Zeus Cloud",
+    "hq_country": "Myanmar",
+    "hq_city": null,
+    "origin": "local",
+    "provider_type": "IaaS",
+    "is_local_asean": true,
+    "website": "https://www.zeus.com.mm/",
+    "legal_country": "Myanmar",
+    "legal_note": "Powered by Myanmar Technology Gateway Co., Ltd. About page lists a Nay Pyi Taw branch; Kantor Pusat city is not named. Compute city is Nay Pyi Taw."
+  },
+  "sources": [
+    "https://www.zeus.com.mm/",
+    "https://www.zeus.com.mm/linux-cloud-server/",
+    "https://www.zeus.com.mm/about-us/"
+  ],
+  "stack": {
+    "hypervisor": "KVM",
+    "orchestration": null,
+    "storage": null,
+    "container_runtime": null,
+    "control_plane": null,
+    "source_url": "https://www.zeus.com.mm/"
+  },
+  "sovereignty": {"data_residency": "local"},
+  "locations": [
+    {"city": "Nay Pyi Taw", "country": "Myanmar"}
+  ],
+  "buildings": [],
+  "buildings_named": [],
+  "dc_city": "Nay Pyi Taw",
+  "dc_country": "Myanmar",
+  "dc_location": "Undisclosed building",
+  "scraped_from": "https://www.zeus.com.mm/linux-cloud-server/",
+  "notes": "Linux Cloud Server public cards (vCPU+RAM+SSD+monthly USD). Homepage also prints 60,000/100,000/180,000Ks for Starter/Geek/Production without matching vCPU on every card — USD Linux cards used. Windows SKUs omitted. Homepage quotes KVM and datacenter in Nay Pyi Taw. No named hall.",
+  "tiers": [
+    {"id": "zeus-linux-starter", "tier_name": "Linux Starter", "vcpu": 2, "ram_gb": 2, "storage_gb": 60, "storage_type": "SSD", "price_amount": 15, "currency": "USD", "price_native": "USD 15/month"},
+    {"id": "zeus-linux-standard", "tier_name": "Linux Standard", "vcpu": 2, "ram_gb": 4, "storage_gb": 80, "storage_type": "SSD", "price_amount": 25, "currency": "USD", "price_native": "USD 25/month"},
+    {"id": "zeus-linux-production", "tier_name": "Linux Production", "vcpu": 4, "ram_gb": 8, "storage_gb": 160, "storage_type": "SSD", "price_amount": 45, "currency": "USD", "price_native": "USD 45/month"}
+  ]
+}

@@ -1,0 +1,41 @@
+{
+  "allow_no_tiers": true,
+  "provider": {
+    "id": "asia_cloud_edge",
+    "name": "Asia Cloud Edge",
+    "hq_country": "Myanmar",
+    "hq_city": "Yangon",
+    "origin": "local",
+    "provider_type": "IaaS",
+    "is_local_asean": true,
+    "website": "https://asiacloudedge.com/",
+    "legal_country": "Myanmar",
+    "legal_note": "Homepage names MAIN SERVICE CENTER – YGN DC. Public VPS/VPC is contact-sales; no public SKU table."
+  },
+  "sources": [
+    "https://asiacloudedge.com/",
+    "https://asiacloudedge.com/about-us/",
+    "https://asiacloudedge.com/private-public-cloud-services/",
+    "https://asiacloudedge.com/datacenter-service/"
+  ],
+  "stack": {
+    "hypervisor": null,
+    "orchestration": null,
+    "storage": null,
+    "container_runtime": null,
+    "control_plane": null,
+    "source_url": "https://asiacloudedge.com/private-public-cloud-services/"
+  },
+  "sovereignty": {"data_residency": "local"},
+  "locations": [
+    {"city": "Yangon", "country": "Myanmar"}
+  ],
+  "buildings": [],
+  "buildings_named": [],
+  "tiers": [],
+  "dc_city": "Yangon",
+  "dc_country": "Myanmar",
+  "dc_location": "Undisclosed building",
+  "scraped_from": "https://asiacloudedge.com/private-public-cloud-services/",
+  "notes": "IaaS VPS/VPC described; no public monthly cards. Hosted Private Cloud page names vSphere / VMware Cloud Director for dedicated hosted private cloud — not copied onto public VPS hypervisor. Hall not named; city Yangon from YGN DC on homepage."
+}

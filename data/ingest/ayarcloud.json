@@ -1,0 +1,41 @@
+{
+  "allow_no_tiers": true,
+  "provider": {
+    "id": "ayarcloud",
+    "name": "AyarCloud",
+    "hq_country": "Myanmar",
+    "hq_city": "Yangon",
+    "origin": "local",
+    "provider_type": "IaaS",
+    "is_local_asean": true,
+    "website": "https://www.ayarcloud.com/",
+    "legal_country": "Myanmar",
+    "legal_note": "Product line of AYARNET ISP. Contact office: Taw Win Centre, Dagon township, Yangon. IaaS marked Coming Soon; VPS marked Available Now."
+  },
+  "sources": [
+    "https://www.ayarcloud.com/",
+    "https://www.ayarcloud.com/about-us/",
+    "https://www.ayarcloud.com/vps-servers/",
+    "https://www.ayarcloud.com/pricing/"
+  ],
+  "stack": {
+    "hypervisor": null,
+    "orchestration": null,
+    "storage": null,
+    "container_runtime": null,
+    "control_plane": null,
+    "source_url": "https://www.ayarcloud.com/"
+  },
+  "sovereignty": {"data_residency": "local"},
+  "locations": [
+    {"city": "Yangon", "country": "Myanmar"}
+  ],
+  "buildings": [],
+  "buildings_named": [],
+  "tiers": [],
+  "dc_city": "Yangon",
+  "dc_country": "Myanmar",
+  "dc_location": "Undisclosed building",
+  "scraped_from": "https://www.ayarcloud.com/pricing/",
+  "notes": "No complete public monthly SKU cards. Pricing page publishes hourly MMK formulas (Economy from 31 MMK/hour for 1 core/1 GB). VPS configurator shows Starting at 482.25 Ks/mo without aligned vCPU/RAM. Homepage lists DC/PoP sites in South Dagon, Taw Win Center, North Dagon, Thingangyun — Taw Win is the office address, so halls stay Undisclosed. Kubernetes in FAQ is a customer service claim, not taken as infrastructure hypervisor."
+}

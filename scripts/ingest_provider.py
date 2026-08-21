@@ -39,7 +39,7 @@ def validate(doc: dict) -> None:
     if city and city != "Undisclosed":
         if not any(l.get("city") == city for l in loc):
             die("dc_city must appear in official locations")
-    FX = {"IDR": 16000, "VND": 25000, "THB": 35, "SGD": 1.35, "USD": 1, "PHP": 56}
+    FX = {"IDR": 16000, "VND": 25000, "THB": 35, "SGD": 1.35, "USD": 1, "PHP": 56, "BND": 1.35}
     default_fx = float(doc.get("fx_idr_per_usd") or 16000)
     for t in doc.get("tiers") or []:
         for k in ("id", "tier_name", "vcpu", "ram_gb"):
@@ -149,7 +149,9 @@ def emit_sql(doc: dict) -> str:
         stor = "NULL" if t.get("storage_gb") is None else str(float(t["storage_gb"]))
         dc_c = t.get("dc_city") or dc_city
         dc_co = t.get("dc_country") or dc_country
-        dc_l = t.get("dc_location") or ("Undisclosed building" if dc_c == "Undisclosed" else dc_c)
+        dc_l = t.get("dc_location") or doc.get("dc_location") or (
+            "Undisclosed building" if dc_c == "Undisclosed" else dc_c
+        )
         lines.append(
             f"INSERT INTO tiers (id, provider_id, tier_name, vcpu, ram_gb, storage_gb, storage_type, "
             f"price_native, currency, price_usd_month, billing_period, dc_location, dc_city, dc_country, "
