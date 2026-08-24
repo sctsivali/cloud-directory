@@ -1,0 +1,31 @@
+=== Infrastructure Refresh Report 2026-08-23 05:01 WIB ===
+
+1. Identity & Scope
+   - Separate office_presence, compute_presence, network_presence
+   - Named hall ONLY if exact string on official product/public-cloud page
+   - City only from first-party compute page (no inference from office/IX/latency)
+   - Reverse-discover tenancy only when DC operator page explicitly names provider
+   - PeeringDB/ASN = network only, never compute
+
+2. Current State (from audits)
+   - 98 providers in directory
+   - 29 marked local ASEAN
+   - Local ASEAN with named halls: 22 rows (BiznetGio, IDCloudHost, Qwords, Lintasarta, Telkomsigma, etc.)
+   - Local ASEAN still Undisclosed building: ~40 rows (Dewaweb, BizFly, VHost, JagoanHosting, VietVPS, HostVN, etc.)
+   - No new first-party evidence found for remaining locals in this tick
+
+3. Light-check ASEAN locals
+   - No new official compute halls discovered
+   - No reverse-discovery (DC operator naming tenant) in this run
+   - Pricing.complete exists → pricing refresh already done today
+   - enrichment.complete & sources.complete exist → prior steps done
+
+4. Action
+   - No new ingest JSON or SQL generated (no qualifying candidate this tick)
+   - infrastructure.complete written
+   - Lock released
+
+Verified: 22 named halls
+Still unknown: ~40 local ASEAN compute locations (Undisclosed building per rule)
+
+[Selesai - no new provider ingested]

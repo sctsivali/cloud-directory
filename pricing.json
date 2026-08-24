@@ -1,0 +1,18 @@
+{
+  "date": "2026-08-24",
+  "status": "complete",
+  "changed": 0,
+  "checked": 6,
+  "new_ingest": [],
+  "summary_id": "Tidak ada perubahan harga VPS/IaaS publik yang terdeteksi dari halaman harga resmi ASEAN. Metode Wowrack diterapkan ketat pada sumber terpantau (Wowrack/CloudRaya, EranyaCloud, IDCloudHost, RukCom, CloudHM, Bangmod). FX rates stabil, printed monthly digunakan, no SKU di-invent. pricing.complete ditulis.",
+  "summary_en": "No public VPS/IaaS price changes detected from official ASEAN pricing pages. Wowrack method strictly applied to monitored sources (Wowrack/CloudRaya, EranyaCloud, IDCloudHost, RukCom, CloudHM, Bangmod). FX rates stable, printed monthly used, no invented SKUs. pricing.complete written.",
+  "providers_checked": [
+    "wowrack/cloudraya",
+    "eranyacloud",
+    "idcloudhost",
+    "rukcom",
+    "cloudhm",
+    "bangmod-cloud"
+  ],
+  "run": "pricing-refresh"
+}
