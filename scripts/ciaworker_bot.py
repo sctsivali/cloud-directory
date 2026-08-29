@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """CIA Guide ops bot (@ciaworker_bot): queue reports + Approve/Reject.
 
-Not a chat agent. Ryo-only. Token: ~/.hermes/ciaworker.token (chmod 600).
+Not a chat agent. Token: ~/.hermes/ciaworker.token (chmod 600).
+Allowlist: ~/.hermes/ciaworker.allowlist (Telegram user IDs).
+Notify target: /sethome in the ops group.
 Silent unless there is queue work or a command.
 """
 from __future__ import annotations
@@ -59,6 +61,18 @@ def tg(tok: str, method: str, payload: dict) -> dict:
 
 def authorized(uid: int | str) -> bool:
     return str(uid) in allow()
+
+
+def in_home_group(chat_id: int | str) -> bool:
+    home = home_chat()
+    return home is not None and int(chat_id) == int(home)
+
+
+def ops_ok(uid: int | str, chat_id: int | str) -> bool:
+    """Anyone in the sethome group; otherwise allowlisted DMs only."""
+    if in_home_group(chat_id):
+        return True
+    return authorized(uid)
 
 
 def kb_for(row_id: int, status: str) -> dict | None:
@@ -140,30 +154,59 @@ def remember_chat(chat_id: int) -> None:
     CHAT_PATH.chmod(0o600)
 
 
+def home_chat() -> int | None:
+    if not CHAT_PATH.exists():
+        return None
+    raw = CHAT_PATH.read_text().strip()
+    return int(raw) if raw.lstrip("-").isdigit() else None
+
+
 def handle_message(tok: str, msg: dict) -> None:
     user = msg.get("from") or {}
     uid = user.get("id") or 0
     chat = msg.get("chat") or {}
     text = (msg.get("text") or "").strip()
-    if not authorized(uid):
-        return
-    remember_chat(int(chat["id"]))
     cmd = text.split()[0].split("@")[0].lower() if text else ""
+    chat_id = int(chat.get("id") or 0)
+
+    if cmd == "/whoami":
+        tg(tok, "sendMessage", {
+            "chat_id": chat_id,
+            "text": f"id kamu: {uid}",
+        })
+        return
+
+    if not ops_ok(uid, chat_id):
+        return
+
     if cmd in ("/start", "/help"):
         tg(tok, "sendMessage", {
-            "chat_id": chat["id"],
+            "chat_id": chat_id,
             "text": (
                 "CIA Guide ops. Bukan agen ngobrol.\n"
+                "/sethome — laporan crawl ke chat ini (grup Redaksi)\n"
                 "/queue — antrian discovered + needs_review\n"
+                "/whoami — ID Telegram (untuk allowlist tim)\n"
                 "Tombol: Approve crawl / Tolak / Masuk Guide / Buang"
             ),
         })
         return
+    if cmd == "/sethome":
+        if not authorized(uid):
+            return
+        remember_chat(chat_id)
+        kind = chat.get("type") or "?"
+        title = chat.get("title") or "DM"
+        tg(tok, "sendMessage", {
+            "chat_id": chat_id,
+            "text": f"Home ops: {title} ({kind}). Laporan crawl ke sini.",
+        })
+        return
     if cmd == "/queue":
         rows = pending_cards()
-        tg(tok, "sendMessage", {"chat_id": chat["id"], "text": queue_summary()})
+        tg(tok, "sendMessage", {"chat_id": chat_id, "text": queue_summary()})
         for row in rows[:10]:
-            payload = {"chat_id": chat["id"], "text": card(row)}
+            payload = {"chat_id": chat_id, "text": card(row)}
             kb = kb_for(int(row["id"]), row["status"])
             if kb:
                 payload["reply_markup"] = kb
@@ -177,7 +220,8 @@ def handle_callback(tok: str, cq: dict) -> None:
     data = cq.get("data") or ""
     cid = cq.get("id")
     msg = cq.get("message") or {}
-    if not authorized(uid):
+    chat_id = int((msg.get("chat") or {}).get("id") or 0)
+    if not ops_ok(uid, chat_id):
         tg(tok, "answerCallbackQuery", {"callback_query_id": cid, "text": "tidak diizinkan"})
         return
     parts = data.split(":")
