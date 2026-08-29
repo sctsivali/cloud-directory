@@ -6,6 +6,7 @@ import { Flag } from "./Flag";
 import { MapView } from "./MapView";
 import { useLang } from "./Language";
 import type { MapLink, MapSite, OverviewData } from "@/lib/db";
+import { displayTechField } from "@/lib/tech";
 
 export function OverviewView({ data, links, sites }: { data: OverviewData; links: MapLink[]; sites: MapSite[] }) {
   const { t } = useLang();
@@ -304,7 +305,7 @@ export function OverviewView({ data, links, sites }: { data: OverviewData; links
                   <span className="pill">{p.hq_country || "—"}</span>
                 </div>
                 <div className="meta">
-                  {p.hq_country || "—"} · {p.tier_count} {t.pkg} · {p.hypervisor || t.hvUnknown}
+                  {p.hq_country || "—"} · {p.tier_count} {t.pkg} · {displayTechField(p.hypervisor) || t.hvUnknown}
                 </div>
                 <div className="arena-metric">
                   {p.min_price != null ? `${t.from} $${p.min_price.toFixed(2)}` : "—"}

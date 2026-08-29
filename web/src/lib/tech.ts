@@ -666,10 +666,24 @@ export function stackBlob(row: {
     .toLowerCase();
 }
 
+const HEDGE_RE =
+  /\b(likely|implied|typical|unknown|confirmed:|sales model|for some services|belum ditemukan|not disclosed|probably|maybe|derived)\b/i;
+const EMPTY_RE =
+  /^(unknown|n\/?a|not disclosed|undisclosed|none|-|belum ditemukan|tidak diketahui)(\b|$)/i;
+
+/** First-party tech token only. Research notes, hedges, and empty → "". */
 export function usableField(value?: string | null) {
   if (!value) return "";
-  if (/\b(likely|implied|typical|unknown|strong|high)\b/i.test(value)) return "";
-  return value;
+  const v = value.trim();
+  if (!v) return "";
+  if (EMPTY_RE.test(v)) return "";
+  if (HEDGE_RE.test(v)) return "";
+  if (v.length > 60) return "";
+  return v;
+}
+
+export function displayTechField(value?: string | null) {
+  return usableField(value);
 }
 
 export function techsForBlob(blob: string): Tech[] {
