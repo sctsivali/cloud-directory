@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Process one provider_pipeline row with status=queued.
 
-Full-site first-party fetch. Writes a draft JSON. Does NOT ingest Guide.
+Deep Intelligence Check: full-site first-party fetch. Writes a draft JSON. Does NOT ingest Guide.
 Moves row to needs_review and notifies the ops group. Silent if queue empty.
 """
 from __future__ import annotations
@@ -111,7 +111,7 @@ def main() -> None:
     path = DRAFT / f"{rid}.json"
     path.write_text(json.dumps(draft, ensure_ascii=False, indent=2) + "\n")
     reason = (
-        f"Wowrack draft {path.name}. quotes={len(q)} price_words={has_price}. "
+        f"Deep Intelligence Check draft {path.name}. quotes={len(q)} price_words={has_price}. "
         "Not in Guide until Masuk Guide + gate."
     )
     payload = json.dumps({"draft": str(path), "stack_quotes": q})
