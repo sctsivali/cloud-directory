@@ -43,8 +43,24 @@ export function BuildingView({ data }: { data: BuildingDetail }) {
           <span>{t.bldgProviders}</span>
         </div>
         <div className="fact">
-          <strong>{data.operator || "—"}</strong>
+          <strong>{data.operator || t.hvUnknown}</strong>
           <span>{t.bldgOperator}</span>
+        </div>
+        <div className="fact">
+          <strong>{data.operator_country || t.hvUnknown}</strong>
+          <span>{t.bldgOpCountry}</span>
+        </div>
+        <div className="fact">
+          <strong>{data.dc_tier || t.hvUnknown}</strong>
+          <span>{t.bldgTier}</span>
+        </div>
+        <div className="fact">
+          <strong>{data.telcos || t.hvUnknown}</strong>
+          <span>{t.bldgTelco}</span>
+        </div>
+        <div className="fact">
+          <strong>{data.dc_tech || t.hvUnknown}</strong>
+          <span>{t.bldgTech}</span>
         </div>
       </div>
       <p className="section-sub">

@@ -355,6 +355,10 @@ export type BuildingRow = {
   listed: boolean;
   address: string | null;
   operator: string | null;
+  operator_country: string | null;
+  dc_tier: string | null;
+  telcos: string | null;
+  dc_tech: string | null;
   photo_path: string | null;
   photo_credit: string | null;
   photo_source: string | null;
@@ -365,6 +369,7 @@ export async function getBuildings(): Promise<BuildingRow[]> {
   const { rows } = await pool.query<BuildingRow>(`
     SELECT
       b.id, b.name, b.city, b.country, b.listed, b.address, b.operator,
+      b.operator_country, b.dc_tier, b.telcos, b.dc_tech,
       b.photo_path, b.photo_credit, b.photo_source,
       COUNT(DISTINCT pb.provider_id)::int AS provider_count
     FROM buildings b
@@ -384,6 +389,7 @@ export type BuildingDetail = BuildingRow & {
 export async function getBuilding(id: number): Promise<BuildingDetail | null> {
   const { rows } = await pool.query(
     `SELECT b.id, b.name, b.city, b.country, b.listed, b.address, b.operator, b.source,
+            b.operator_country, b.dc_tier, b.telcos, b.dc_tech,
             b.photo_path, b.photo_credit, b.photo_source,
             COUNT(DISTINCT pb.provider_id)::int AS provider_count
      FROM buildings b
