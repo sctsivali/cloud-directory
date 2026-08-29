@@ -14,17 +14,18 @@
   "sources": [
     "https://readyspace.com.sg/",
     "https://readyspace.com.sg/products/cloud-server/",
+    "https://readyspace.com.sg/products/cloud-infrastructure/kubernetes-cluster/",
     "https://readyspace.com.sg/company/about/",
     "https://readyspace.com.sg/company/contact/",
     "https://readyspace.com.sg/vps-hosting-singapore-unleashing-the-power-of-digital-presence/"
   ],
   "stack": {
     "hypervisor": null,
-    "orchestration": null,
+    "orchestration": "Kubernetes (RSKS)",
     "storage": null,
     "container_runtime": null,
     "control_plane": null,
-    "source_url": "https://readyspace.com.sg/products/cloud-server/"
+    "source_url": "https://readyspace.com.sg/products/cloud-infrastructure/kubernetes-cluster/"
   },
   "sovereignty": {"data_residency": "local"},
   "locations": [{"city": "Singapore", "country": "Singapore"}],
@@ -34,7 +35,7 @@
   "dc_country": "Singapore",
   "dc_location": "Singapore",
   "scraped_from": "https://readyspace.com.sg/products/cloud-server/",
-  "notes": "Cloud Server cards print Monthly Starting Price. Linux or Windows on the same card — ingested as Linux VM. Various Locations; Great World City is office. Visible product copy does not name KVM/Proxmox/OpenStack (homepage JS hits are not product claims). Dedicated S$210 omitted. Kubernetes Cluster is start-from S$15, not a named SKU table.",
+  "notes": "Cloud Server cards print Monthly Starting Price. Linux or Windows on the same card — ingested as Linux VM. Various Locations; Great World City is office. Visible Cloud Server copy does not name KVM (homepage JS and HCI/Proxmox page are other products). Kubernetes Cluster page names ReadySpace Kubernetes Service (RSKS) as a fully-managed Kubernetes product. Dedicated S$210 omitted.",
   "tiers": [
     {"id": "readyspace-cs-1gb", "tier_name": "Cloud Server 1GB", "vcpu": 1, "ram_gb": 1, "storage_gb": 25, "storage_type": "SSD", "currency": "SGD", "price_amount": 6, "price_native": "S$6.00/month"},
     {"id": "readyspace-cs-2gb", "tier_name": "Cloud Server 2GB", "vcpu": 1, "ram_gb": 2, "storage_gb": 50, "storage_type": "SSD", "currency": "SGD", "price_amount": 12, "price_native": "S$12/month"},
