@@ -261,7 +261,7 @@ export const COPY = {
       "Formula 2026.08.18. Indikator kontrol = residensi data 40 · kontrol hukum 40 · fasilitas bernama 20. Bukan nilai paspor perusahaan. Field kosong = 0, tidak dikurangi. Open technology dan kualitas bukti dihitung terpisah.",
     techVaried: "Bervariasi",
     techCountNote: "Jumlah berdasarkan field yang ditulis penyedia; inferensi tidak dihitung.",
-    lastUpdated: "Dataset ditinjau 18 Agustus 2026",
+    lastUpdated: "Dataset ditinjau 30 Agustus 2026",
     updKicker: "Log data",
     updH1: "Pembaruan Cloud Directory",
     updLede:
@@ -620,7 +620,7 @@ export const COPY = {
       "Formula 2026.08.18. Control indicator = data residency 40 · legal control 40 · named facility 20. Not a company-passport prize. Empty fields score 0, never minus. Open technology and evidence quality stay separate.",
     techVaried: "Varies",
     techCountNote: "Counts use fields the provider wrote; inferences are not counted.",
-    lastUpdated: "Dataset reviewed 18 August 2026",
+    lastUpdated: "Dataset reviewed 30 August 2026",
     updKicker: "Data log",
     updH1: "Cloud Directory updates",
     updLede:
