@@ -1,0 +1,52 @@
+{
+  "provider": {
+    "id": "web_com_ph",
+    "name": "Web.com.ph",
+    "hq_country": "Philippines",
+    "hq_city": "Makati",
+    "origin": "local",
+    "provider_type": "IaaS",
+    "is_local_asean": true,
+    "website": "https://www.web.com.ph/",
+    "legal_country": "Philippines",
+    "legal_note": "Web.com.ph, Inc. Office: Room 301 Raman Condominium, 1130 Chino Roces Ave (sales floor, not a DC hall)."
+  },
+  "sources": [
+    "https://www.web.com.ph/",
+    "https://www.web.com.ph/virtualserver.html",
+    "https://www.web.com.ph/iaas.html"
+  ],
+  "stack": {
+    "hypervisor": null,
+    "orchestration": null,
+    "storage": null,
+    "container_runtime": null,
+    "control_plane": null,
+    "source_url": "https://www.web.com.ph/virtualserver.html"
+  },
+  "sovereignty": {"data_residency": "local"},
+  "locations": [
+    {"city": "Taguig", "country": "Philippines"}
+  ],
+  "buildings_named": [
+    {
+      "name": "Vitro Taguig (BGC)",
+      "city": "Taguig",
+      "country": "Philippines",
+      "operator": "PLDT",
+      "source": "https://www.web.com.ph/virtualserver.html"
+    }
+  ],
+  "currency": "USD",
+  "dc_city": "Taguig",
+  "dc_country": "Philippines",
+  "dc_location": "Vitro Taguig (BGC)",
+  "scraped_from": "https://www.web.com.ph/virtualserver.html",
+  "notes": "Four Linux VPS cards print USD/month. IaaS page is hourly pay-as-you-go without named SKUs — omitted. MK2 Data Center (Globe) is named but no city string; not attached as a hall. Raman Condominium is office. Hypervisor not named on the VPS page.",
+  "tiers": [
+    {"id": "webcomph-vps1", "tier_name": "VPS1", "vcpu": 2, "ram_gb": 4, "storage_gb": 50, "storage_type": "SSD", "currency": "USD", "price_amount": 50, "price_native": "$50/month"},
+    {"id": "webcomph-vps2", "tier_name": "VPS2", "vcpu": 4, "ram_gb": 8, "storage_gb": 100, "storage_type": "SSD", "currency": "USD", "price_amount": 100, "price_native": "$100/month"},
+    {"id": "webcomph-vps3", "tier_name": "VPS3", "vcpu": 8, "ram_gb": 16, "storage_gb": 200, "storage_type": "SSD", "currency": "USD", "price_amount": 200, "price_native": "$200/month"},
+    {"id": "webcomph-vps4", "tier_name": "VPS4", "vcpu": 16, "ram_gb": 32, "storage_gb": 400, "storage_type": "SSD", "currency": "USD", "price_amount": 300, "price_native": "$300/month"}
+  ]
+}

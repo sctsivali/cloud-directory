@@ -1,0 +1,49 @@
+{
+  "provider": {
+    "id": "rukcom",
+    "name": "Ruk-Com Cloud",
+    "hq_country": "Thailand",
+    "hq_city": "Bangkok",
+    "origin": "local",
+    "provider_type": "IaaS",
+    "is_local_asean": true,
+    "website": "https://ruk-com.cloud/",
+    "legal_country": "Thailand",
+    "legal_note": "Vanit Place Aree (Building A), Phaya Thai, Bangkok 10400 is the company office, not a DC hall."
+  },
+  "sources": [
+    "https://ruk-com.cloud/",
+    "https://ruk-com.cloud/en/cloud-vps/",
+    "https://ruk-com.cloud/cloud-vps/",
+    "https://ruk-com.cloud/cloud-iaas/"
+  ],
+  "stack": {
+    "hypervisor": null,
+    "orchestration": "Kubernetes",
+    "storage": null,
+    "container_runtime": null,
+    "control_plane": "OpenStack",
+    "source_url": "https://ruk-com.cloud/en/cloud-vps/"
+  },
+  "sovereignty": {"data_residency": "local"},
+  "locations": [{"city": "Undisclosed", "country": "Thailand"}],
+  "buildings": [],
+  "currency": "THB",
+  "dc_city": "Undisclosed",
+  "dc_country": "Thailand",
+  "dc_location": "Undisclosed building",
+  "scraped_from": "https://ruk-com.cloud/en/cloud-vps/",
+  "notes": "EN VPS page: 'VPS Server powered by OpenStack' — control plane, not a named hypervisor. Kubernetes Support is on the IaaS portal page. Jelastic not found on product copy. 10 VPS-TH cards print monthly THB. Vanit Place Aree is office. No single DC hall named on the VPS page.",
+  "tiers": [
+    {"id": "rukcom-vps-th-1", "tier_name": "VPS-TH-1", "vcpu": 2, "ram_gb": 4, "storage_gb": 40, "storage_type": "SSD", "currency": "THB", "price_amount": 800, "price_native": "800 THB/month"},
+    {"id": "rukcom-vps-th-2", "tier_name": "VPS-TH-2", "vcpu": 4, "ram_gb": 4, "storage_gb": 40, "storage_type": "SSD", "currency": "THB", "price_amount": 1200, "price_native": "1,200 THB/month"},
+    {"id": "rukcom-vps-th-3", "tier_name": "VPS-TH-3", "vcpu": 4, "ram_gb": 8, "storage_gb": 60, "storage_type": "SSD", "currency": "THB", "price_amount": 1800, "price_native": "1,800 THB/month"},
+    {"id": "rukcom-vps-th-4", "tier_name": "VPS-TH-4", "vcpu": 8, "ram_gb": 8, "storage_gb": 80, "storage_type": "SSD", "currency": "THB", "price_amount": 2500, "price_native": "2,500 THB/month"},
+    {"id": "rukcom-vps-th-5", "tier_name": "VPS-TH-5", "vcpu": 8, "ram_gb": 16, "storage_gb": 80, "storage_type": "SSD", "currency": "THB", "price_amount": 3500, "price_native": "3,500 THB/month"},
+    {"id": "rukcom-vps-th-6", "tier_name": "VPS-TH-6", "vcpu": 16, "ram_gb": 16, "storage_gb": 80, "storage_type": "SSD", "currency": "THB", "price_amount": 4000, "price_native": "4,000 THB/month"},
+    {"id": "rukcom-vps-th-7", "tier_name": "VPS-TH-7", "vcpu": 16, "ram_gb": 32, "storage_gb": 100, "storage_type": "SSD", "currency": "THB", "price_amount": 6500, "price_native": "6,500 THB/month"},
+    {"id": "rukcom-vps-th-8", "tier_name": "VPS-TH-8", "vcpu": 32, "ram_gb": 32, "storage_gb": 100, "storage_type": "SSD", "currency": "THB", "price_amount": 7500, "price_native": "7,500 THB/month"},
+    {"id": "rukcom-vps-th-9", "tier_name": "VPS-TH-9", "vcpu": 32, "ram_gb": 64, "storage_gb": 120, "storage_type": "SSD", "currency": "THB", "price_amount": 12000, "price_native": "12,000 THB/month"},
+    {"id": "rukcom-vps-th-10", "tier_name": "VPS-TH-10", "vcpu": 32, "ram_gb": 128, "storage_gb": 120, "storage_type": "SSD", "currency": "THB", "price_amount": 22000, "price_native": "22,000 THB/month"}
+  ]
+}
