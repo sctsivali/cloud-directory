@@ -6,7 +6,7 @@ import { Icon } from "./Icon";
 import { Flag, flagForCountry } from "./Flag";
 import type { ArenaRow } from "@/lib/db";
 import { loadCompare, saveCompare } from "@/lib/needs";
-import { officialTechLogo, stackBlob, techMono, techsForBlob } from "@/lib/tech";
+import { officialTechLogo, displayTechField, stackBlob, techMono, techsForBlob } from "@/lib/tech";
 
 type Tab = "sov" | "oss" | "cost" | "cover" | "perf" | "conf";
 type Scope = "asean" | "all";
@@ -67,7 +67,7 @@ export function ArenaView({ rows }: { rows: ArenaRow[] }) {
     if (tab === "cost") return r.min_price != null ? `${t.from} $${r.min_price.toFixed(2)}` : "—";
     if (tab === "cover") return `${r.loc_count} DC`;
     if (tab === "perf") return `${r.max_vcpu ?? "—"} vCPU · ${r.max_ram ?? "—"} GB`;
-    if (tab === "oss") return r.hypervisor || t.hvUnknown;
+    if (tab === "oss") return displayTechField(r.hypervisor) || t.hvUnknown;
     return r.data_residency || r.origin || "—";
   }
 
@@ -197,10 +197,10 @@ export function ArenaView({ rows }: { rows: ArenaRow[] }) {
                         {t.chipAsk}
                       </span>
                     )}
-                    {r.hypervisor ? (
+                    {displayTechField(r.hypervisor) ? (
                       <span className="status-chip">
                         <Icon name="server" size={14} />
-                        {r.hypervisor}
+                        {displayTechField(r.hypervisor)}
                       </span>
                     ) : (
                       <span className="status-chip warn">

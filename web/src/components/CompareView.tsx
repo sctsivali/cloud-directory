@@ -5,6 +5,7 @@ import { useLang } from "./Language";
 import { Icon } from "./Icon";
 import type { ArenaRow } from "@/lib/db";
 import { loadCompare, saveCompare } from "@/lib/needs";
+import { displayTechField } from "@/lib/tech";
 
 export function CompareView({ rows }: { rows: ArenaRow[] }) {
   const { t } = useLang();
@@ -55,7 +56,7 @@ export function CompareView({ rows }: { rows: ArenaRow[] }) {
               {t.scoreSov} {r.sov_score} · {t.scoreOss} {r.oss_score} · {t.scoreConf} {r.conf_score}
             </p>
             <p className="meta">
-              {t.colHv}: {r.hypervisor || t.hvUnknown}
+              {t.colHv}: {displayTechField(r.hypervisor) || t.hvUnknown}
             </p>
             <p className="meta">
               {t.from} {r.min_price != null ? `$${r.min_price.toFixed(2)}` : "—"}

@@ -2,12 +2,16 @@
 
 import { Icon } from "./Icon";
 import { useLang } from "./Language";
-import { firstTechSlug, stackBlob } from "@/lib/tech";
+import { firstTechSlug, displayTechField, stackBlob } from "@/lib/tech";
 import type { ProviderDetail } from "@/lib/db";
 
 export function ProviderView({ data }: { data: ProviderDetail }) {
   const { t } = useLang();
-  const hvSlug = firstTechSlug(stackBlob({ hypervisor: data.hypervisor, orchestration: data.orchestration, storage: data.storage }));
+  const hv = displayTechField(data.hypervisor);
+  const orch = displayTechField(data.orchestration);
+  const stor = displayTechField(data.storage);
+  const cp = displayTechField(data.control_plane);
+  const hvSlug = firstTechSlug(stackBlob({ hypervisor: hv, orchestration: orch, storage: stor }));
   return (
     <>
       <p className="kicker">
@@ -24,9 +28,9 @@ export function ProviderView({ data }: { data: ProviderDetail }) {
       </p>
       <p className="section-sub">
         {t.beginnerKnown}: {data.hq_country || "—"}
-        {data.hypervisor ? ` · ${data.hypervisor.split("(")[0].trim()}` : ""}
+        {hv ? ` · ${hv}` : ""}
         {data.source_url ? ` · ${t.fieldSrc}` : ""}. {t.beginnerUnknown}:{" "}
-        {[!data.hypervisor ? t.fieldHv : "", !data.cities.some((c) => c.listed) ? t.fieldBldg : "", !data.source_url ? t.fieldSrc : ""]
+        {[!hv ? t.fieldHv : "", !data.cities.some((c) => c.listed) ? t.fieldBldg : "", !data.source_url ? t.fieldSrc : ""]
           .filter(Boolean)
           .join(" · ") || t.resultUnkNone}
       </p>
@@ -66,12 +70,8 @@ export function ProviderView({ data }: { data: ProviderDetail }) {
           <div className="city">
             <b>{t.fieldHv}</b>
             <span>
-              {(data.hypervisor || t.evUnknown).split("(")[0].trim()} ·{" "}
-              {!data.hypervisor
-                ? t.evUnknown
-                : /likely|implied|typical|unknown/i.test(data.hypervisor)
-                  ? t.evInferred
-                  : t.evClaimed}
+              {hv || t.hvUnknown} ·{" "}
+              {!hv ? t.evUnknown : t.evClaimed}
             </span>
           </div>
           <div className="city">
@@ -126,20 +126,20 @@ export function ProviderView({ data }: { data: ProviderDetail }) {
           <div className="city">
             <b>Hypervisor</b>
             <span>
-              {hvSlug ? <a href={`/tech/${hvSlug}`}>{data.hypervisor}</a> : data.hypervisor || t.hvUnknown}
+              {hvSlug ? <a href={`/tech/${hvSlug}`}>{hv}</a> : hv || t.hvUnknown}
             </span>
           </div>
           <div className="city">
             <b>Orkestrasi</b>
-            <span>{data.orchestration || "—"}</span>
+            <span>{orch || t.hvUnknown}</span>
           </div>
           <div className="city">
             <b>Storage</b>
-            <span>{data.storage || "—"}</span>
+            <span>{stor || t.hvUnknown}</span>
           </div>
           <div className="city">
             <b>Control plane</b>
-            <span>{data.control_plane || "—"}</span>
+            <span>{cp || t.hvUnknown}</span>
           </div>
         </div>
         {data.sea_strength && !/strong|high/i.test(data.sea_strength) ? <p className="section-sub">{data.sea_strength}</p> : null}
@@ -188,17 +188,17 @@ export function ProviderView({ data }: { data: ProviderDetail }) {
                     {` · ${tier.ram_gb ?? "—"} GB`}
                   </div>
                   <div className="meta">
-                    {tier.hypervisor
-                      ? firstTechSlug(stackBlob({ hypervisor: tier.hypervisor }))
+                    {displayTechField(tier.hypervisor)
+                      ? firstTechSlug(stackBlob({ hypervisor: displayTechField(tier.hypervisor) }))
                         ? (
-                            <a href={`/tech/${firstTechSlug(stackBlob({ hypervisor: tier.hypervisor }))}`}>
-                              {tier.hypervisor.split("(")[0].trim()}
+                            <a href={`/tech/${firstTechSlug(stackBlob({ hypervisor: displayTechField(tier.hypervisor) }))}`}>
+                              {displayTechField(tier.hypervisor)}
                             </a>
                           )
-                        : tier.hypervisor.split("(")[0].trim()
+                        : displayTechField(tier.hypervisor)
                       : t.hvUnknown}
-                    {tier.orchestration ? ` · ${tier.orchestration.split("(")[0].trim()}` : ""}
-                    {tier.container_runtime ? ` · ${tier.container_runtime.split(",")[0].trim()}` : ""}
+                    {displayTechField(tier.orchestration) ? ` · ${displayTechField(tier.orchestration)}` : ""}
+                    {displayTechField(tier.container_runtime) ? ` · ${displayTechField(tier.container_runtime)}` : ""}
                   </div>
                   <div className="meta">
                     {t.provSov} {tier.sov_score ?? "—"} · {t.provOss} {tier.oss_score ?? "—"}

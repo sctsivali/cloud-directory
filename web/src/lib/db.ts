@@ -13,19 +13,24 @@ if (!globalForPg.pool) globalForPg.pool = pool;
 
 const ASEAN = `'Indonesia','Malaysia','Singapore','Thailand','Vietnam','Philippines','Cambodia','Laos','Myanmar','Brunei'`;
 
+const CITY_NAMED = `
+  btrim(COALESCE(%CITY%,'')) <> ''
+  AND btrim(%CITY%) !~* '^(undisclosed|unknown|not disclosed)'
+`;
+
 const SOV = `
   (
     CASE WHEN EXISTS (
       SELECT 1 FROM tiers tx
       WHERE tx.provider_id = p.id
         AND tx.status = 'OK'
-        AND COALESCE(tx.dc_city,'') <> 'Undisclosed'
+        AND ${CITY_NAMED.replaceAll("%CITY%", "tx.dc_city")}
         AND COALESCE(tx.dc_country,'') IN (${ASEAN})
     ) OR EXISTS (
       SELECT 1 FROM provider_locations pl
       JOIN locations l ON l.id = pl.location_id
       WHERE pl.provider_id = p.id
-        AND COALESCE(l.city,'') <> 'Undisclosed'
+        AND ${CITY_NAMED.replaceAll("%CITY%", "l.city")}
         AND l.country IN (${ASEAN})
     ) THEN 40 ELSE 0 END
     + CASE WHEN COALESCE(NULLIF(p.legal_country,''), p.hq_country, '') IN (${ASEAN})
@@ -34,7 +39,7 @@ const SOV = `
         SELECT 1 FROM tiers tx
         WHERE tx.provider_id = p.id
           AND tx.status = 'OK'
-          AND COALESCE(tx.dc_city,'') <> 'Undisclosed'
+          AND ${CITY_NAMED.replaceAll("%CITY%", "tx.dc_city")}
           AND tx.dc_country = p.legal_country
       ) THEN 15 ELSE 0 END
     + CASE WHEN EXISTS (
@@ -49,9 +54,10 @@ const CONF = `
   (
     CASE WHEN COALESCE(p.hq_country,'') <> '' THEN 20 ELSE 0 END
     + CASE
-        WHEN COALESCE(st.hypervisor,'') ~* 'likely|implied|typical|unknown' THEN 10
-        WHEN COALESCE(st.hypervisor,'') <> '' THEN 20
-        ELSE 0
+        WHEN btrim(COALESCE(st.hypervisor,'')) = '' THEN 0
+        WHEN COALESCE(st.hypervisor,'') ~* 'likely|implied|typical|unknown|confirmed:|not disclosed|belum ditemukan|sales model|derived' THEN 0
+        WHEN length(btrim(st.hypervisor)) > 60 THEN 0
+        ELSE 20
       END
     + CASE WHEN EXISTS (
         SELECT 1 FROM provider_buildings pb
@@ -62,7 +68,7 @@ const CONF = `
         SELECT 1 FROM tiers tx
         WHERE tx.provider_id = p.id
           AND COALESCE(tx.dc_country,'') <> ''
-          AND COALESCE(tx.dc_city,'') <> 'Undisclosed'
+          AND ${CITY_NAMED.replaceAll("%CITY%", "tx.dc_city")}
       ) THEN 15 ELSE 0 END
     + CASE WHEN EXISTS (
         SELECT 1 FROM sources so
