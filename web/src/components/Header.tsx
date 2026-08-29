@@ -52,6 +52,7 @@ export function Header() {
         <a className="brand" href="/" onClick={() => setOpen(false)}>
           <img src="/cia-logo.png" alt="Cloud in Asia" className="brand-logo brand-logo-dark" />
           <img src="/cia-logo-light.png" alt="Cloud in Asia" className="brand-logo brand-logo-light" />
+          <span className="brand-pill">{t.brandGuide}</span>
         </a>
         <nav className="topnav" aria-label="Primary">
           {primary.map((item) => (

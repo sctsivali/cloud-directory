@@ -3,6 +3,7 @@ export type Lang = "id" | "en";
 export const COPY = {
   id: {
     brand: "Cloud in Asia",
+    brandGuide: "Guide",
     navLearn: "Belajar",
     navOverview: "Beranda",
     navBuildings: "Pusat Data",
@@ -358,6 +359,7 @@ export const COPY = {
   },
   en: {
     brand: "Cloud in Asia",
+    brandGuide: "Guide",
     navLearn: "Learn",
     navOverview: "Home",
     navBuildings: "Data Centres",
