@@ -1,0 +1,46 @@
+{
+  "provider": {
+    "id": "zcom_th",
+    "name": "Z.com Cloud TH",
+    "hq_country": "Thailand",
+    "hq_city": null,
+    "origin": "local",
+    "provider_type": "IaaS",
+    "is_local_asean": true,
+    "website": "https://cloud.z.com/th/",
+    "legal_country": "Thailand",
+    "legal_note": "Footer: GMO-Z.com NetDesign Co., Ltd. / Netdesign Host Co Ltd."
+  },
+  "sources": [
+    "https://cloud.z.com/th/",
+    "https://cloud.z.com/th/cloud/pricing/",
+    "https://cloud.z.com/th/cloud/docs/"
+  ],
+  "stack": {
+    "hypervisor": null,
+    "orchestration": null,
+    "storage": null,
+    "container_runtime": null,
+    "control_plane": null,
+    "source_url": "https://cloud.z.com/th/cloud/pricing/"
+  },
+  "sovereignty": {"data_residency": "local"},
+  "locations": [{"city": "Undisclosed", "country": "Thailand"}],
+  "buildings": [],
+  "currency": "THB",
+  "dc_city": "Undisclosed",
+  "dc_country": "Thailand",
+  "dc_location": "Undisclosed building",
+  "scraped_from": "https://cloud.z.com/th/cloud/pricing/",
+  "notes": "Printed monthly cards C1–C8 (บาท/เดือน). Hourly rates exist; monthly printed wins. Linux default; Windows license extra omitted. Title keyword OpenStack is not a product claim that the cloud runs on OpenStack. No DC city or hall named. Prices Thailand-only, VAT excluded.",
+  "tiers": [
+    {"id": "zcom-th-c1", "tier_name": "C1", "vcpu": 1, "ram_gb": 1, "storage_gb": 20, "storage_type": "SSD", "currency": "THB", "price_amount": 400, "price_native": "400 THB/month"},
+    {"id": "zcom-th-c2", "tier_name": "C2", "vcpu": 2, "ram_gb": 2, "storage_gb": 50, "storage_type": "SSD", "currency": "THB", "price_amount": 600, "price_native": "600 THB/month"},
+    {"id": "zcom-th-c3", "tier_name": "C3", "vcpu": 4, "ram_gb": 4, "storage_gb": 50, "storage_type": "SSD", "currency": "THB", "price_amount": 1200, "price_native": "1,200 THB/month"},
+    {"id": "zcom-th-c4", "tier_name": "C4", "vcpu": 4, "ram_gb": 8, "storage_gb": 50, "storage_type": "SSD", "currency": "THB", "price_amount": 2000, "price_native": "2,000 THB/month"},
+    {"id": "zcom-th-c5", "tier_name": "C5", "vcpu": 8, "ram_gb": 8, "storage_gb": 50, "storage_type": "SSD", "currency": "THB", "price_amount": 2400, "price_native": "2,400 THB/month"},
+    {"id": "zcom-th-c6", "tier_name": "C6", "vcpu": 8, "ram_gb": 16, "storage_gb": 50, "storage_type": "SSD", "currency": "THB", "price_amount": 4000, "price_native": "4,000 THB/month"},
+    {"id": "zcom-th-c7", "tier_name": "C7", "vcpu": 12, "ram_gb": 32, "storage_gb": 50, "storage_type": "SSD", "currency": "THB", "price_amount": 8000, "price_native": "8,000 THB/month"},
+    {"id": "zcom-th-c8", "tier_name": "C8", "vcpu": 24, "ram_gb": 64, "storage_gb": 50, "storage_type": "SSD", "currency": "THB", "price_amount": 16000, "price_native": "16,000 THB/month"}
+  ]
+}
