@@ -85,6 +85,13 @@ html[data-theme="light"] .brand-logo-light { display: block; }
 .nav-more-panel .top-link.active { box-shadow: inset 2px 0 0 var(--cia); }
 .mobile-more-label { padding: 0.6rem 1.25rem 0.15rem; margin: 0; }
 .top-tools { display: flex; align-items: center; gap: 8px; flex: none; }
+.top-home {
+  display: inline-flex; align-items: center; gap: 6px;
+  color: var(--muted); font-size: 0.8rem; text-decoration: none;
+  white-space: nowrap; padding: 0 0.4rem; height: 3.5rem;
+}
+.top-home:hover { color: var(--cia); }
+.top-home svg { flex: none; }
 .menu-btn, .mobile-nav { display: none; }
 .nav-label {
   font-size: 0.72rem; letter-spacing: 0.16em; text-transform: uppercase;

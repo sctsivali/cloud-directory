@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { ThemeToggle } from "./ThemeToggle";
 import { LanguageToggle } from "./LanguageToggle";
 import { useLang } from "./Language";
+import { Icon } from "./Icon";
 
 type LinkItem = { href: string; label: string; active: boolean };
 
@@ -87,6 +88,10 @@ export function Header() {
           </div>
         </nav>
         <div className="top-tools">
+          <a className="top-home" href="https://cloudinasia.com" aria-label={t.navMainSiteAria}>
+            <Icon name="external" size={16} />
+            <span>{t.navMainSite}</span>
+          </a>
           <LanguageToggle />
           <ThemeToggle />
         </div>
@@ -102,6 +107,9 @@ export function Header() {
       </div>
       {open && (
         <nav id="mobile-nav" className="mobile-nav" aria-label="Mobile">
+          <a className="top-link" href="https://cloudinasia.com" aria-label={t.navMainSiteAria} onClick={() => setOpen(false)}>
+            {t.navMainSite}
+          </a>
           {primary.map((item) => (
             <a
               key={item.href}
