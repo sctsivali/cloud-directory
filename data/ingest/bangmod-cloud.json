@@ -1,38 +1,47 @@
 {
-  "currency": "THB",
   "provider": {
     "id": "bangmod_cloud",
     "name": "Bangmod.Cloud",
     "hq_country": "Thailand",
-    "hq_city": null,
+    "hq_city": "Bangkok",
     "origin": "local",
     "provider_type": "IaaS",
     "is_local_asean": true,
     "website": "https://bangmod.cloud/",
     "legal_country": "Thailand",
-    "legal_note": null
+    "legal_note": "Bangmod Enterprise Co., Ltd. HQ: Hong's Tower, Bang Khun Thian (office, not a DC hall). Singapore entity Bangmod Cloud Pte. Ltd. is also listed."
   },
-  "sources": ["https://bangmod.cloud/", "https://bangmod.cloud/cloud-server/"],
-  "stack": {"hypervisor": null, "source_url": "https://bangmod.cloud/cloud-server/"},
+  "sources": [
+    "https://bangmod.cloud/",
+    "https://bangmod.cloud/cloud-server/",
+    "https://bangmod.cloud/data-center/",
+    "https://bangmod.cloud/about/"
+  ],
+  "stack": {
+    "hypervisor": null,
+    "orchestration": null,
+    "storage": null,
+    "container_runtime": null,
+    "control_plane": null,
+    "source_url": "https://bangmod.cloud/cloud-server/"
+  },
   "sovereignty": {"data_residency": "local"},
   "locations": [{"city": "Undisclosed", "country": "Thailand"}],
   "buildings": [],
+  "currency": "THB",
   "dc_city": "Undisclosed",
   "dc_country": "Thailand",
   "dc_location": "Undisclosed building",
   "scraped_from": "https://bangmod.cloud/cloud-server/",
-  "notes": "Only Linux-512MB-20GB had a complete public card. Other THB figures not paired to specs. DC in Thailand, hall unnamed.",
+  "notes": "Linux Cloud Server table, printed Price / Month. Windows and Managed/Plesk/DirectAdmin tables omitted. Hourly column exists; monthly printed wins. Nav items Private Cloud OpenStack / Proxmox are private-cloud products, not the public VM hypervisor. data-center page names CSL as the Thailand operator with 9 sites (Bangrak, Ratchada, etc.) — no single hall quoted for these SKUs. Equinix Singapore is mentioned as under revision; not attached.",
   "tiers": [
-    {
-      "id": "bangmod-linux-512mb-20gb",
-      "tier_name": "Linux-512MB-20GB",
-      "vcpu": 1,
-      "ram_gb": 0.5,
-      "storage_gb": 20,
-      "storage_type": "SSD",
-      "price_amount": 159,
-      "currency": "THB",
-      "price_native": "159 THB"
-    }
+    {"id": "bangmod-linux-512mb-20gb", "tier_name": "Linux-512MB-20GB", "vcpu": 1, "ram_gb": 0.5, "storage_gb": 20, "storage_type": "SSD", "currency": "THB", "price_amount": 159, "price_native": "159 THB/month"},
+    {"id": "bangmod-linux-1gb-30gb", "tier_name": "Linux-1GB-30GB", "vcpu": 2, "ram_gb": 1, "storage_gb": 30, "storage_type": "SSD", "currency": "THB", "price_amount": 289, "price_native": "289 THB/month"},
+    {"id": "bangmod-linux-2gb-40gb", "tier_name": "Linux-2GB-40GB", "vcpu": 3, "ram_gb": 2, "storage_gb": 40, "storage_type": "SSD", "currency": "THB", "price_amount": 599, "price_native": "599 THB/month"},
+    {"id": "bangmod-linux-4gb-50gb", "tier_name": "Linux-4GB-50GB", "vcpu": 4, "ram_gb": 4, "storage_gb": 50, "storage_type": "SSD", "currency": "THB", "price_amount": 719, "price_native": "719 THB/month"},
+    {"id": "bangmod-linux-6gb-60gb", "tier_name": "Linux-6GB-60GB", "vcpu": 6, "ram_gb": 6, "storage_gb": 60, "storage_type": "SSD", "currency": "THB", "price_amount": 1299, "price_native": "1,299 THB/month"},
+    {"id": "bangmod-linux-8gb-70gb", "tier_name": "Linux-8GB-70GB", "vcpu": 8, "ram_gb": 8, "storage_gb": 70, "storage_type": "SSD", "currency": "THB", "price_amount": 1699, "price_native": "1,699 THB/month"},
+    {"id": "bangmod-linux-16gb-80gb", "tier_name": "Linux-16GB-80GB", "vcpu": 8, "ram_gb": 16, "storage_gb": 80, "storage_type": "SSD", "currency": "THB", "price_amount": 2499, "price_native": "2,499 THB/month"},
+    {"id": "bangmod-linux-32gb-120gb", "tier_name": "Linux-32GB-120GB", "vcpu": 12, "ram_gb": 32, "storage_gb": 120, "storage_type": "SSD", "currency": "THB", "price_amount": 5499, "price_native": "5,499 THB/month"}
   ]
 }
