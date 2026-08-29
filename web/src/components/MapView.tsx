@@ -167,8 +167,8 @@ export function MapView({ links, sites = [], hero = false }: { links: MapLink[];
     const map = L.map(mapEl.current, { zoomControl: false, attributionControl: false, minZoom: 2, worldCopyJump: true }).setView([4.5, 115], 4);
     const light = document.documentElement.getAttribute("data-theme") === "light";
     const tiles = light
-      ? "https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png"
-      : "https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png";
+      ? "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}"
+      : "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}";
     L.tileLayer(tiles, { maxZoom: 11 }).addTo(map);
     mapRef.current = map;
     const stroke = light ? "#8a8a8a" : "#666";
