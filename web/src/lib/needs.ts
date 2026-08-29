@@ -154,6 +154,26 @@ export const SECTOR_EXTRAS: Record<Sector, ExtraQ[]> = {
         { id: "unknown", idLabel: "Belum tahu", enLabel: "Not sure yet" },
       ],
     },
+    {
+      key: "entity",
+      idTitle: "Kontrak harus dengan badan di negara instansi?",
+      enTitle: "Must the contract be with an entity in the agency’s country?",
+      options: [
+        { id: "local_entity", idLabel: "Ya, badan lokal", enLabel: "Yes, a local entity" },
+        { id: "foreign_ok", idLabel: "Badan asing masih bisa", enLabel: "A foreign entity can still work" },
+        { id: "unknown", idLabel: "Belum tahu", enLabel: "Not sure yet" },
+      ],
+    },
+    {
+      key: "docs",
+      idTitle: "Perlu dokumen penyedia yang bisa dicek (kebijakan, SLA, sumber publik)?",
+      enTitle: "Do you need provider documents you can check (policy, SLA, public sources)?",
+      options: [
+        { id: "need_docs", idLabel: "Ya, harus ada jejak bukti", enLabel: "Yes, evidence must be traceable" },
+        { id: "later", idLabel: "Nanti saja", enLabel: "Later" },
+        { id: "unknown", idLabel: "Belum tahu", enLabel: "Not sure yet" },
+      ],
+    },
   ],
   fsi: [
     {
@@ -173,6 +193,26 @@ export const SECTOR_EXTRAS: Record<Sector, ExtraQ[]> = {
       options: [
         { id: "need_hall", idLabel: "Ya, gedung harus tertulis", enLabel: "Yes, the hall must be named" },
         { id: "city_enough", idLabel: "Kota saja cukup", enLabel: "City is enough" },
+        { id: "unknown", idLabel: "Belum tahu", enLabel: "Not sure yet" },
+      ],
+    },
+    {
+      key: "entity",
+      idTitle: "Entitas kontrak harus badan di negara operasi?",
+      enTitle: "Must the contracting entity be in the operating country?",
+      options: [
+        { id: "local_entity", idLabel: "Ya, badan lokal", enLabel: "Yes, a local entity" },
+        { id: "foreign_ok", idLabel: "Badan asing masih bisa", enLabel: "A foreign entity can still work" },
+        { id: "unknown", idLabel: "Belum tahu", enLabel: "Not sure yet" },
+      ],
+    },
+    {
+      key: "docs",
+      idTitle: "Perlu jejak bukti untuk audit internal?",
+      enTitle: "Do you need a paper trail for internal audit?",
+      options: [
+        { id: "need_docs", idLabel: "Ya, kebijakan dan lokasi harus tertulis", enLabel: "Yes, policy and location must be written" },
+        { id: "later", idLabel: "Nanti saja", enLabel: "Later" },
         { id: "unknown", idLabel: "Belum tahu", enLabel: "Not sure yet" },
       ],
     },
@@ -217,6 +257,26 @@ export const SECTOR_EXTRAS: Record<Sector, ExtraQ[]> = {
         { id: "stay_in_country", idLabel: "Data tinggal di negara kampus", enLabel: "Data stays in the campus country" },
         { id: "open_stack", idLabel: "Stack yang bisa diajarkan / dibuka", enLabel: "A stack we can teach or inspect" },
         { id: "cheap", idLabel: "Biaya lab yang terprediksi", enLabel: "Predictable lab cost" },
+      ],
+    },
+    {
+      key: "hall",
+      idTitle: "Perlu nama gedung DC yang bisa disebut ke pimpinan kampus?",
+      enTitle: "Do you need a DC hall name you can cite to campus leadership?",
+      options: [
+        { id: "need_hall", idLabel: "Ya, fasilitas bernama", enLabel: "Yes, a named facility" },
+        { id: "city_enough", idLabel: "Kota saja cukup", enLabel: "City is enough" },
+        { id: "unknown", idLabel: "Belum tahu", enLabel: "Not sure yet" },
+      ],
+    },
+    {
+      key: "ops",
+      idTitle: "Siapa yang akan mengoperasi cloud kampus?",
+      enTitle: "Who will operate the campus cloud?",
+      options: [
+        { id: "no_it", idLabel: "Belum ada tim IT", enLabel: "No IT team yet" },
+        { id: "small", idLabel: "Tim kecil", enLabel: "A small team" },
+        { id: "has_ops", idLabel: "Ada tim operasi", enLabel: "There is an ops team" },
       ],
     },
   ],
@@ -296,7 +356,7 @@ export function deriveNeeds(state: NeedsState): DerivedNeeds {
   if (state.priorities.includes("cost") || state.workloads.includes("web")) priorities.push({ id: "Biaya yang dapat dijelaskan", en: "Cost that can be explained" });
   if (state.priorities.includes("support") || state.priorities.includes("simple")) priorities.push({ id: "Dukungan dan kemudahan operasi", en: "Support and ease of operations" });
   if (state.priorities.includes("portability")) priorities.push({ id: "Portabilitas dan rencana keluar", en: "Portability and an exit plan" });
-  if (state.priorities.includes("docs") || highImpact) priorities.push({ id: "Kualitas dan keterlacakan bukti", en: "Evidence quality and traceability" });
+  if (state.priorities.includes("docs") || state.extras.docs === "need_docs" || highImpact) priorities.push({ id: "Kualitas dan keterlacakan bukti", en: "Evidence quality and traceability" });
   if (state.priorities.includes("location") || state.countries.length === 1) priorities.push({ id: "Kecocokan region dengan operasi Anda", en: "Region fit with your operations" });
   if (!priorities.length) priorities.push({ id: "Kecocokan layanan, harga publik, dan bukti yang ada", en: "Service fit, public pricing and available evidence" });
 
@@ -342,6 +402,7 @@ export function deriveNeeds(state: NeedsState): DerivedNeeds {
     state.extras.campus === "sis" ||
     state.extras.market === "domestic" ||
     state.extras.learn_focus === "control" ||
+    state.extras.docs === "need_docs" ||
     state.priorities.includes("location");
 
   let sort: DerivedNeeds["sort"] = "cost";
@@ -398,6 +459,41 @@ export function deriveNeeds(state: NeedsState): DerivedNeeds {
   if (state.extras.ops === "no_it" || state.extras.ops === "small") checklist.push({ id: "Tanya dukungan lokal dan siapa yang dihubungi saat gangguan.", en: "Ask about local support and who to call during an outage." });
 
   return { summary, priorities, unknowns, validate, sort, scope, country, why, checklist, highImpact };
+}
+
+export type Rankable = {
+  id: string;
+  name: string;
+  hq_country: string | null;
+  is_local_asean: boolean;
+  sov_score: number;
+  oss_score: number;
+  conf_score: number;
+  min_price: number | null;
+  loc_count: number;
+  max_vcpu: number | null;
+  max_ram: number | null;
+};
+
+export function shortlistProviders(rows: Rankable[], derived: DerivedNeeds, n = 4): Rankable[] {
+  function rank(list: Rankable[]) {
+    const copy = [...list];
+    copy.sort((a, b) => {
+      if (derived.sort === "sov") return b.sov_score - a.sov_score;
+      if (derived.sort === "oss") return b.oss_score - a.oss_score;
+      if (derived.sort === "conf") return b.conf_score - a.conf_score;
+      if (derived.sort === "cost") return (a.min_price ?? 9e9) - (b.min_price ?? 9e9);
+      if (derived.sort === "cover") return b.loc_count - a.loc_count;
+      return (b.max_vcpu ?? 0) - (a.max_vcpu ?? 0) || (b.max_ram ?? 0) - (a.max_ram ?? 0);
+    });
+    return copy;
+  }
+  let base = derived.scope === "asean" ? rows.filter((r) => r.is_local_asean) : rows;
+  if (derived.country !== "all") {
+    const local = base.filter((r) => (r.hq_country || "") === derived.country);
+    if (local.length >= 2) base = local;
+  }
+  return rank(base).slice(0, n);
 }
 
 function labelJoin(state: NeedsState, lang: "id" | "en") {
