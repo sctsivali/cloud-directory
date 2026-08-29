@@ -220,6 +220,7 @@ export type ProviderDetail = {
   orchestration: string | null;
   storage: string | null;
   control_plane: string | null;
+  container_runtime: string | null;
   virtualization: string | null;
   open_source: boolean | null;
   source_url: string | null;
@@ -257,7 +258,7 @@ export async function getProvider(id: string): Promise<ProviderDetail | null> {
     SELECT
       p.id, p.name, p.hq_country, p.legal_country, p.legal_note, p.origin, p.is_local_asean, p.provider_type,
       s.data_residency, s.sea_strength,
-      st.hypervisor, st.orchestration, st.storage, st.control_plane, st.virtualization, st.open_source, st.source_url,
+      st.hypervisor, st.orchestration, st.storage, st.control_plane, st.container_runtime, st.virtualization, st.open_source, st.source_url,
       ${SOV}::int AS sov_score,
       ${CONF}::int AS conf_score,
       (
@@ -295,6 +296,28 @@ export async function getProvider(id: string): Promise<ProviderDetail | null> {
              JOIN buildings b2 ON b2.id = pb2.building_id AND b2.listed
              WHERE pb2.provider_id = $1 AND b2.city = l.city AND b2.country = l.country
            )
+         UNION ALL
+         SELECT * FROM (
+           SELECT DISTINCT ON (t.dc_country, t.dc_city)
+             NULL::int AS id, t.dc_city AS city, t.dc_country AS country,
+             'Undisclosed building' AS building, FALSE AS listed,
+             NULL::text AS address, NULL::text AS operator
+           FROM tiers t
+           WHERE t.provider_id = $1 AND t.status = 'OK'
+             AND btrim(COALESCE(t.dc_city,'')) <> ''
+             AND t.dc_city !~* '^(undisclosed|unknown|not disclosed)'
+             AND NOT EXISTS (
+               SELECT 1 FROM provider_buildings pb2
+               JOIN buildings b2 ON b2.id = pb2.building_id AND b2.listed
+               WHERE pb2.provider_id = $1 AND b2.city = t.dc_city AND b2.country = t.dc_country
+             )
+             AND NOT EXISTS (
+               SELECT 1 FROM provider_locations pl2
+               JOIN locations l2 ON l2.id = pl2.location_id
+               WHERE pl2.provider_id = $1 AND l2.city = t.dc_city AND l2.country = t.dc_country
+             )
+           ORDER BY t.dc_country, t.dc_city
+         ) tier_cities
        ) loc
        ORDER BY listed DESC, country, city, building`,
       [id]

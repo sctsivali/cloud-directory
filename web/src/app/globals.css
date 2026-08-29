@@ -360,6 +360,7 @@ html[data-theme="dark"] .map-pop {
 .tabs button.active { background: var(--cia); color: #111; }
 .scope button.active { background: var(--yellow); color: #111; }
 .arena-list { margin-top: 0.5rem; }
+.arena-list .name { font-weight: 600; }
 .arena-cards { list-style: none; margin: 0.5rem 0 0; padding: 0; }
 .arena-card {
   display: grid; grid-template-columns: 1.75rem 1fr auto; gap: 12px;
@@ -405,7 +406,7 @@ html[data-theme="light"] .compare-fab { box-shadow: 0 10px 24px rgba(0,0,0,.18);
   padding: 12px 14px; border-radius: 12px;
   border: 1px solid #2a2a2a; background: #141414; color: var(--text);
 }
-.city b { display: block; font-weight: 400; }
+.city b { display: block; font-weight: 600; }
 .city span { color: var(--muted); font-size: 0.8rem; }
 .law-lead {
   margin-bottom: 12px;

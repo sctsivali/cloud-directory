@@ -5,13 +5,19 @@ import { useLang } from "./Language";
 import { firstTechSlug, displayTechField, stackBlob } from "@/lib/tech";
 import type { ProviderDetail } from "@/lib/db";
 
+function techLink(value: string | null | undefined, fallback: string) {
+  const shown = displayTechField(value);
+  if (!shown) return fallback;
+  const slug = firstTechSlug(
+    stackBlob({ hypervisor: shown, orchestration: shown, storage: shown, container_runtime: shown, control_plane: shown })
+  );
+  return slug ? <a href={`/tech/${slug}`}>{shown}</a> : shown;
+}
+
 export function ProviderView({ data }: { data: ProviderDetail }) {
   const { t } = useLang();
   const hv = displayTechField(data.hypervisor);
-  const orch = displayTechField(data.orchestration);
-  const stor = displayTechField(data.storage);
-  const cp = displayTechField(data.control_plane);
-  const hvSlug = firstTechSlug(stackBlob({ hypervisor: hv, orchestration: orch, storage: stor }));
+  const runtime = displayTechField(data.container_runtime);
   return (
     <>
       <p className="kicker">
@@ -124,23 +130,27 @@ export function ProviderView({ data }: { data: ProviderDetail }) {
         <h2>{t.provStack}</h2>
         <div className="city-grid">
           <div className="city">
-            <b>Hypervisor</b>
-            <span>
-              {hvSlug ? <a href={`/tech/${hvSlug}`}>{hv}</a> : hv || t.hvUnknown}
-            </span>
+            <b>{t.stackHv}</b>
+            <span>{techLink(data.hypervisor, t.hvUnknown)}</span>
           </div>
           <div className="city">
-            <b>Orkestrasi</b>
-            <span>{orch || t.hvUnknown}</span>
+            <b>{t.stackOrch}</b>
+            <span>{techLink(data.orchestration, t.hvUnknown)}</span>
           </div>
           <div className="city">
-            <b>Storage</b>
-            <span>{stor || t.hvUnknown}</span>
+            <b>{t.stackStor}</b>
+            <span>{techLink(data.storage, t.hvUnknown)}</span>
           </div>
           <div className="city">
-            <b>Control plane</b>
-            <span>{cp || t.hvUnknown}</span>
+            <b>{t.stackCp}</b>
+            <span>{techLink(data.control_plane, t.hvUnknown)}</span>
           </div>
+          {runtime ? (
+            <div className="city">
+              <b>{t.stackRuntime}</b>
+              <span>{techLink(data.container_runtime, t.hvUnknown)}</span>
+            </div>
+          ) : null}
         </div>
         {data.sea_strength && !/strong|high/i.test(data.sea_strength) ? <p className="section-sub">{data.sea_strength}</p> : null}
       </section>
@@ -151,18 +161,18 @@ export function ProviderView({ data }: { data: ProviderDetail }) {
           <p className="section-sub">{t.undisclosedBuilding}</p>
         ) : (
           <div className="city-grid">
-            {data.cities.slice(0, 24).map((c) => (
-              <div className="city" key={`${c.building}-${c.city}-${c.country}`}>
-                <b>
-                  {c.id ? <a href={`/building/${c.id}`}>{c.building}</a> : c.building}
-                </b>
-                <span>
-                  {c.city}, {c.country}
-                  {c.operator ? ` · ${c.operator}` : ""}
-                  {c.address ? ` · ${c.address}` : ""}
-                </span>
-              </div>
-            ))}
+            {data.cities.slice(0, 24).map((c) => {
+              const title = c.listed ? c.building : c.city || t.undisclosedBuilding;
+              const sub = c.listed
+                ? [c.city, c.country, c.operator, c.address].filter(Boolean).join(" · ")
+                : [t.undisclosedBuilding, c.country].filter(Boolean).join(" · ");
+              return (
+                <div className="city" key={`${c.building}-${c.city}-${c.country}`}>
+                  <b>{c.listed && c.id ? <a href={`/building/${c.id}`}>{title}</a> : title}</b>
+                  <span>{sub}</span>
+                </div>
+              );
+            })}
           </div>
         )}
       </section>
@@ -173,44 +183,41 @@ export function ProviderView({ data }: { data: ProviderDetail }) {
           <p className="section-sub">{t.noPlans}</p>
         ) : (
           <ol className="list arena-list">
-            {data.tiers.map((tier) => (
-              <li key={tier.id}>
-                <span className="rank">{tier.vcpu ?? "—"}</span>
-                <div className="arena-main">
-                  <div className="name">{tier.tier_name}</div>
-                  <div className="meta">
-                    {tier.dc_city === "Undisclosed" || tier.dc_location === "Undisclosed building"
-                      ? t.undisclosedBuilding
-                      : tier.dc_location || tier.dc_city || t.undisclosedBuilding}
-                    {tier.dc_country ? ` · ${tier.dc_country}` : ""}
-                    {tier.currency ? ` · ${tier.currency}` : ""}
-                    {tier.cpu_family ? ` · ${tier.cpu_family}` : ""}
-                    {` · ${tier.ram_gb ?? "—"} GB`}
+            {data.tiers.map((tier, i) => {
+              const cityLine =
+                tier.dc_city === "Undisclosed" || tier.dc_location === "Undisclosed building"
+                  ? t.undisclosedBuilding
+                  : [tier.dc_city || tier.dc_location, tier.dc_country].filter(Boolean).join(" · ") || t.undisclosedBuilding;
+              const specs = [
+                tier.vcpu != null ? `${tier.vcpu} vCPU` : null,
+                tier.ram_gb != null ? `${tier.ram_gb} GB RAM` : null,
+                tier.storage_gb != null ? `${tier.storage_gb} GB${tier.storage_type ? ` ${tier.storage_type}` : ""}` : null,
+                cityLine,
+              ]
+                .filter(Boolean)
+                .join(" · ");
+              return (
+                <li key={tier.id}>
+                  <span className="rank">{i + 1}</span>
+                  <div className="arena-main">
+                    <div className="name">{tier.tier_name}</div>
+                    <div className="meta">{specs}</div>
+                    <div className="meta">
+                      {techLink(tier.hypervisor, t.hvUnknown)}
+                      {displayTechField(tier.orchestration) ? <> · {techLink(tier.orchestration, "")}</> : null}
+                    </div>
+                    <div className="meta">
+                      {tier.price_native ? `${tier.price_native}` : ""}
+                      {tier.currency && !String(tier.price_native || "").includes(tier.currency) ? ` · ${tier.currency}` : ""}
+                    </div>
                   </div>
-                  <div className="meta">
-                    {displayTechField(tier.hypervisor)
-                      ? firstTechSlug(stackBlob({ hypervisor: displayTechField(tier.hypervisor) }))
-                        ? (
-                            <a href={`/tech/${firstTechSlug(stackBlob({ hypervisor: displayTechField(tier.hypervisor) }))}`}>
-                              {displayTechField(tier.hypervisor)}
-                            </a>
-                          )
-                        : displayTechField(tier.hypervisor)
-                      : t.hvUnknown}
-                    {displayTechField(tier.orchestration) ? ` · ${displayTechField(tier.orchestration)}` : ""}
-                    {displayTechField(tier.container_runtime) ? ` · ${displayTechField(tier.container_runtime)}` : ""}
+                  <div className="arena-score">
+                    <span className="score-label">{t.from} USD/bln</span>
+                    <span className="score">${Number(tier.price_usd_month).toFixed(2)}</span>
                   </div>
-                  <div className="meta">
-                    {t.provSov} {tier.sov_score ?? "—"} · {t.provOss} {tier.oss_score ?? "—"}
-                    {tier.price_native ? ` · ${tier.price_native}` : ""}
-                  </div>
-                </div>
-                <div className="arena-score">
-                  <span className="score-label">{t.from} USD/bln</span>
-                  <span className="score">${Number(tier.price_usd_month).toFixed(2)}</span>
-                </div>
-              </li>
-            ))}
+                </li>
+              );
+            })}
           </ol>
         )}
         <div className="cta-row start-actions">
