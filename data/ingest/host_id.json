@@ -1,0 +1,47 @@
+{
+  "provider": {
+    "id": "host_id",
+    "name": "Host.id",
+    "hq_country": "Indonesia",
+    "hq_city": null,
+    "origin": "local",
+    "provider_type": "IaaS",
+    "is_local_asean": true,
+    "website": "https://host.id/",
+    "legal_country": "Indonesia",
+    "legal_note": null
+  },
+  "sources": [
+    "https://host.id/",
+    "https://host.id/vps/"
+  ],
+  "stack": {
+    "hypervisor": "KVM",
+    "orchestration": null,
+    "storage": null,
+    "container_runtime": null,
+    "control_plane": null,
+    "source_url": "https://host.id/vps/"
+  },
+  "sovereignty": {"data_residency": "local"},
+  "locations": [{"city": "Jakarta", "country": "Indonesia"}],
+  "buildings_named": [],
+  "currency": "IDR",
+  "dc_city": "Jakarta",
+  "dc_country": "Indonesia",
+  "dc_location": "Undisclosed building",
+  "scraped_from": "https://host.id/vps/",
+  "notes": "Cloud VPS page: KVM Based Virtualizations; Tier-3 data center in Jakarta, no hall name. IPMI KVM is console, not HV. Monthly IDR cards Lite/Pro.",
+  "tiers": [
+    {"id": "host_id-lite-1-1", "tier_name": "Lite 1.1", "vcpu": 1, "ram_gb": 1, "storage_gb": 20, "storage_type": "NVMe", "currency": "IDR", "price_amount": 75000, "price_native": "Rp75.000 / Month"},
+    {"id": "host_id-lite-2-1", "tier_name": "Lite 2.1", "vcpu": 1, "ram_gb": 2, "storage_gb": 20, "storage_type": "NVMe", "currency": "IDR", "price_amount": 100000, "price_native": "Rp100.000 / Month"},
+    {"id": "host_id-lite-2-2", "tier_name": "Lite 2.2", "vcpu": 2, "ram_gb": 2, "storage_gb": 20, "storage_type": "NVMe", "currency": "IDR", "price_amount": 125000, "price_native": "Rp125.000 / Month"},
+    {"id": "host_id-lite-4-2", "tier_name": "Lite 4.2", "vcpu": 2, "ram_gb": 4, "storage_gb": 40, "storage_type": "NVMe", "currency": "IDR", "price_amount": 150000, "price_native": "Rp150.000 / Month"},
+    {"id": "host_id-lite-4-4", "tier_name": "Lite 4.4", "vcpu": 4, "ram_gb": 4, "storage_gb": 40, "storage_type": "NVMe", "currency": "IDR", "price_amount": 175000, "price_native": "Rp175.000 / Month"},
+    {"id": "host_id-pro-8-4", "tier_name": "Pro 8.4", "vcpu": 4, "ram_gb": 8, "storage_gb": 80, "storage_type": "NVMe", "currency": "IDR", "price_amount": 365000, "price_native": "Rp365.000 / Month"},
+    {"id": "host_id-pro-8-8", "tier_name": "Pro 8.8", "vcpu": 8, "ram_gb": 8, "storage_gb": 80, "storage_type": "NVMe", "currency": "IDR", "price_amount": 450000, "price_native": "Rp450.000 / Month"},
+    {"id": "host_id-pro-16-8", "tier_name": "Pro 16.8", "vcpu": 8, "ram_gb": 16, "storage_gb": 160, "storage_type": "NVMe", "currency": "IDR", "price_amount": 750000, "price_native": "Rp750.000 / Month"},
+    {"id": "host_id-pro-16-16", "tier_name": "Pro 16.16", "vcpu": 16, "ram_gb": 16, "storage_gb": 160, "storage_type": "NVMe", "currency": "IDR", "price_amount": 900000, "price_native": "Rp900.000 / Month"},
+    {"id": "host_id-pro-32-16", "tier_name": "Pro 32.16", "vcpu": 16, "ram_gb": 32, "storage_gb": 320, "storage_type": "NVMe", "currency": "IDR", "price_amount": 1300000, "price_native": "Rp1.300.000 / Month"}
+  ]
+}

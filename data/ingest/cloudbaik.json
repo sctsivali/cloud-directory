@@ -1,0 +1,36 @@
+{
+  "provider": {
+    "id": "cloudbaik",
+    "name": "CloudBaik",
+    "hq_country": "Indonesia",
+    "hq_city": null,
+    "origin": "local",
+    "provider_type": "IaaS",
+    "is_local_asean": true,
+    "website": "https://cloudbaik.com/",
+    "legal_country": "Indonesia",
+    "legal_note": null
+  },
+  "sources": [
+    "https://cloudbaik.com/"
+  ],
+  "stack": {
+    "hypervisor": null,
+    "orchestration": null,
+    "storage": null,
+    "container_runtime": null,
+    "control_plane": null,
+    "source_url": "https://cloudbaik.com/"
+  },
+  "sovereignty": {"data_residency": "local"},
+  "locations": [{"city": "Undisclosed", "country": "Indonesia"}],
+  "buildings_named": [],
+  "currency": "IDR",
+  "dc_city": "Undisclosed",
+  "dc_country": "Indonesia",
+  "dc_location": "Undisclosed building",
+  "scraped_from": "https://cloudbaik.com/",
+  "allow_no_tiers": true,
+  "notes": "Homepage is a CPU/RAM/storage slider, no complete public monthly cards. Docker/Kubernetes mentioned as guest/app support, not the public-cloud hypervisor. No DC city or hall named.",
+  "tiers": []
+}
