@@ -1,0 +1,10 @@
+BEGIN;
+INSERT INTO providers (id,name,hq_country,hq_city,origin,provider_type,is_local_asean,website,legal_country,legal_note) VALUES ('hostdata_id','HostData.id','Indonesia',NULL,'local','IaaS',TRUE,'https://hostdata.id/','Indonesia',NULL) ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, hq_country=EXCLUDED.hq_country, hq_city=EXCLUDED.hq_city, origin=EXCLUDED.origin, provider_type=EXCLUDED.provider_type, is_local_asean=EXCLUDED.is_local_asean, website=EXCLUDED.website, legal_country=EXCLUDED.legal_country, legal_note=EXCLUDED.legal_note;
+INSERT INTO stacks (provider_id, hypervisor, orchestration, storage, container_runtime, control_plane, source_url) VALUES ('hostdata_id','KVM',NULL,NULL,NULL,NULL,'https://hostdata.id/, https://hostdata.id/vps') ON CONFLICT (provider_id) DO UPDATE SET hypervisor=EXCLUDED.hypervisor, orchestration=EXCLUDED.orchestration, storage=EXCLUDED.storage, container_runtime=EXCLUDED.container_runtime, control_plane=EXCLUDED.control_plane, source_url=EXCLUDED.source_url;
+INSERT INTO sovereignty (provider_id, data_residency) VALUES ('hostdata_id','local') ON CONFLICT (provider_id) DO UPDATE SET data_residency=EXCLUDED.data_residency;
+DELETE FROM sources WHERE provider_id = 'hostdata_id';
+INSERT INTO sources (provider_id, url, scraped_at, status) VALUES ('hostdata_id','https://hostdata.id/', now(), 'OK');
+INSERT INTO sources (provider_id, url, scraped_at, status) VALUES ('hostdata_id','https://hostdata.id/vps', now(), 'OK');
+INSERT INTO locations (city, country) VALUES ('Jakarta','Indonesia') ON CONFLICT (city, country) DO NOTHING;
+INSERT INTO provider_locations (provider_id, location_id) SELECT 'hostdata_id', id FROM locations WHERE city='Jakarta' AND country='Indonesia' ON CONFLICT DO NOTHING;
+COMMIT;
