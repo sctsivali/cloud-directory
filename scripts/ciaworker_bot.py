@@ -301,7 +301,9 @@ def notify_row(tok: str, rid: int) -> None:
 
 def notify_pending(tok: str) -> None:
     out = psql(
-        "SELECT id FROM provider_pipeline WHERE notified_at IS NULL ORDER BY id LIMIT 10;"
+        "SELECT id FROM provider_pipeline "
+        "WHERE notified_at IS NULL AND status IN ('live','rejected') "
+        "ORDER BY id LIMIT 10;"
     )
     for line in out.splitlines():
         if line.strip().isdigit():

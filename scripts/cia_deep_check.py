@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Process one provider_pipeline row with status=queued.
+"""Process one queued row: first-party draft only.
 
-Deep Intelligence Check: full-site first-party fetch. Writes a draft JSON. Does NOT ingest Guide.
-Moves row to needs_review and notifies the ops group. Silent if queue empty.
+Does NOT write Guide. Status becomes ingested (= ready for apply).
+Silent if queue empty. Redaksi is notified only when mark_live runs.
 """
 from __future__ import annotations
 
@@ -119,7 +119,7 @@ def main() -> None:
         f"UPDATE provider_pipeline SET status='ingested', reason='{esc(reason)}', "
         f"payload='{esc(payload)}'::jsonb, updated_at=now() WHERE id={rid};"
     )
-    subprocess.run([sys.executable, str(BOT), "notify", str(rid)], check=False, timeout=30)
+    # Redaksi only after mark_live (real /provider page). Do not notify drafts.
 
 
 if __name__ == "__main__":

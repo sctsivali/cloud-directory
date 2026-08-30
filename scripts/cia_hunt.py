@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
-"""30-minute hunt: one uncovered official URL → provider_pipeline discovered.
+"""Hunt: one uncovered official URL → provider_pipeline queued (auto crawl).
 
-Name+URL only. No SKU, hall, or hypervisor. Silent stdout if nothing new.
-Notifies @ciaworker_bot home group when a row is inserted.
+Name+URL only. Silent if nothing new. Flush unsent Redaksi cards first.
 """
 from __future__ import annotations
 
