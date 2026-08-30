@@ -1,0 +1,38 @@
+{
+  "allow_no_tiers": true,
+  "provider": {
+    "id": "thaidns_co_th",
+    "name": "ThaiDNS",
+    "hq_country": "Thailand",
+    "hq_city": null,
+    "origin": "local",
+    "provider_type": "IaaS",
+    "is_local_asean": true,
+    "website": "https://thaidns.co.th/",
+    "legal_country": "Thailand",
+    "legal_note": null
+  },
+  "sources": [
+    "https://thaidns.co.th/"
+  ],
+  "stack": {
+    "hypervisor": null,
+    "source_url": "https://thaidns.co.th/"
+  },
+  "sovereignty": {
+    "data_residency": "local"
+  },
+  "locations": [
+    {
+      "city": "Undisclosed",
+      "country": "Thailand"
+    }
+  ],
+  "buildings_named": [],
+  "tiers": [],
+  "dc_city": "Undisclosed",
+  "dc_country": "Thailand",
+  "dc_location": "Undisclosed building",
+  "scraped_from": "https://thaidns.co.th/",
+  "notes": "Auto-ingest. SKUs/halls/hypervisor only if written on official pages."
+}
