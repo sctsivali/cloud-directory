@@ -1,0 +1,38 @@
+{
+  "allow_no_tiers": true,
+  "provider": {
+    "id": "vpls_co_th",
+    "name": "VPLS",
+    "hq_country": "Thailand",
+    "hq_city": null,
+    "origin": "local",
+    "provider_type": "IaaS",
+    "is_local_asean": true,
+    "website": "https://www.vpls.co.th/",
+    "legal_country": "Thailand",
+    "legal_note": null
+  },
+  "sources": [
+    "https://www.vpls.co.th/"
+  ],
+  "stack": {
+    "hypervisor": null,
+    "source_url": "https://www.vpls.co.th/"
+  },
+  "sovereignty": {
+    "data_residency": "local"
+  },
+  "locations": [
+    {
+      "city": "Undisclosed",
+      "country": "Thailand"
+    }
+  ],
+  "buildings_named": [],
+  "tiers": [],
+  "dc_city": "Undisclosed",
+  "dc_country": "Thailand",
+  "dc_location": "Undisclosed building",
+  "scraped_from": "https://www.vpls.co.th/",
+  "notes": "Auto-ingest. SKUs/halls/hypervisor only if written on official pages."
+}
