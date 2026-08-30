@@ -62,10 +62,25 @@ export function BuildingView({ data }: { data: BuildingDetail }) {
           <strong>{data.dc_tech || t.hvUnknown}</strong>
           <span>{t.bldgTech}</span>
         </div>
+        <div className="fact">
+          <strong>{data.facilities || t.hvUnknown}</strong>
+          <span>{t.bldgFacilities}</span>
+        </div>
+        <div className="fact">
+          <strong>
+            {data.lat != null && data.lng != null ? t.bldgPinYes : t.hvUnknown}
+          </strong>
+          <span>{t.bldgPin}</span>
+        </div>
       </div>
       <p className="section-sub">
         {t.bldgAddress}: {data.address || "—"}
       </p>
+      {data.last_checked_at ? (
+        <p className="section-sub">
+          {t.bldgChecked}: {String(data.last_checked_at).slice(0, 10)}
+        </p>
+      ) : null}
 
       <section className="section">
         <h2>{t.bldgInHere}</h2>
