@@ -1,9 +1,10 @@
 {
-  "cursor": 43,
+  "cursor": 46,
   "ingested": [
     "alchosting_net",
     "avmcloud_net",
     "cloudhm",
+    "cloudvpsviet_com",
     "daintycloud_com",
     "datacentermap_com",
     "dewavps_com",
@@ -11,6 +12,7 @@
     "dpdatacenter_com",
     "epldt",
     "estnoc_ee",
+    "flaz_id",
     "globaldms_com",
     "hostatom",
     "hostdata_id",
@@ -18,6 +20,7 @@
     "kloud_com_ph",
     "laodc_com",
     "limitrack_com",
+    "maxcloud_id",
     "mondoze_com_my",
     "namekh_com",
     "olivevps_com",
