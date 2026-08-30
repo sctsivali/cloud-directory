@@ -1,0 +1,12 @@
+BEGIN;
+INSERT INTO providers (id,name,hq_country,hq_city,origin,provider_type,is_local_asean,website,legal_country,legal_note) VALUES ('vpsmalaysia','VPS Malaysia','Malaysia',NULL,'local','IaaS',TRUE,'https://www.vpsmalaysia.com.my/','Malaysia',NULL) ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, hq_country=EXCLUDED.hq_country, hq_city=EXCLUDED.hq_city, origin=EXCLUDED.origin, provider_type=EXCLUDED.provider_type, is_local_asean=EXCLUDED.is_local_asean, website=EXCLUDED.website, legal_country=EXCLUDED.legal_country, legal_note=EXCLUDED.legal_note;
+INSERT INTO stacks (provider_id, hypervisor, orchestration, storage, container_runtime, control_plane, source_url) VALUES ('vpsmalaysia','KVM',NULL,NULL,NULL,NULL,'https://www.vpsmalaysia.com.my/, https://www.vpsmalaysia.com.my/cloud-vps/') ON CONFLICT (provider_id) DO UPDATE SET hypervisor=EXCLUDED.hypervisor, orchestration=EXCLUDED.orchestration, storage=EXCLUDED.storage, container_runtime=EXCLUDED.container_runtime, control_plane=EXCLUDED.control_plane, source_url=EXCLUDED.source_url;
+INSERT INTO sovereignty (provider_id, data_residency) VALUES ('vpsmalaysia','local') ON CONFLICT (provider_id) DO UPDATE SET data_residency=EXCLUDED.data_residency;
+DELETE FROM sources WHERE provider_id = 'vpsmalaysia';
+INSERT INTO sources (provider_id, url, scraped_at, status) VALUES ('vpsmalaysia','https://www.vpsmalaysia.com.my/', now(), 'OK');
+INSERT INTO sources (provider_id, url, scraped_at, status) VALUES ('vpsmalaysia','https://www.vpsmalaysia.com.my/cloud-vps/', now(), 'OK');
+INSERT INTO locations (city, country) VALUES ('Undisclosed','Malaysia') ON CONFLICT (city, country) DO NOTHING;
+INSERT INTO provider_locations (provider_id, location_id) SELECT 'vpsmalaysia', id FROM locations WHERE city='Undisclosed' AND country='Malaysia' ON CONFLICT DO NOTHING;
+INSERT INTO buildings (name, city, country, source, listed, operator) VALUES ('MY03 Data Center','Undisclosed','Malaysia','https://www.vpsmalaysia.com.my/', TRUE, NULL) ON CONFLICT (name, city, country) DO UPDATE SET listed=TRUE, source=COALESCE(buildings.source, EXCLUDED.source);
+INSERT INTO provider_buildings (provider_id, building_id) SELECT 'vpsmalaysia', id FROM buildings WHERE name='MY03 Data Center' AND city='Undisclosed' AND country='Malaysia' ON CONFLICT DO NOTHING;
+COMMIT;

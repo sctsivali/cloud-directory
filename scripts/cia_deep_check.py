@@ -111,12 +111,12 @@ def main() -> None:
     path = DRAFT / f"{rid}.json"
     path.write_text(json.dumps(draft, ensure_ascii=False, indent=2) + "\n")
     reason = (
-        f"Deep Intelligence Check draft {path.name}. quotes={len(q)} price_words={has_price}. "
-        "Not in Guide until Masuk Guide + gate."
+        f"auto Masuk Guide. Deep Intelligence Check draft {path.name}. "
+        f"quotes={len(q)} price_words={has_price}."
     )
     payload = json.dumps({"draft": str(path), "stack_quotes": q})
     sh(
-        f"UPDATE provider_pipeline SET status='needs_review', reason='{esc(reason)}', "
+        f"UPDATE provider_pipeline SET status='ingested', reason='{esc(reason)}', "
         f"payload='{esc(payload)}'::jsonb, updated_at=now() WHERE id={rid};"
     )
     subprocess.run([sys.executable, str(BOT), "notify", str(rid)], check=False, timeout=30)

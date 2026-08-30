@@ -1,0 +1,45 @@
+{
+  "provider": {
+    "id": "vpsmalaysia",
+    "name": "VPS Malaysia",
+    "hq_country": "Malaysia",
+    "hq_city": null,
+    "origin": "local",
+    "provider_type": "IaaS",
+    "is_local_asean": true,
+    "website": "https://www.vpsmalaysia.com.my/",
+    "legal_country": "Malaysia",
+    "legal_note": null
+  },
+  "sources": [
+    "https://www.vpsmalaysia.com.my/",
+    "https://www.vpsmalaysia.com.my/cloud-vps/"
+  ],
+  "stack": {
+    "hypervisor": "KVM",
+    "orchestration": null,
+    "storage": null,
+    "container_runtime": null,
+    "control_plane": null,
+    "source_url": "https://www.vpsmalaysia.com.my/"
+  },
+  "sovereignty": {"data_residency": "local"},
+  "locations": [{"city": "Undisclosed", "country": "Malaysia"}],
+  "buildings_named": [
+    {
+      "name": "MY03 Data Center",
+      "city": "Undisclosed",
+      "country": "Malaysia",
+      "operator": null,
+      "source": "https://www.vpsmalaysia.com.my/"
+    }
+  ],
+  "currency": "MYR",
+  "dc_city": "Undisclosed",
+  "dc_country": "Malaysia",
+  "dc_location": "MY03 Data Center",
+  "scraped_from": "https://www.vpsmalaysia.com.my/",
+  "allow_no_tiers": true,
+  "notes": "Linux KVM VPS named with kernel-level KVM. Homepage teasers mix 3-year vs monthly and omit vCPU+RAM. Store login-walled. MY03 datacenter named; no first-party city.",
+  "tiers": []
+}

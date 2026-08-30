@@ -1,0 +1,55 @@
+{
+  "provider": {
+    "id": "nusa",
+    "name": "Nusa Cloud",
+    "hq_country": "Indonesia",
+    "hq_city": "Jakarta",
+    "origin": "local",
+    "provider_type": "IaaS",
+    "is_local_asean": true,
+    "website": "https://www.nusa.id/",
+    "legal_country": "Indonesia",
+    "legal_note": "PT Media Antar Nusa. Office: Grand ITC Permata Hijau, Jakarta Selatan (sales floor, not a DC hall)."
+  },
+  "sources": [
+    "https://www.nusa.id/",
+    "https://www.nusa.id/cloud"
+  ],
+  "stack": {
+    "hypervisor": null,
+    "orchestration": null,
+    "storage": null,
+    "container_runtime": null,
+    "control_plane": "OpenStack",
+    "source_url": "https://www.nusa.id/cloud"
+  },
+  "sovereignty": {"data_residency": "local"},
+  "locations": [
+    {"city": "Jakarta", "country": "Indonesia"},
+    {"city": "Medan", "country": "Indonesia"}
+  ],
+  "buildings_named": [
+    {
+      "name": "Telkom neuCentrIX Jakarta",
+      "city": "Jakarta",
+      "country": "Indonesia",
+      "operator": "Telkom neuCentrIX",
+      "source": "https://www.nusa.id/cloud"
+    },
+    {
+      "name": "Telkom neuCentrIX Medan",
+      "city": "Medan",
+      "country": "Indonesia",
+      "operator": "Telkom neuCentrIX",
+      "source": "https://www.nusa.id/cloud"
+    }
+  ],
+  "currency": "IDR",
+  "dc_city": "Jakarta",
+  "dc_country": "Indonesia",
+  "dc_location": "Telkom neuCentrIX Jakarta",
+  "scraped_from": "https://www.nusa.id/cloud",
+  "allow_no_tiers": true,
+  "notes": "JSON-LD lists NCC 25/40/60 prices but not vCPU+RAM on the public cloud page at ingest time. Control plane OpenStack quoted on the VPS service. Halls neuCentrIX Jakarta & Medan named on that page. Do not fill HV.",
+  "tiers": []
+}
