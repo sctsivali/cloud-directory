@@ -1,0 +1,38 @@
+{
+  "allow_no_tiers": true,
+  "provider": {
+    "id": "dimensicloud_id",
+    "name": "DimensiCloud",
+    "hq_country": "Indonesia",
+    "hq_city": null,
+    "origin": "local",
+    "provider_type": "IaaS",
+    "is_local_asean": true,
+    "website": "https://dimensicloud.id/",
+    "legal_country": "Indonesia",
+    "legal_note": null
+  },
+  "sources": [
+    "https://dimensicloud.id/"
+  ],
+  "stack": {
+    "hypervisor": null,
+    "source_url": "https://dimensicloud.id/"
+  },
+  "sovereignty": {
+    "data_residency": "local"
+  },
+  "locations": [
+    {
+      "city": "Jakarta",
+      "country": "Indonesia"
+    }
+  ],
+  "buildings_named": [],
+  "tiers": [],
+  "dc_city": "Jakarta",
+  "dc_country": "Indonesia",
+  "dc_location": "Jakarta",
+  "scraped_from": "https://dimensicloud.id/",
+  "notes": "Auto-ingest. SKUs/halls/hypervisor only if written on official pages."
+}
