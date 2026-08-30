@@ -1,5 +1,5 @@
 {
-  "cursor": 64,
+  "cursor": 67,
   "ingested": [
     "alchosting_net",
     "antmediahost_com",
@@ -9,6 +9,7 @@
     "cloudaja_id",
     "cloudhm",
     "cloudvpsviet_com",
+    "colossuscloud_com",
     "computing_id",
     "daintycloud_com",
     "datacentermap_com",
@@ -30,6 +31,8 @@
     "laodc_com",
     "limitrack_com",
     "maxcloud_id",
+    "melbicom_net",
+    "melon_cloud",
     "mondoze_com_my",
     "namekh_com",
     "olivevps_com",
