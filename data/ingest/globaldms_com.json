@@ -1,0 +1,38 @@
+{
+  "allow_no_tiers": true,
+  "provider": {
+    "id": "globaldms_com",
+    "name": "Global Digital Management Solutions",
+    "hq_country": "Cambodia",
+    "hq_city": null,
+    "origin": "local",
+    "provider_type": "IaaS",
+    "is_local_asean": true,
+    "website": "https://www.global-dms.com/",
+    "legal_country": "Cambodia",
+    "legal_note": null
+  },
+  "sources": [
+    "https://www.global-dms.com/"
+  ],
+  "stack": {
+    "hypervisor": null,
+    "source_url": "https://www.global-dms.com/"
+  },
+  "sovereignty": {
+    "data_residency": "local"
+  },
+  "locations": [
+    {
+      "city": "Undisclosed",
+      "country": "Cambodia"
+    }
+  ],
+  "buildings_named": [],
+  "tiers": [],
+  "dc_city": "Undisclosed",
+  "dc_country": "Cambodia",
+  "dc_location": "Undisclosed building",
+  "scraped_from": "https://www.global-dms.com/",
+  "notes": "Auto-ingest. SKUs/halls/hypervisor only if written on official pages."
+}
