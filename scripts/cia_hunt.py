@@ -102,8 +102,8 @@ def main() -> None:
     name, url, country = picked
     out = sh(
         "INSERT INTO provider_pipeline (name, website, country, status, reason) "
-        f"SELECT '{esc(name)}', '{esc(url)}', '{esc(country)}', 'discovered', "
-        f"'hunt 30m URL live' "
+        f"SELECT '{esc(name)}', '{esc(url)}', '{esc(country)}', 'queued', "
+        f"'auto crawl' "
         f"WHERE NOT EXISTS (SELECT 1 FROM provider_pipeline WHERE lower(website)=lower('{esc(url)}')) "
         "RETURNING id;"
     )
