@@ -109,10 +109,12 @@ def main() -> None:
     )
     if not out.isdigit():
         return
-    subprocess.run(
+    r = subprocess.run(
         [sys.executable, str(BOT), "notify", out],
-        check=False, timeout=30,
+        capture_output=True, text=True, timeout=60,
     )
+    if r.returncode != 0:
+        print(f"notify fail {out}: {(r.stderr or r.stdout)[-200:]}", file=sys.stderr)
 
 
 if __name__ == "__main__":

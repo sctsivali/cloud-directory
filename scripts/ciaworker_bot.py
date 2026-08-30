@@ -214,6 +214,13 @@ def handle_message(tok: str, msg: dict) -> None:
         return
 
 
+def announce_home(tok: str, text: str) -> None:
+    hid = home_chat()
+    if hid is None:
+        raise SystemExit("no home chat")
+    tg(tok, "sendMessage", {"chat_id": hid, "text": text, "disable_web_page_preview": True})
+
+
 def handle_callback(tok: str, cq: dict) -> None:
     user = cq.get("from") or {}
     uid = user.get("id") or 0
@@ -241,6 +248,13 @@ def handle_callback(tok: str, cq: dict) -> None:
         if kb:
             payload["reply_markup"] = kb
         tg(tok, "editMessageText", payload)
+    if row and status == "ingested":
+        site = row.get("website") or ""
+        announce_home(tok, (
+            f"Masuk Guide: {row['name']}\n"
+            f"{site}\n"
+            f"https://guide.cloudin.asia/updates"
+        ))
 
 
 def notify_row(tok: str, rid: int) -> None:
@@ -284,6 +298,9 @@ def main() -> None:
     tok = token()
     if len(sys.argv) >= 3 and sys.argv[1] == "notify":
         notify_row(tok, int(sys.argv[2]))
+        return
+    if len(sys.argv) >= 3 and sys.argv[1] == "announce":
+        announce_home(tok, " ".join(sys.argv[2:]))
         return
     if len(sys.argv) >= 2 and sys.argv[1] == "queue":
         print(queue_summary())
