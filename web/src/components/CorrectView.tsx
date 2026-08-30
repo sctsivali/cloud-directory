@@ -123,6 +123,11 @@ export function CorrectView() {
           <p className="num">02</p>
           <h3>{t.correctClaimH2}</h3>
           <p>{t.correctClaimHelp}</p>
+          <ol className="correct-steps">
+            <li>{t.correctClaimStep1}</li>
+            <li>{t.correctClaimStep2}</li>
+            <li>{t.correctClaimStep3}</li>
+          </ol>
           <form className="correct-form" onSubmit={onClaim}>
             <label className="field">
               <span>{t.correctProvider}</span>

@@ -275,7 +275,10 @@ export const COPY = {
     correctRescanBtn: "Kirim permintaan rescan",
     correctClaimH2: "Klaim penyedia",
     correctClaimHelp:
-      "Email harus domain yang sama dengan situs resmi. Kami kirim tautan verifikasi ke email itu. Claim bukan izin mengubah skor dari dokumen non-publik.",
+      "Pakai alamat email di domain situs resmi, bukan Gmail/Yahoo. Contoh: situs host.id → ops@host.id. Setelah kirim, kami mengirim magic link ke mailbox itu. Klik tautan = klaim terverifikasi. Bukan izin mengubah skor dari file yang tidak publik.",
+    correctClaimStep1: "Email harus domain situs resmi (bukan Gmail).",
+    correctClaimStep2: "Kami kirim magic link ke mailbox itu — bukan ke Telegram.",
+    correctClaimStep3: "Klik tautan untuk verifikasi klaim.",
     correctClaimEmail: "Email domain resmi",
     correctClaimBtn: "Kirim tautan verifikasi",
     correctOk: "Permintaan tercatat. Redaksi akan meninjau.",
@@ -658,7 +661,10 @@ export const COPY = {
     correctRescanBtn: "Send rescan request",
     correctClaimH2: "Claim this provider",
     correctClaimHelp:
-      "Email must be on the same domain as the official website. We send a verification link to that address. A claim does not let non-public documents change the score.",
+      "Use an email on the official website domain, not Gmail/Yahoo. Example: host.id → ops@host.id. After you submit, we send a magic link to that mailbox. Clicking it verifies the claim. It does not let non-public files change the score.",
+    correctClaimStep1: "Email must be on the official site domain (not Gmail).",
+    correctClaimStep2: "We send a magic link to that mailbox — not to Telegram.",
+    correctClaimStep3: "Click the link to verify the claim.",
     correctClaimEmail: "Official-domain email",
     correctClaimBtn: "Send verification link",
     correctOk: "Request recorded. Editorial will review.",
