@@ -1,0 +1,104 @@
+{
+  "pipeline_id": 11,
+  "name": "Lao Data Center",
+  "website": "https://laodc.com/",
+  "country": "Laos",
+  "pages": [
+    {
+      "url": "https://laodc.com/",
+      "status": 200
+    },
+    {
+      "url": "https://laodc.com/products/vps",
+      "status": 200
+    },
+    {
+      "url": "https://laodc.com/about",
+      "status": 200
+    }
+  ],
+  "stack_quotes": [],
+  "price_words_seen": true,
+  "note": "Draft only. Not ingested. Hypervisor null unless a public-cloud VM page names it.",
+  "allow_no_tiers": false,
+  "provider": {
+    "id": "laodc",
+    "name": "Lao Data Center",
+    "hq_country": "Laos",
+    "hq_city": null,
+    "origin": "local",
+    "provider_type": "IaaS",
+    "is_local_asean": true,
+    "website": "https://laodc.com/",
+    "legal_country": "Laos",
+    "legal_note": null
+  },
+  "sources": [
+    "https://laodc.com/products/vps",
+    "https://laodc.com/"
+  ],
+  "stack": {
+    "hypervisor": null,
+    "orchestration": null,
+    "storage": null,
+    "control_plane": null,
+    "source_url": "https://laodc.com/products/vps"
+  },
+  "sovereignty": {
+    "data_residency": "local"
+  },
+  "locations": [
+    {
+      "city": "Vientiane",
+      "country": "Laos"
+    },
+    {
+      "city": "Singapore",
+      "country": "Singapore"
+    }
+  ],
+  "buildings_named": [],
+  "tiers": [
+    {
+      "id": "laodc-basic",
+      "tier_name": "Basic",
+      "vcpu": 1,
+      "ram_gb": 2,
+      "storage_gb": 20,
+      "storage_type": "SSD",
+      "price_amount": 15,
+      "currency": "USD",
+      "price_native": "$15 /month",
+      "source_url": "https://laodc.com/products/vps"
+    },
+    {
+      "id": "laodc-intermediate",
+      "tier_name": "Intermediate",
+      "vcpu": 2,
+      "ram_gb": 4,
+      "storage_gb": 60,
+      "storage_type": "SSD",
+      "price_amount": 25,
+      "currency": "USD",
+      "price_native": "$25 /month",
+      "source_url": "https://laodc.com/products/vps"
+    },
+    {
+      "id": "laodc-power",
+      "tier_name": "Power",
+      "vcpu": 4,
+      "ram_gb": 8,
+      "storage_gb": 120,
+      "storage_type": "SSD",
+      "price_amount": 40,
+      "currency": "USD",
+      "price_native": "$40 /month",
+      "source_url": "https://laodc.com/products/vps"
+    }
+  ],
+  "dc_city": "Vientiane",
+  "dc_country": "Laos",
+  "dc_location": "Undisclosed building",
+  "scraped_from": "https://laodc.com/products/vps",
+  "notes": "Deep Intelligence Check. Tiers from public VPS page. No hypervisor/stack named. Singapore location listed but primary LA. No office-as-hall."
+}
