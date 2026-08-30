@@ -1,0 +1,38 @@
+{
+  "allow_no_tiers": true,
+  "provider": {
+    "id": "melbicom_net",
+    "name": "Melbicom",
+    "hq_country": "Singapore",
+    "hq_city": null,
+    "origin": "local",
+    "provider_type": "IaaS",
+    "is_local_asean": true,
+    "website": "https://www.melbicom.net/",
+    "legal_country": "Singapore",
+    "legal_note": null
+  },
+  "sources": [
+    "https://www.melbicom.net/"
+  ],
+  "stack": {
+    "hypervisor": "KVM",
+    "source_url": "https://www.melbicom.net/"
+  },
+  "sovereignty": {
+    "data_residency": "local"
+  },
+  "locations": [
+    {
+      "city": "Undisclosed",
+      "country": "Singapore"
+    }
+  ],
+  "buildings_named": [],
+  "tiers": [],
+  "dc_city": "Undisclosed",
+  "dc_country": "Singapore",
+  "dc_location": "Undisclosed building",
+  "scraped_from": "https://www.melbicom.net/",
+  "notes": "Auto-ingest. SKUs/halls/hypervisor only if written on official pages."
+}
