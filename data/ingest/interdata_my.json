@@ -1,0 +1,38 @@
+{
+  "allow_no_tiers": true,
+  "provider": {
+    "id": "interdata_my",
+    "name": "Interdata Networks",
+    "hq_country": "Malaysia",
+    "hq_city": null,
+    "origin": "local",
+    "provider_type": "IaaS",
+    "is_local_asean": true,
+    "website": "https://interdata.my/",
+    "legal_country": "Malaysia",
+    "legal_note": null
+  },
+  "sources": [
+    "https://interdata.my/"
+  ],
+  "stack": {
+    "hypervisor": "KVM",
+    "source_url": "https://interdata.my/"
+  },
+  "sovereignty": {
+    "data_residency": "local"
+  },
+  "locations": [
+    {
+      "city": "Undisclosed",
+      "country": "Malaysia"
+    }
+  ],
+  "buildings_named": [],
+  "tiers": [],
+  "dc_city": "Undisclosed",
+  "dc_country": "Malaysia",
+  "dc_location": "Undisclosed building",
+  "scraped_from": "https://interdata.my/",
+  "notes": "Auto-ingest. SKUs/halls/hypervisor only if written on official pages."
+}
