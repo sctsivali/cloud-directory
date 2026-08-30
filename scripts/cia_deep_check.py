@@ -77,6 +77,10 @@ def quotes(text: str) -> list[str]:
 
 
 def main() -> None:
+    sh(
+        "UPDATE provider_pipeline SET status='queued', updated_at=now() "
+        "WHERE status='crawling' AND updated_at < now() - interval '20 minutes';"
+    )
     raw = sh(
         "SELECT json_build_object('id',id,'name',name,'website',website,'country',country) "
         "FROM provider_pipeline WHERE status='queued' ORDER BY id LIMIT 1;"

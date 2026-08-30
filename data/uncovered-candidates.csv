@@ -1,17 +1,43 @@
 priority,id,name,country,official_url,skip_if
-P2,cloudhm,Cloud HM,Thailand,https://cloudhm.co.th/,
-P2,rukcom,Ruk-Com Cloud,Thailand,https://www.ruk-com.in.th/,
-P2,zcom_th,Z.com Cloud TH,Thailand,https://www.z.com/th/cloud/,
-P2,hostatom,HostAtom,Thailand,https://www.hostatom.com/,
-P2,rise_ph,RISE,Philippines,https://www.rise.ph/,
-P2,epldt,ePLDT,Philippines,https://www.epldt.com/,
-P2,ip_converge,IP Converge,Philippines,https://www.ip-converge.com/,
-P2,cloud_ph,CloudPH,Philippines,https://www.cloud.ph/,
-P2,azdigi,AZDIGI,Vietnam,https://www.azdigi.com/,
-P2,inet_vn,iNET,Vietnam,https://inet.vn/,
-P2,warnahosting,WarnaHosting,Indonesia,https://warnahosting.com/,
-P2,masterweb,Masterweb,Indonesia,https://www.masterweb.com/,
-P2,nusa_id,Nusa Cloud,Indonesia,https://www.nusa.id/,discover-30m
-P2,host_id,Host.id,Indonesia,https://host.id/,discover-30m
-P2,cloudbaik_com,CloudBaik,Indonesia,https://cloudbaik.com/,discover-30m
-P2,vpsmalaysia_com_my,VPS Malaysia,Malaysia,https://www.vpsmalaysia.com.my/,discover-30m
+P2,cloudhm,Cloud HM,Thailand,https://cloudhm.co.th/,in_guide
+P2,rukcom,Ruk-Com Cloud,Thailand,https://www.ruk-com.in.th/,in_guide
+P2,zcom_th,Z.com Cloud TH,Thailand,https://www.z.com/th/cloud/,in_guide
+P2,hostatom,HostAtom,Thailand,https://www.hostatom.com/,in_guide
+P2,rise_ph,RISE,Philippines,https://www.rise.ph/,in_guide
+P2,epldt,ePLDT,Philippines,https://www.epldt.com/,in_guide
+P2,ip_converge,IP Converge,Philippines,https://www.ip-converge.com/,dead
+P2,cloud_ph,CloudPH,Philippines,https://www.cloud.ph/,dead
+P2,azdigi,AZDIGI,Vietnam,https://www.azdigi.com/,in_guide
+P2,inet_vn,iNET,Vietnam,https://inet.vn/,dead
+P2,warnahosting,WarnaHosting,Indonesia,https://warnahosting.com/,dead
+P2,masterweb,Masterweb,Indonesia,https://www.masterweb.com/,dead
+P2,nusa_id,Nusa Cloud,Indonesia,https://www.nusa.id/,in_guide
+P2,host_id,Host.id,Indonesia,https://host.id/,in_guide
+P2,cloudbaik_com,CloudBaik,Indonesia,https://cloudbaik.com/,in_guide
+P2,vpsmalaysia_com_my,VPS Malaysia,Malaysia,https://www.vpsmalaysia.com.my/,in_guide
+P2,vpsthai_com,VPSThai,Thailand,https://www.vpsthai.com/,hunted
+P2,limitrack_com,Limitrack,Thailand,https://www.limitrack.com/,hunted
+P2,tpcloud_vn,TPCloud,Vietnam,https://tpcloud.vn/,hunted
+P2,kloud_com_ph,Kloud Solutions,Philippines,https://kloud.com.ph/,hunted
+P2,quape_com,QUAPE,Singapore,https://www.quape.com/,hunted
+P2,olivevps_com,OliveVPS,Singapore,https://olivevps.com/,hunted
+P2,dpdatacenter_com,Daun Penh Cloud,Cambodia,https://dpdatacenter.com/,hunted
+P2,globaldms_com,Global Digital Management Solutions,Cambodia,https://www.global-dms.com/,hunted
+P2,laodc_com,Lao Data Center,Laos,https://laodc.com/,hunted
+P2,daintycloud_com,DaintyCloud,Myanmar,https://daintycloud.com/,hunted
+P2,bruhosting_com,BruHosting,Brunei,https://www.bruhosting.com/,dead
+P2,dewavps_com,DewaVPS,Indonesia,https://www.dewavps.com/,hunted
+P2,hostdata_id,HostData.id,Indonesia,https://hostdata.id/,hunted
+P2,interdata_my,Interdata Networks,Malaysia,https://interdata.my/,hunted
+P2,thaidata_cloud,Thai Data Cloud,Thailand,https://thaidata.cloud/,hunted
+P2,vpshub_vn,VPSHUB,Vietnam,https://vpshub.vn/,hunted
+P2,tooserver_net,TooServer,Singapore,https://tooserver.net/,hunted
+P2,namekh_com,NameKH,Cambodia,https://namekh.com/,hunted
+P2,datacentermap_com,Tech Greencloud,Brunei,https://www.datacentermap.com/,hunted
+P2,mondoze_com_my,Mondoze,Malaysia,https://www.mondoze.com.my/,hunted
+P2,avmcloud_net,AVM Cloud,Malaysia,https://www.avmcloud.net/,hunted
+P2,thuevps_com,thueVPS,Vietnam,https://thuevps.com/,hunted
+P2,vietidc_com,VietIDC,Vietnam,https://vietidc.com/,hunted
+P2,dot_ph,dotPH,Philippines,https://www.dot.ph/,hunted
+P2,alchosting_net,ALC Hosting,Philippines,https://www.alchosting.net/,hunted
+P2,estnoc_ee,EstNOC,Cambodia,https://www.estnoc.ee/,hunted
