@@ -1,0 +1,38 @@
+{
+  "allow_no_tiers": true,
+  "provider": {
+    "id": "cloudaja_id",
+    "name": "CloudAja",
+    "hq_country": "Indonesia",
+    "hq_city": null,
+    "origin": "local",
+    "provider_type": "IaaS",
+    "is_local_asean": true,
+    "website": "https://www.cloudaja.id/",
+    "legal_country": "Indonesia",
+    "legal_note": null
+  },
+  "sources": [
+    "https://www.cloudaja.id/"
+  ],
+  "stack": {
+    "hypervisor": null,
+    "source_url": "https://www.cloudaja.id/"
+  },
+  "sovereignty": {
+    "data_residency": "local"
+  },
+  "locations": [
+    {
+      "city": "Undisclosed",
+      "country": "Indonesia"
+    }
+  ],
+  "buildings_named": [],
+  "tiers": [],
+  "dc_city": "Undisclosed",
+  "dc_country": "Indonesia",
+  "dc_location": "Undisclosed building",
+  "scraped_from": "https://www.cloudaja.id/",
+  "notes": "Auto-ingest. SKUs/halls/hypervisor only if written on official pages."
+}
