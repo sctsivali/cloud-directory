@@ -1,0 +1,40 @@
+{
+  "allow_no_tiers": true,
+  "provider": {
+    "id": "dcloud_co_id",
+    "name": "DCloud",
+    "hq_country": "Indonesia",
+    "hq_city": null,
+    "origin": "local",
+    "provider_type": "IaaS",
+    "is_local_asean": true,
+    "website": "https://dcloud.co.id/",
+    "legal_country": "Indonesia",
+    "legal_note": null
+  },
+  "sources": [
+    "https://dcloud.co.id/"
+  ],
+  "stack": {
+    "hypervisor": "KVM (via LOKI OpenStack)",
+    "orchestration": "Kubernetes (DKubes)",
+    "storage": "S3-compatible (DObject)",
+    "source_url": "https://dcloud.co.id/"
+  },
+  "sovereignty": {
+    "data_residency": "local"
+  },
+  "locations": [
+    {
+      "city": "Jakarta",
+      "country": "Indonesia"
+    }
+  ],
+  "buildings_named": [],
+  "tiers": [],
+  "dc_city": "Jakarta",
+  "dc_country": "Indonesia",
+  "dc_location": "Jakarta",
+  "scraped_from": "https://dcloud.co.id/",
+  "notes": "Auto-ingest. SKUs/halls/hypervisor only if written on official pages."
+}
