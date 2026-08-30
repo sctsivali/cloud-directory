@@ -36,6 +36,7 @@ GLOBAL = {
 }
 BLOG = {
     "vpssos.com", "howtohosting.guide", "indexbox.io", "vpsknow.com",
+ "datacentermap.com", "datacenterhawk.com",
     "wikipedia.org", "reddit.com", "youtube.com", "facebook.com",
     "linkedin.com", "medium.com", "quora.com",
 }

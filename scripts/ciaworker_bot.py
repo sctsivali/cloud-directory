@@ -16,7 +16,7 @@ TOKEN_PATH = HOME / "ciaworker.token"
 ALLOW_PATH = HOME / "ciaworker.allowlist"
 CHAT_PATH = HOME / "ciaworker.chat_id"
 API = "https://api.telegram.org/bot{token}/{method}"
-STATUSES = ("discovered", "queued", "crawling", "needs_review", "ingested", "rejected")
+STATUSES = ("discovered", "queued", "crawling", "needs_review", "ingested", "rejected", "live")
 
 
 def token() -> str:

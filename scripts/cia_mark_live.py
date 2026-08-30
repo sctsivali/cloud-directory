@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-"""Mark a pipeline row live after ingest, announce Redaksi. Silent if bad args.
+"""Mark a pipeline row live after ingest, announce Redaksi once.
 
 Usage: cia_mark_live.py PIPELINE_ID PROVIDER_ID
+Silent if already live.
 """
 from __future__ import annotations
 
-import subprocess, sys
+import json, subprocess, sys
 from pathlib import Path
 
 BOT = Path("/home/hermes-prime/arena-next/scripts/ciaworker_bot.py")
@@ -32,25 +33,20 @@ def main() -> None:
         return
     rid, pid = int(sys.argv[1]), sys.argv[2].strip()
     row = sh(
-        "SELECT json_build_object('name',name,'website',website,'reason',reason) "
+        "SELECT json_build_object('name',name,'website',website,'status',status,'reason',reason) "
         f"FROM provider_pipeline WHERE id={rid};"
     )
     if not row:
         return
-    import json
     d = json.loads(row)
+    if (d.get("status") or "") == "live":
+        return
     href = f"https://guide.cloudin.asia/provider/{pid}"
-    reason = (d.get("reason") or "") + f" | live {pid}"
     sh(
-        f"UPDATE provider_pipeline SET status='ingested', reason='{esc(reason)}', "
-        f"updated_at=now() WHERE id={rid};"
+        f"UPDATE provider_pipeline SET status='live', reason='live {esc(pid)}', "
+        f"updated_at=now() WHERE id={rid} AND status <> 'live';"
     )
-    who = d.get("reason") or ""
-    text = (
-        f"Live Guide: {d.get('name')}\n"
-        f"{href}\n"
-        f"{who}"
-    )
+    text = f"Live Guide: {d.get('name')}\n{href}"
     subprocess.run([sys.executable, str(BOT), "announce", text], check=False, timeout=30)
 
 
