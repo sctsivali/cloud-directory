@@ -1,0 +1,39 @@
+{
+  "allow_no_tiers": true,
+  "provider": {
+    "id": "dewavps_com",
+    "name": "DewaVPS",
+    "hq_country": "Indonesia",
+    "hq_city": null,
+    "origin": "local",
+    "provider_type": "IaaS",
+    "is_local_asean": true,
+    "website": "https://www.dewavps.com/",
+    "legal_country": "Indonesia",
+    "legal_note": null
+  },
+  "sources": [
+    "https://www.dewavps.com/",
+    "https://www.dewavps.com/cloud-vps/"
+  ],
+  "stack": {
+    "hypervisor": null,
+    "source_url": "https://www.dewavps.com/cloud-vps/"
+  },
+  "sovereignty": {
+    "data_residency": "local"
+  },
+  "locations": [
+    {
+      "city": "Jakarta",
+      "country": "Indonesia"
+    }
+  ],
+  "buildings_named": [],
+  "tiers": [],
+  "dc_city": "Jakarta",
+  "dc_country": "Indonesia",
+  "dc_location": "Jakarta",
+  "scraped_from": "https://www.dewavps.com/cloud-vps/",
+  "notes": "Auto-ingest. SKUs/halls/hypervisor only if written on official pages."
+}
