@@ -1,0 +1,39 @@
+{
+  "allow_no_tiers": true,
+  "provider": {
+    "id": "vpshub_vn",
+    "name": "VPSHUB",
+    "hq_country": "Vietnam",
+    "hq_city": null,
+    "origin": "local",
+    "provider_type": "IaaS",
+    "is_local_asean": true,
+    "website": "https://vpshub.vn/",
+    "legal_country": "Vietnam",
+    "legal_note": null
+  },
+  "sources": [
+    "https://vpshub.vn/",
+    "https://vpshub.vn/pricing"
+  ],
+  "stack": {
+    "hypervisor": null,
+    "source_url": "https://vpshub.vn/pricing"
+  },
+  "sovereignty": {
+    "data_residency": "local"
+  },
+  "locations": [
+    {
+      "city": "Undisclosed",
+      "country": "Vietnam"
+    }
+  ],
+  "buildings_named": [],
+  "tiers": [],
+  "dc_city": "Undisclosed",
+  "dc_country": "Vietnam",
+  "dc_location": "Undisclosed building",
+  "scraped_from": "https://vpshub.vn/pricing",
+  "notes": "Auto-ingest. SKUs/halls/hypervisor only if written on official pages."
+}
