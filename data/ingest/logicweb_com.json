@@ -1,0 +1,39 @@
+{
+  "allow_no_tiers": true,
+  "provider": {
+    "id": "logicweb_com",
+    "name": "LogicWeb",
+    "hq_country": "Singapore",
+    "hq_city": null,
+    "origin": "local",
+    "provider_type": "IaaS",
+    "is_local_asean": true,
+    "website": "https://www.logicweb.com/",
+    "legal_country": "Singapore",
+    "legal_note": null
+  },
+  "sources": [
+    "https://www.logicweb.com/",
+    "https://www.logicweb.com/vps"
+  ],
+  "stack": {
+    "hypervisor": "KVM",
+    "source_url": "https://www.logicweb.com/vps"
+  },
+  "sovereignty": {
+    "data_residency": "local"
+  },
+  "locations": [
+    {
+      "city": "Singapore",
+      "country": "Singapore"
+    }
+  ],
+  "buildings_named": [],
+  "tiers": [],
+  "dc_city": "Singapore",
+  "dc_country": "Singapore",
+  "dc_location": "Singapore",
+  "scraped_from": "https://www.logicweb.com/vps",
+  "notes": "Auto-ingest. SKUs/halls/hypervisor only if written on official pages."
+}
