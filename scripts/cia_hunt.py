@@ -74,7 +74,17 @@ def host(url: str) -> str:
     return (urlparse(url).netloc or "").lower().removeprefix("www.")
 
 
+def flush_notify() -> None:
+    r = subprocess.run(
+        [sys.executable, str(BOT), "notify-pending"],
+        capture_output=True, text=True, timeout=90,
+    )
+    if r.returncode != 0:
+        print(f"notify-pending fail: {(r.stderr or r.stdout)[-200:]}", file=sys.stderr)
+
+
 def main() -> None:
+    flush_notify()
     ids, names, sites = known()
     if not CSV.exists():
         return
@@ -109,12 +119,7 @@ def main() -> None:
     )
     if not out.isdigit():
         return
-    r = subprocess.run(
-        [sys.executable, str(BOT), "notify", out],
-        capture_output=True, text=True, timeout=60,
-    )
-    if r.returncode != 0:
-        print(f"notify fail {out}: {(r.stderr or r.stdout)[-200:]}", file=sys.stderr)
+    flush_notify()
 
 
 if __name__ == "__main__":

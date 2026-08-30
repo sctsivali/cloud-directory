@@ -287,8 +287,25 @@ def notify_row(tok: str, rid: int) -> None:
     kb = kb_for(int(row["id"]), row["status"])
     if kb:
         payload["reply_markup"] = kb
-    tg(tok, "sendMessage", payload)
-    psql(f"UPDATE provider_pipeline SET notified_at=now() WHERE id={int(rid)};")
+    last = None
+    for attempt in range(3):
+        try:
+            tg(tok, "sendMessage", payload)
+            psql(f"UPDATE provider_pipeline SET notified_at=now() WHERE id={int(rid)};")
+            return
+        except Exception as exc:
+            last = exc
+            time.sleep(2 * (attempt + 1))
+    raise SystemExit(f"notify {rid} failed: {type(last).__name__}")
+
+
+def notify_pending(tok: str) -> None:
+    out = psql(
+        "SELECT id FROM provider_pipeline WHERE notified_at IS NULL ORDER BY id LIMIT 10;"
+    )
+    for line in out.splitlines():
+        if line.strip().isdigit():
+            notify_row(tok, int(line.strip()))
 
 
 def loop(tok: str) -> None:
@@ -317,6 +334,9 @@ def main() -> None:
     tok = token()
     if len(sys.argv) >= 3 and sys.argv[1] == "notify":
         notify_row(tok, int(sys.argv[2]))
+        return
+    if len(sys.argv) >= 2 and sys.argv[1] == "notify-pending":
+        notify_pending(tok)
         return
     if len(sys.argv) >= 3 and sys.argv[1] == "announce":
         announce_home(tok, " ".join(sys.argv[2:]))
