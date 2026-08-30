@@ -1,0 +1,105 @@
+{
+  "provider": {
+    "id": "tpcloud",
+    "name": "TPCloud",
+    "hq_city": "Ho Chi Minh City",
+    "hq_country": "Vietnam",
+    "legal_country": "Vietnam",
+    "website": "https://tpcloud.vn/",
+    "origin": "local",
+    "provider_type": "public",
+    "is_local_asean": true
+  },
+  "sources": [
+    "https://tpcloud.vn/en/products/cloud-infrastructure/public-cloud/",
+    "https://tpcloud.vn/en/products/storage-services/object-storage/",
+    "https://tpcloud.vn/en/about-us/tpcloud/"
+  ],
+  "locations": [
+    {
+      "city": "Ho Chi Minh City",
+      "country": "Vietnam"
+    },
+    {
+      "city": "Hanoi",
+      "country": "Vietnam"
+    },
+    {
+      "city": "Da Nang",
+      "country": "Vietnam"
+    }
+  ],
+  "dc_city": "Ho Chi Minh City",
+  "dc_country": "Vietnam",
+  "dc_location": "Undisclosed building",
+  "tiers": [
+    {
+      "id": "tpcloud-vps-standard",
+      "tier_name": "VPS Standard",
+      "vcpu": 1,
+      "ram_gb": 1,
+      "storage_gb": 20,
+      "storage_type": "SSD",
+      "price_amount": 400000,
+      "currency": "VND",
+      "price_native": "400000 VND/bulan"
+    },
+    {
+      "id": "tpcloud-vps-deluxe",
+      "tier_name": "VPS Deluxe",
+      "vcpu": 2,
+      "ram_gb": 2,
+      "storage_gb": 40,
+      "storage_type": "SSD",
+      "price_amount": 700000,
+      "currency": "VND",
+      "price_native": "700000 VND/bulan"
+    },
+    {
+      "id": "tpcloud-vps-premium",
+      "tier_name": "VPS Premium",
+      "vcpu": 6,
+      "ram_gb": 16,
+      "storage_gb": 100,
+      "storage_type": "SSD",
+      "price_amount": 1497500,
+      "currency": "VND",
+      "price_native": "1497500 VND/bulan"
+    },
+    {
+      "id": "tpcloud-vps-supreme",
+      "tier_name": "VPS Supreme",
+      "vcpu": 6,
+      "ram_gb": 16,
+      "storage_gb": 100,
+      "storage_type": "SSD",
+      "price_amount": 3645000,
+      "currency": "VND",
+      "price_native": "3645000 VND/bulan"
+    },
+    {
+      "id": "tpcloud-vps-ultimate",
+      "tier_name": "VPS Ultimate",
+      "vcpu": 8,
+      "ram_gb": 64,
+      "storage_gb": 100,
+      "storage_type": "SSD",
+      "price_amount": 12150000,
+      "currency": "VND",
+      "price_native": "12150000 VND/bulan"
+    }
+  ],
+  "stack": {
+    "hypervisor": "VMware",
+    "orchestration": null,
+    "storage": "S3-compatible Object Storage",
+    "container_runtime": null,
+    "control_plane": null
+  },
+  "sovereignty": {
+    "data_residency": "Vietnam (Tier III DCs)"
+  },
+  "fx_idr_per_usd": 25000,
+  "scraped_from": "https://tpcloud.vn/en/products/cloud-infrastructure/public-cloud/",
+  "notes": "VMware Cloud Verified (first in Vietnam). Parent Tpcoms (est 2012). Cities from first-party offices; no named halls. Prices printed as monthly. No KVM/OpenStack/K8s/Ceph evidence on product pages."
+}
