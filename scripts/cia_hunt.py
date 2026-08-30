@@ -53,7 +53,7 @@ def known() -> tuple[set[str], set[str], set[str]]:
 def alive(url: str) -> bool:
     try:
         from curl_cffi import requests as r
-        resp = r.get(url, impersonate="chrome124", timeout=18, allow_redirects=True)
+        resp = r.get(url, impersonate="chrome124", timeout=8, allow_redirects=True)
         code = int(resp.status_code)
         if code:
             return code != 404
@@ -63,7 +63,7 @@ def alive(url: str) -> bool:
         import ssl, urllib.request
         req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 CIA-Guide-hunt"})
         ctx = ssl.create_default_context()
-        with urllib.request.urlopen(req, timeout=18, context=ctx) as resp:
+        with urllib.request.urlopen(req, timeout=8, context=ctx) as resp:
             return int(resp.status) != 404
     except Exception as e:
         # 403 still means the host exists
@@ -81,7 +81,7 @@ def main() -> None:
     with CSV.open() as f:
         rows = list(csv.DictReader(f))
     picked = None
-    for row in rows:
+    for row in reversed(rows):
         pid = (row.get("id") or "").strip().lower()
         name = (row.get("name") or "").strip()
         url = (row.get("official_url") or "").strip()
