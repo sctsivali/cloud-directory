@@ -91,6 +91,17 @@ def kb_for(row_id: int, status: str) -> dict | None:
     return {"inline_keyboard": rows}
 
 
+def actor_label(user: dict) -> str:
+    first = (user.get("first_name") or "").strip()
+    last = (user.get("last_name") or "").strip()
+    name = " ".join(p for p in (first, last) if p) or "seseorang"
+    uname = (user.get("username") or "").strip()
+    uid = user.get("id") or ""
+    if uname:
+        return f"{name} (@{uname})"
+    return f"{name} (id {uid})"
+
+
 def card(row: dict) -> str:
     return (
         f"#{row['id']}  {row['name']}\n"
@@ -236,8 +247,14 @@ def handle_callback(tok: str, cq: dict) -> None:
         tg(tok, "answerCallbackQuery", {"callback_query_id": cid, "text": "payload rusak"})
         return
     rid, status = int(parts[1]), parts[2]
-    row = set_status(rid, status, reason=f"via ciaworker by {uid}")
-    tg(tok, "answerCallbackQuery", {"callback_query_id": cid, "text": status})
+    who = actor_label(user)
+    verb = {
+        "queued": "Approve crawl",
+        "ingested": "Masuk Guide",
+        "rejected": "Tolak",
+    }.get(status, status)
+    row = set_status(rid, status, reason=f"{verb} oleh {who}")
+    tg(tok, "answerCallbackQuery", {"callback_query_id": cid, "text": f"{verb} · {who}"})
     if row and msg.get("chat"):
         payload = {
             "chat_id": msg["chat"]["id"],
@@ -248,12 +265,14 @@ def handle_callback(tok: str, cq: dict) -> None:
         if kb:
             payload["reply_markup"] = kb
         tg(tok, "editMessageText", payload)
-    if row and status == "ingested":
+    if row and status in ("queued", "ingested"):
         site = row.get("website") or ""
+        extra = "\nhttps://guide.cloudin.asia/updates" if status == "ingested" else ""
         announce_home(tok, (
-            f"Masuk Guide: {row['name']}\n"
+            f"{verb}: {row['name']}\n"
             f"{site}\n"
-            f"https://guide.cloudin.asia/updates"
+            f"oleh {who}"
+            f"{extra}"
         ))
 
 
