@@ -1,6 +1,7 @@
 {
-  "cursor": 36,
+  "cursor": 38,
   "ingested": [
+    "avmcloud_net",
     "cloudhm",
     "daintycloud_com",
     "datacentermap_com",
@@ -21,6 +22,7 @@
     "rise_ph",
     "rukcom",
     "thaidata_cloud",
+    "thuevps_com",
     "tooserver_net",
     "vpshub_vn",
     "vpsthai_com",
