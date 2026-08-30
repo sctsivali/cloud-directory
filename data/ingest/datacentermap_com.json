@@ -1,0 +1,38 @@
+{
+  "allow_no_tiers": true,
+  "provider": {
+    "id": "datacentermap_com",
+    "name": "Tech Greencloud",
+    "hq_country": "Brunei",
+    "hq_city": null,
+    "origin": "local",
+    "provider_type": "IaaS",
+    "is_local_asean": true,
+    "website": "https://www.datacentermap.com/",
+    "legal_country": "Brunei",
+    "legal_note": null
+  },
+  "sources": [
+    "https://www.datacentermap.com/"
+  ],
+  "stack": {
+    "hypervisor": null,
+    "source_url": "https://www.datacentermap.com/"
+  },
+  "sovereignty": {
+    "data_residency": "local"
+  },
+  "locations": [
+    {
+      "city": "Undisclosed",
+      "country": "Brunei"
+    }
+  ],
+  "buildings_named": [],
+  "tiers": [],
+  "dc_city": "Undisclosed",
+  "dc_country": "Brunei",
+  "dc_location": "Undisclosed building",
+  "scraped_from": "https://www.datacentermap.com/",
+  "notes": "Auto-ingest. SKUs/halls/hypervisor only if written on official pages."
+}
