@@ -1,0 +1,38 @@
+{
+  "allow_no_tiers": true,
+  "provider": {
+    "id": "olivevps_com",
+    "name": "OliveVPS",
+    "hq_country": "Singapore",
+    "hq_city": null,
+    "origin": "local",
+    "provider_type": "IaaS",
+    "is_local_asean": true,
+    "website": "https://olivevps.com/",
+    "legal_country": "Singapore",
+    "legal_note": null
+  },
+  "sources": [
+    "https://olivevps.com/"
+  ],
+  "stack": {
+    "hypervisor": "KVM",
+    "source_url": "https://olivevps.com/"
+  },
+  "sovereignty": {
+    "data_residency": "local"
+  },
+  "locations": [
+    {
+      "city": "Singapore",
+      "country": "Singapore"
+    }
+  ],
+  "buildings_named": [],
+  "tiers": [],
+  "dc_city": "Singapore",
+  "dc_country": "Singapore",
+  "dc_location": "Singapore",
+  "scraped_from": "https://olivevps.com/",
+  "notes": "Auto-ingest. SKUs/halls/hypervisor only if written on official pages."
+}
