@@ -1,0 +1,39 @@
+{
+  "allow_no_tiers": true,
+  "provider": {
+    "id": "worldwidemyanmar_com",
+    "name": "World Wide Myanmar",
+    "hq_country": "Myanmar",
+    "hq_city": null,
+    "origin": "local",
+    "provider_type": "IaaS",
+    "is_local_asean": true,
+    "website": "https://www.worldwidemyanmar.com/",
+    "legal_country": "Myanmar",
+    "legal_note": null
+  },
+  "sources": [
+    "https://www.worldwidemyanmar.com/",
+    "https://www.worldwidemyanmar.com/vps"
+  ],
+  "stack": {
+    "hypervisor": null,
+    "source_url": "https://www.worldwidemyanmar.com/vps"
+  },
+  "sovereignty": {
+    "data_residency": "local"
+  },
+  "locations": [
+    {
+      "city": "Undisclosed",
+      "country": "Myanmar"
+    }
+  ],
+  "buildings_named": [],
+  "tiers": [],
+  "dc_city": "Undisclosed",
+  "dc_country": "Myanmar",
+  "dc_location": "Undisclosed building",
+  "scraped_from": "https://www.worldwidemyanmar.com/vps",
+  "notes": "Auto-ingest. SKUs/halls/hypervisor only if written on official pages."
+}
