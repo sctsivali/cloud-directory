@@ -593,3 +593,59 @@ html[data-theme="light"] .law-lead { background: #fff; border-color: var(--line)
 [data-theme="light"] .dc-pin-dot {
   box-shadow: 0 0 0 2px #fff, 0 0 0 3px #60bd91;
 }
+
+.correct-note {
+  margin: 0 0 1.5rem;
+  padding: 14px 16px;
+  border-left: 3px solid var(--cia);
+  background: var(--well);
+  color: var(--muted);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+.correct-flash {
+  margin: 0 0 1.25rem;
+  padding: 12px 14px;
+  border-radius: 8px;
+  font-size: 0.95rem;
+}
+.correct-flash.ok { border: 1px solid var(--cia); color: var(--text); }
+.correct-flash.bad { border: 1px solid #8a4a4a; color: var(--text); }
+.correct-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 0.5rem;
+}
+.correct-card { min-height: 0; }
+.correct-form { display: flex; flex-direction: column; gap: 1rem; margin-top: 0.25rem; }
+.correct-form .field { display: flex; flex-direction: column; gap: 6px; font-size: 0.85rem; color: var(--muted); }
+.correct-form select,
+.correct-form input[type="email"] {
+  width: 100%;
+  min-height: 2.75rem;
+  padding: 0.55rem 0.75rem;
+  background: var(--well);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 0.95rem;
+}
+.correct-form select:focus,
+.correct-form input:focus {
+  outline: none;
+  border-color: var(--cia);
+}
+.correct-form .btn-cta { align-self: flex-start; cursor: pointer; }
+.correct-form .btn-cta:disabled { opacity: 0.55; cursor: wait; }
+html[data-theme="light"] .correct-form select,
+html[data-theme="light"] .correct-form input[type="email"] {
+  background: #fff;
+  color: #111;
+}
+@media (max-width: 900px) {
+  .correct-grid { grid-template-columns: 1fr; }
+  .correct-form .btn-cta { width: 100%; }
+}
+

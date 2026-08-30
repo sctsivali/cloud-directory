@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import { useLang } from "./Language";
+import { Icon } from "./Icon";
 
 type Choice = { id: string; name: string };
 
@@ -14,6 +15,7 @@ export function CorrectView() {
   const [claimEmail, setClaimEmail] = useState("");
   const [msg, setMsg] = useState("");
   const [err, setErr] = useState("");
+  const [busy, setBusy] = useState<"rescan" | "claim" | "">("");
 
   useEffect(() => {
     fetch("/api/correct/rescan")
@@ -22,29 +24,40 @@ export function CorrectView() {
       .catch(() => setProviders([]));
   }, []);
 
-  async function post(url: string, body: object) {
+  async function post(kind: "rescan" | "claim", url: string, body: object) {
     setMsg("");
     setErr("");
-    const r = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
-    const d = await r.json().catch(() => ({}));
-    if (!r.ok) {
-      setErr(d.error || t.correctFail);
-      return;
+    setBusy(kind);
+    try {
+      const r = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) {
+        setErr(d.error || t.correctFail);
+        return;
+      }
+      setMsg(t.correctOk);
+    } finally {
+      setBusy("");
     }
-    setMsg(t.correctOk);
   }
 
   function onRescan(e: FormEvent) {
     e.preventDefault();
-    void post("/api/correct/rescan", { provider_id: rescanId, email: rescanEmail });
+    void post("rescan", "/api/correct/rescan", {
+      provider_id: rescanId,
+      email: rescanEmail,
+    });
   }
   function onClaim(e: FormEvent) {
     e.preventDefault();
-    void post("/api/correct/claim", { provider_id: claimId, email: claimEmail });
+    void post("claim", "/api/correct/claim", {
+      provider_id: claimId,
+      email: claimEmail,
+    });
   }
 
   return (
@@ -52,18 +65,30 @@ export function CorrectView() {
       <p className="kicker">{t.correctKicker}</p>
       <h1>{t.correctH1}</h1>
       <p className="lede">{t.correctLede}</p>
-      <p className="section-sub">{t.correctDisclaimer}</p>
-      {msg ? <p className="section-sub">{msg}</p> : null}
-      {err ? <p className="section-sub">{err}</p> : null}
 
-      <section className="section">
-        <h2>{t.correctRescanH2}</h2>
-        <p className="section-sub">{t.correctRescanHelp}</p>
-        <form onSubmit={onRescan}>
-          <p>
-            <label>
-              {t.correctProvider}
-              <br />
+      <div className="correct-note" role="note">
+        {t.correctDisclaimer}
+      </div>
+
+      {msg ? (
+        <p className="correct-flash ok" role="status">
+          {msg}
+        </p>
+      ) : null}
+      {err ? (
+        <p className="correct-flash bad" role="alert">
+          {err}
+        </p>
+      ) : null}
+
+      <div className="correct-grid">
+        <section className="card correct-card">
+          <p className="num">01</p>
+          <h3>{t.correctRescanH2}</h3>
+          <p>{t.correctRescanHelp}</p>
+          <form className="correct-form" onSubmit={onRescan}>
+            <label className="field">
+              <span>{t.correctProvider}</span>
               <select
                 required
                 value={rescanId}
@@ -77,34 +102,30 @@ export function CorrectView() {
                 ))}
               </select>
             </label>
-          </p>
-          <p>
-            <label>
-              {t.correctEmailOpt}
-              <br />
+            <label className="field">
+              <span>{t.correctEmailOpt}</span>
               <input
                 type="email"
                 value={rescanEmail}
                 onChange={(e) => setRescanEmail(e.target.value)}
               />
             </label>
-          </p>
-          <p>
-            <button className="btn-cta" type="submit">
+            <button className="btn-cta" type="submit" disabled={busy === "rescan"}>
+              <span className="btn-ico">
+                <Icon name="refresh" size={16} />
+              </span>
               {t.correctRescanBtn}
             </button>
-          </p>
-        </form>
-      </section>
+          </form>
+        </section>
 
-      <section className="section">
-        <h2>{t.correctClaimH2}</h2>
-        <p className="section-sub">{t.correctClaimHelp}</p>
-        <form onSubmit={onClaim}>
-          <p>
-            <label>
-              {t.correctProvider}
-              <br />
+        <section className="card correct-card">
+          <p className="num">02</p>
+          <h3>{t.correctClaimH2}</h3>
+          <p>{t.correctClaimHelp}</p>
+          <form className="correct-form" onSubmit={onClaim}>
+            <label className="field">
+              <span>{t.correctProvider}</span>
               <select
                 required
                 value={claimId}
@@ -118,11 +139,8 @@ export function CorrectView() {
                 ))}
               </select>
             </label>
-          </p>
-          <p>
-            <label>
-              {t.correctClaimEmail}
-              <br />
+            <label className="field">
+              <span>{t.correctClaimEmail}</span>
               <input
                 type="email"
                 required
@@ -130,14 +148,15 @@ export function CorrectView() {
                 onChange={(e) => setClaimEmail(e.target.value)}
               />
             </label>
-          </p>
-          <p>
-            <button className="btn-cta" type="submit">
+            <button className="btn-cta" type="submit" disabled={busy === "claim"}>
+              <span className="btn-ico">
+                <Icon name="key" size={16} />
+              </span>
               {t.correctClaimBtn}
             </button>
-          </p>
-        </form>
-      </section>
+          </form>
+        </section>
+      </div>
     </>
   );
 }
