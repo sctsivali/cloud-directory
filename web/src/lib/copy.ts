@@ -264,6 +264,22 @@ export const COPY = {
     correctHow:
       "Sertakan: nama penyedia atau fasilitas, field yang dikoreksi, URL sumber primer, tanggal sumber, dan nama organisasi Anda. Jangan kirim data pelanggan atau rahasia dagang.",
     correctGo: "Buka CloudinAsia",
+    correctDisclaimer:
+      "Kami hanya membaca situs resmi yang publik. Halaman di balik login, PDF internal, atau klaim operator tanpa kutipan di website tidak masuk skor. Penyedia wajib menampilkan paket (nama, vCPU, RAM, harga/bulan), kota datacenter, nama gedung jika ada, dan stack teknologi di situs resminya.",
+    correctRescanH2: "Minta crawl ulang",
+    correctRescanHelp:
+      "Satu permintaan per penyedia per 24 jam. Redaksi menerima tautan approve; rescan baru jalan setelah diklik.",
+    correctProvider: "Penyedia",
+    correctPick: "Pilih penyedia",
+    correctEmailOpt: "Email Anda (opsional)",
+    correctRescanBtn: "Kirim permintaan rescan",
+    correctClaimH2: "Klaim penyedia",
+    correctClaimHelp:
+      "Email harus domain yang sama dengan situs resmi. Kami kirim tautan verifikasi ke email itu. Claim bukan izin mengubah skor dari dokumen non-publik.",
+    correctClaimEmail: "Email domain resmi",
+    correctClaimBtn: "Kirim tautan verifikasi",
+    correctOk: "Permintaan tercatat. Redaksi akan meninjau.",
+    correctFail: "Tidak bisa mengirim. Coba lagi.",
     methVerT: "Versi rumus",
     methVer:
       "Formula 2026.08.18. Indikator kontrol = residensi data 40 · kontrol hukum 40 · fasilitas bernama 20. Bukan nilai paspor perusahaan. Field kosong = 0, tidak dikurangi. Open technology dan kualitas bukti dihitung terpisah.",
@@ -631,6 +647,22 @@ export const COPY = {
     correctHow:
       "Include: provider or facility name, the field, a primary-source URL, the source date, and your organisation. Do not send customer data or trade secrets.",
     correctGo: "Open CloudinAsia",
+    correctDisclaimer:
+      "We only read public official websites. Login-walled pages, internal PDFs, or operator claims without a public quote do not enter the score. Providers must publish package cards (name, vCPU, RAM, monthly price), datacenter city, hall name if any, and technology stack on the official site.",
+    correctRescanH2: "Request a recrawl",
+    correctRescanHelp:
+      "One request per provider per 24 hours. Editorial receives an approve link; the rescan runs only after it is clicked.",
+    correctProvider: "Provider",
+    correctPick: "Choose a provider",
+    correctEmailOpt: "Your email (optional)",
+    correctRescanBtn: "Send rescan request",
+    correctClaimH2: "Claim this provider",
+    correctClaimHelp:
+      "Email must be on the same domain as the official website. We send a verification link to that address. A claim does not let non-public documents change the score.",
+    correctClaimEmail: "Official-domain email",
+    correctClaimBtn: "Send verification link",
+    correctOk: "Request recorded. Editorial will review.",
+    correctFail: "Could not send. Try again.",
     methVerT: "Formula version",
     methVer:
       "Formula 2026.08.18. Control indicator = data residency 40 · legal control 40 · named facility 20. Not a company-passport prize. Empty fields score 0, never minus. Open technology and evidence quality stay separate.",
