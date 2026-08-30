@@ -86,6 +86,18 @@ def main() -> None:
     row = json.loads(raw)
     rid = int(row["id"])
     url = row.get("website") or ""
+    host = urlparse(url).netloc.lower().removeprefix("www.")
+    if host in {
+        "datacentermap.com", "datacenterhawk.com", "vpssos.com",
+        "howtohosting.guide", "indexbox.io", "vpsknow.com",
+    } or any(host.endswith("." + h) for h in (
+        "datacentermap.com", "datacenterhawk.com", "vpssos.com",
+    )):
+        sh(
+            f"UPDATE provider_pipeline SET status='rejected', "
+            f"reason='bukan situs provider first-party', updated_at=now() WHERE id={rid};"
+        )
+        return
     sh(f"UPDATE provider_pipeline SET status='crawling', updated_at=now() WHERE id={rid};")
     pages = []
     st, final, body = fetch(url)

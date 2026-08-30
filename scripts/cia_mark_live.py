@@ -44,7 +44,7 @@ def main() -> None:
     href = f"https://guide.cloudin.asia/provider/{pid}"
     sh(
         f"UPDATE provider_pipeline SET status='live', reason='live {esc(pid)}', "
-        f"updated_at=now() WHERE id={rid} AND status <> 'live';"
+        f"notified_at=now(), updated_at=now() WHERE id={rid} AND status <> 'live';"
     )
     text = f"Live Guide: {d.get('name')}\n{href}"
     subprocess.run([sys.executable, str(BOT), "announce", text], check=False, timeout=30)

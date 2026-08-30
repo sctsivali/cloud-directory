@@ -69,6 +69,14 @@ def alive(url: str) -> bool:
         return "Error 403" in str(e) or "403" in str(e)
 
 
+REJECT_HOSTS = {
+    "datacentermap.com", "datacenterhawk.com", "vpssos.com",
+    "howtohosting.guide", "indexbox.io", "vpsknow.com",
+    "amazonaws.com", "azure.com", "digitalocean.com", "vultr.com",
+    "hostinger.com", "hostinger.co.id", "cloudzy.com", "lightnode.com",
+}
+
+
 def host(url: str) -> str:
     return (urlparse(url).netloc or "").lower().removeprefix("www.")
 
@@ -101,6 +109,8 @@ def main() -> None:
         if pid in ids or name.lower() in names:
             continue
         if key in sites or host(url) in {urlparse(s).netloc.removeprefix("www.") for s in sites}:
+            continue
+        if host(url) in REJECT_HOSTS or any(host(url).endswith("." + h) for h in REJECT_HOSTS):
             continue
         if not alive(url):
             continue
