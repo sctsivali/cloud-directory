@@ -1,0 +1,38 @@
+{
+  "allow_no_tiers": true,
+  "provider": {
+    "id": "leyun_asia",
+    "name": "Leyun Cloud",
+    "hq_country": "Malaysia",
+    "hq_city": null,
+    "origin": "local",
+    "provider_type": "IaaS",
+    "is_local_asean": true,
+    "website": "https://www.leyun.asia/",
+    "legal_country": "Malaysia",
+    "legal_note": null
+  },
+  "sources": [
+    "https://www.leyun.asia/"
+  ],
+  "stack": {
+    "hypervisor": null,
+    "source_url": "https://www.leyun.asia/"
+  },
+  "sovereignty": {
+    "data_residency": "local"
+  },
+  "locations": [
+    {
+      "city": "Undisclosed",
+      "country": "Malaysia"
+    }
+  ],
+  "buildings_named": [],
+  "tiers": [],
+  "dc_city": "Undisclosed",
+  "dc_country": "Malaysia",
+  "dc_location": "Undisclosed building",
+  "scraped_from": "https://www.leyun.asia/",
+  "notes": "Auto-ingest. SKUs/halls/hypervisor only if written on official pages."
+}
