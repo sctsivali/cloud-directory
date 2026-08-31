@@ -1,0 +1,86 @@
+{
+  "allow_no_tiers": true,
+  "provider": {
+    "id": "cloudzone_vn",
+    "name": "Cloudzone",
+    "hq_country": "Vietnam",
+    "hq_city": null,
+    "origin": "local",
+    "provider_type": "IaaS",
+    "is_local_asean": true,
+    "website": "https://cloudzone.vn/",
+    "legal_country": "Vietnam",
+    "legal_note": null
+  },
+  "sources": [
+    "https://cloudzone.vn/"
+  ],
+  "stack": {
+    "hypervisor": null,
+    "orchestration": null,
+    "storage": null,
+    "control_plane": null,
+    "source_url": "https://cloudzone.vn/"
+  },
+  "sovereignty": {
+    "data_residency": "local"
+  },
+  "locations": [
+  {
+    "city": "Hồ Chí Minh",
+    "country": "Vietnam"
+  },
+  {
+    "city": "Hà Nội",
+    "country": "Vietnam"
+  },
+  {
+    "city": "Đà Nẵng",
+    "country": "Vietnam"
+  }
+  ],
+  "buildings_named": [],
+  "tiers": [
+  {
+    "id": "cloudzone_vn-vps-1-1-20",
+    "tier_name": "Cloud VPS 1-1-20",
+    "vcpu": 1,
+    "ram_gb": 1,
+    "storage_gb": 20,
+    "storage_type": "SSD",
+    "price_amount": 100000,
+    "currency": "VND",
+    "price_native": "100.000đ /tháng",
+    "bandwidth_mbps": 100
+  },
+  {
+    "id": "cloudzone_vn-vps-2-4-20",
+    "tier_name": "Cloud VPS 2-4-20",
+    "vcpu": 2,
+    "ram_gb": 4,
+    "storage_gb": 20,
+    "storage_type": "SSD",
+    "price_amount": 300000,
+    "currency": "VND",
+    "price_native": "300.000đ /tháng",
+    "bandwidth_mbps": 100
+  },
+  {
+    "id": "cloudzone_vn-gpu-4-4-50",
+    "tier_name": "Cloud VPS GPU 4-4-50",
+    "vcpu": 4,
+    "ram_gb": 4,
+    "storage_gb": 50,
+    "storage_type": "SSD",
+    "price_amount": 450000,
+    "currency": "VND",
+    "price_native": "450.000đ /tháng",
+    "notes": "GPU 1GB VRAM"
+  }
+  ],
+  "dc_city": "Hồ Chí Minh",
+  "dc_country": "Vietnam",
+  "dc_location": "Hồ Chí Minh (multiple Tier 3 DCs)",
+  "scraped_from": "https://cloudzone.vn/",
+  "notes": "Auto-ingest. SKUs/halls/hypervisor only if written on official pages."
+}
