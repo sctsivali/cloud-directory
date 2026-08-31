@@ -1,0 +1,38 @@
+{
+  "allow_no_tiers": true,
+  "provider": {
+    "id": "orientwebs_net",
+    "name": "OrientWebs",
+    "hq_country": "Myanmar",
+    "hq_city": null,
+    "origin": "local",
+    "provider_type": "IaaS",
+    "is_local_asean": true,
+    "website": "https://orientwebs.net/",
+    "legal_country": "Myanmar",
+    "legal_note": null
+  },
+  "sources": [
+    "https://orientwebs.net/"
+  ],
+  "stack": {
+    "hypervisor": "KVM",
+    "source_url": "https://orientwebs.net/"
+  },
+  "sovereignty": {
+    "data_residency": "local"
+  },
+  "locations": [
+    {
+      "city": "Undisclosed",
+      "country": "Myanmar"
+    }
+  ],
+  "buildings_named": [],
+  "tiers": [],
+  "dc_city": "Undisclosed",
+  "dc_country": "Myanmar",
+  "dc_location": "Undisclosed building",
+  "scraped_from": "https://orientwebs.net/",
+  "notes": "Auto-ingest. SKUs/halls/hypervisor only if written on official pages."
+}
