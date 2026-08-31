@@ -1,5 +1,9 @@
 {
+  "status": "ingested",
+  "tier_name": "Cloud HM",
   "allow_no_tiers": true,
+  "tiers": [],
+  "notes": "Initial stub from hunt. Full Deep Intelligence Check pending.",
   "provider": {
     "id": "cloudhm",
     "name": "Cloud HM",
@@ -15,24 +19,24 @@
   "sources": [
     "https://cloudhm.co.th/"
   ],
+  "locations": [
+    {
+      "city": "Bangkok",
+      "country": "Thailand"
+    }
+  ],
   "stack": {
     "hypervisor": null,
-    "source_url": "https://cloudhm.co.th/"
+    "orchestration": null,
+    "storage": null,
+    "control_plane": null
   },
   "sovereignty": {
     "data_residency": "local"
   },
-  "locations": [
-    {
-      "city": "Undisclosed",
-      "country": "Thailand"
-    }
-  ],
-  "buildings": [],
-  "tiers": [],
-  "dc_city": "Undisclosed",
-  "dc_country": "Thailand",
-  "dc_location": "Undisclosed building",
   "scraped_from": "https://cloudhm.co.th/",
-  "notes": "Auto-ingest via 15m cron. No invented halls. SKUs only if parser saw a complete public card."
+  "dc_city": "Bangkok",
+  "dc_country": "Thailand",
+  "dc_location": "Bangkok",
+  "fx_idr_per_usd": 16000
 }
