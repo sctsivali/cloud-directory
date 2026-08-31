@@ -1,0 +1,38 @@
+{
+  "allow_no_tiers": true,
+  "provider": {
+    "id": "terabix_net",
+    "name": "Terabix",
+    "hq_country": "Malaysia",
+    "hq_city": null,
+    "origin": "local",
+    "provider_type": "IaaS",
+    "is_local_asean": true,
+    "website": "https://terabix.net/",
+    "legal_country": "Malaysia",
+    "legal_note": null
+  },
+  "sources": [
+    "https://terabix.net/"
+  ],
+  "stack": {
+    "hypervisor": null,
+    "source_url": "https://terabix.net/"
+  },
+  "sovereignty": {
+    "data_residency": "local"
+  },
+  "locations": [
+    {
+      "city": "Undisclosed",
+      "country": "Malaysia"
+    }
+  ],
+  "buildings_named": [],
+  "tiers": [],
+  "dc_city": "Undisclosed",
+  "dc_country": "Malaysia",
+  "dc_location": "Undisclosed building",
+  "scraped_from": "https://terabix.net/",
+  "notes": "Auto-ingest. SKUs/halls/hypervisor only if written on official pages."
+}
