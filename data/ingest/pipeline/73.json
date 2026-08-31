@@ -1,0 +1,76 @@
+{
+  "pipeline_id": 73,
+  "name": "OrientWebs",
+  "website": "https://orientwebs.net/",
+  "country": "Myanmar",
+  "pages": [
+    {
+      "url": "https://orientwebs.net/",
+      "status": 200
+    },
+    {
+      "url": "https://orientwebs.net/vps-servers/",
+      "status": 200
+    },
+    {
+      "url": "https://orientwebs.net/vps-servers/openvz/",
+      "status": 200
+    },
+    {
+      "url": "https://orientwebs.net/vps-servers/kvm/",
+      "status": 200
+    },
+    {
+      "url": "https://orientwebs.net/linux-semi-dedicated-servers/compare-pricing/",
+      "status": 200
+    },
+    {
+      "url": "https://orientwebs.net/data-center-facilities/datacenter-in-us/vps-servers-us/",
+      "status": 200
+    },
+    {
+      "url": "https://orientwebs.net/data-center-facilities/datacenter-in-uk/vps-servers-uk/",
+      "status": 200
+    },
+    {
+      "url": "https://orientwebs.net/data-center-facilities/datacenter-in-au/vps-servers-au/",
+      "status": 200
+    },
+    {
+      "url": "https://orientwebs.net/about/",
+      "status": 200
+    },
+    {
+      "url": "https://orientwebs.net/linux-shared-hosting/compare-pricing/",
+      "status": 200
+    },
+    {
+      "url": "https://orientwebs.net/linux-dedicated-servers/",
+      "status": 200
+    },
+    {
+      "url": "https://orientwebs.net/support/vps-servers-customer-support/",
+      "status": 200
+    },
+    {
+      "url": "https://orientwebs.net/vps-servers/managed-servers/",
+      "status": 200
+    }
+  ],
+  "stack_quotes": [
+    "Protection SSLs VPS Servers VPS Servers OpenVZ VPS Servers KVM VPS Servers SSDs vs. HDDs Dedicated Servers Dedicated Servers Semi-dedicated Servers S",
+    "en your web presence grows, with just a click of the mouse. KVM 4 $ 24.00 /mo. 80 GB Disk Space 4 TB Monthly Traffic 4096 MB RAM 2 CPU Core(s) 1 IP Ad",
+    "lot quicker. Also, you will not have to modify anything in  KVM VPS Servers | OrientWebs Hosting Services - Myanmar Français Español Português Shared",
+    "sword « Back to CP Login Username E-mail « Back to CP Login KVM VPS Servers Full root access, dedicated CPU access and NVMe storage with all Linux KVM",
+    "ccess, dedicated CPU access and NVMe storage with all Linux KVM VPS servers. You’ll be able to select the server’s OS. Our company provides one comple",
+    "r backup every week. 24/7 support. Zero installation costs. KVM 4 Package 80 GB Disk Space 4 TB Monthly Traffic 4096 MB RAM 2 CPU Core(s) 1 IP Address",
+    "99.9% Uptime Guarantee 24/7 Technical Support No Setup Fees KVM 4 at $ 24 .00 /mo. Buy Now If the KVM 4 package is not fit for your sites - take a loo",
+    "Support No Setup Fees KVM 4 at $ 24 .00 /mo. Buy Now If the KVM 4 package is not fit for your sites - take a look at the rest of our plans KVM 8 $ 48.",
+    "t fit for your sites - take a look at the rest of our plans KVM 8 $ 48.00 /mo. 160 GB Disk Space 5 TB Monthly Traffic 8192 MB RAM 4 CPU Core(s) 1 IP A",
+    "SE / Rocky 1-hour Account Activation » All features Buy Now KVM 16 $ 58.00 /mo. 320 GB Disk Space 6 TB Monthly Traffic Unlimited RAM 6 CPU Core(s) 1 I",
+    "SE / Rocky 1-hour Account Activation » All features Buy Now KVM 32 $ 115.00 /mo. 480 GB Disk Space 7 TB Monthly Traffic Unlimited RAM 8 CPU Core(s) 1",
+    "ll features Buy Now Compare Plans Catalog (PDF) VPS Servers KVM VPS Servers A pronouncedly improved system resource usage Efficient use of system reso"
+  ],
+  "price_words_seen": true,
+  "note": "Draft only. Not ingested. Hypervisor null unless a public-cloud VM page names it."
+}
