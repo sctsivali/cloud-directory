@@ -4,7 +4,9 @@
   "scripts": {
     "dev": "next dev -H 0.0.0.0 -p 3000",
     "build": "next build",
-    "start": "next start -H 0.0.0.0 -p 3000"
+    "start": "next start -H 0.0.0.0 -p 3000",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p ../tests/tsconfig.json",
+    "test": "node --experimental-strip-types --test ../tests/fixtures-corpus.test.ts ../tests/legacy-scoring.test.ts ../tests/legacy-shortlist.test.ts"
   },
   "dependencies": {
     "next": "^15.5.0",

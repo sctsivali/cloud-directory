@@ -5,11 +5,12 @@ import { useLang } from "./Language";
 import { Icon } from "./Icon";
 import { Flag, flagForCountry } from "./Flag";
 import type { ArenaRow } from "@/lib/db";
+import { rankArenaRows, type LegacyArenaSort, type LegacyArenaScope } from "@/lib/legacy-scoring";
 import { loadCompare, saveCompare } from "@/lib/needs";
 import { officialTechLogo, displayTechField, stackBlob, techMono, techsForBlob } from "@/lib/tech";
 
-type Tab = "sov" | "oss" | "cost" | "cover" | "perf" | "conf";
-type Scope = "asean" | "all";
+type Tab = LegacyArenaSort;
+type Scope = LegacyArenaScope;
 
 export function ArenaView({ rows }: { rows: ArenaRow[] }) {
   const { t } = useLang();
@@ -48,20 +49,7 @@ export function ArenaView({ rows }: { rows: ArenaRow[] }) {
     return scope === "asean" ? asean.filter((c) => set.has(c)) : all;
   }, [rows, scope]);
 
-  const ranked = useMemo(() => {
-    let base = scope === "asean" ? rows.filter((r) => r.is_local_asean) : rows;
-    if (country !== "all") base = base.filter((r) => (r.hq_country || "") === country);
-    const copy = [...base];
-    copy.sort((a, b) => {
-      if (tab === "sov") return b.sov_score - a.sov_score;
-      if (tab === "oss") return b.oss_score - a.oss_score;
-      if (tab === "conf") return b.conf_score - a.conf_score;
-      if (tab === "cost") return (a.min_price ?? 9e9) - (b.min_price ?? 9e9);
-      if (tab === "cover") return b.loc_count - a.loc_count;
-      return (b.max_vcpu ?? 0) - (a.max_vcpu ?? 0) || (b.max_ram ?? 0) - (a.max_ram ?? 0);
-    });
-    return copy;
-  }, [rows, tab, scope, country]);
+  const ranked = useMemo(() => rankArenaRows(rows, tab, scope, country), [rows, tab, scope, country]);
 
   function metric(r: ArenaRow) {
     if (tab === "cost") return r.min_price != null ? `${t.from} $${r.min_price.toFixed(2)}` : "—";

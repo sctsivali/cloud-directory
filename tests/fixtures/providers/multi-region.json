@@ -1,0 +1,77 @@
+{
+  "id": "multi-region",
+  "name": "Sea Mesh Cloud",
+  "hq_country": "Singapore",
+  "legal_country": "Singapore",
+  "origin": "regional",
+  "is_local_asean": true,
+  "data_residency": "regional",
+  "coverage_tags": ["multi_region_provider", "source_redirect"],
+  "stack": {
+    "hypervisor": "KVM",
+    "orchestration": "Docker",
+    "storage": "Ceph",
+    "control_plane": "OpenStack",
+    "open_source": true
+  },
+  "locations": [
+    { "city": "Singapore", "country": "Singapore" },
+    { "city": "Jakarta", "country": "Indonesia" },
+    { "city": "Bangkok", "country": "Thailand" }
+  ],
+  "buildings": [
+    {
+      "name": "Fixture SG-1 Hall",
+      "city": "Singapore",
+      "country": "Singapore",
+      "listed": true
+    }
+  ],
+  "tiers": [
+    {
+      "id": "multi-region-sg",
+      "tier_name": "Mesh SG",
+      "status": "OK",
+      "vcpu": 4,
+      "ram_gb": 8,
+      "price_usd_month": 15,
+      "currency": "SGD",
+      "billing_period": "monthly",
+      "dc_city": "Singapore",
+      "dc_country": "Singapore"
+    },
+    {
+      "id": "multi-region-jkt",
+      "tier_name": "Mesh JKT",
+      "status": "OK",
+      "vcpu": 8,
+      "ram_gb": 16,
+      "price_usd_month": 18,
+      "currency": "USD",
+      "billing_period": "monthly",
+      "dc_city": "Jakarta",
+      "dc_country": "Indonesia"
+    },
+    {
+      "id": "multi-region-bkk",
+      "tier_name": "Mesh BKK",
+      "status": "OK",
+      "vcpu": 16,
+      "ram_gb": 32,
+      "price_usd_month": 28,
+      "currency": "THB",
+      "billing_period": "monthly",
+      "dc_city": "Bangkok",
+      "dc_country": "Thailand"
+    }
+  ],
+  "sources": [
+    {
+      "url": "https://fixtures.example.test/sea-mesh/old-regions",
+      "status": "302",
+      "final_url": "https://fixtures.example.test/sea-mesh/regions",
+      "fixture": "redirect-302.html",
+      "observed_at": "2026-09-01T00:00:00Z"
+    }
+  ]
+}

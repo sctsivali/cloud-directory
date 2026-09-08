@@ -1,0 +1,13 @@
+{
+  "provider_id": "multi-region",
+  "blessed_for_new_engine": false,
+  "legacy": { "sov": 100, "conf": 100, "oss": 100, "min_price": 15 },
+  "known_defects": [
+    {
+      "id": "redirect-treated-as-source-presence",
+      "blessed": false,
+      "legacy_behavior": "A 302 receipt with a URL still awards CONF +15.",
+      "target_behavior": "Redirects must be bounded, revalidated, and not counted as verification by themselves."
+    }
+  ]
+}

@@ -1,0 +1,55 @@
+{
+  "id": "kvm-negated",
+  "name": "Mekong Bits",
+  "hq_country": "Vietnam",
+  "legal_country": "Vietnam",
+  "origin": "local",
+  "is_local_asean": true,
+  "data_residency": "local",
+  "coverage_tags": ["negated_kvm", "promo_price", "city_only_disclosure"],
+  "stack": {
+    "hypervisor": "We do not use KVM",
+    "orchestration": null,
+    "storage": null,
+    "control_plane": null,
+    "open_source": false
+  },
+  "locations": [{ "city": "Hanoi", "country": "Vietnam" }],
+  "buildings": [],
+  "tiers": [
+    {
+      "id": "kvm-negated-promo",
+      "tier_name": "Promo 2G",
+      "status": "OK",
+      "vcpu": 2,
+      "ram_gb": 2,
+      "price_usd_month": 3.99,
+      "currency": "USD",
+      "billing_period": "monthly",
+      "promo": true,
+      "dc_city": "Hanoi",
+      "dc_country": "Vietnam"
+    },
+    {
+      "id": "kvm-negated-list",
+      "tier_name": "List 2G",
+      "status": "OK",
+      "vcpu": 2,
+      "ram_gb": 2,
+      "price_usd_month": 9,
+      "currency": "USD",
+      "billing_period": "monthly",
+      "promo": false,
+      "dc_city": "Hanoi",
+      "dc_country": "Vietnam"
+    }
+  ],
+  "sources": [
+    {
+      "url": "https://fixtures.example.test/mekong-bits/stack",
+      "status": "200",
+      "fixture": "ok-200.html",
+      "observed_at": "2026-09-01T00:00:00Z"
+    }
+  ]
+}

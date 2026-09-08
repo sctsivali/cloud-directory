@@ -1,0 +1,13 @@
+{
+  "provider_id": "solo-brunei",
+  "blessed_for_new_engine": false,
+  "legacy": { "sov": 80, "conf": 65, "oss": 0, "min_price": 40 },
+  "known_defects": [
+    {
+      "id": "one-country-shortlist-relaxation",
+      "blessed": false,
+      "legacy_behavior": "A Brunei-only wizard need relaxes to all ASEAN locals because only one HQ matches.",
+      "target_behavior": "Hard country constraints cannot be silently relaxed by ranking."
+    }
+  ]
+}

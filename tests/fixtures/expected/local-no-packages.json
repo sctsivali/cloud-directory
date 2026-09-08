@@ -1,0 +1,31 @@
+{
+  "provider_id": "local-no-packages",
+  "blessed_for_new_engine": false,
+  "legacy": { "sov": 65, "conf": 50, "oss": 30, "min_price": null },
+  "known_defects": [
+    {
+      "id": "hedged-kvm-oss-credit",
+      "blessed": false,
+      "legacy_behavior": "OSS awards +30 because 'likely KVM' matches /kvm/.",
+      "target_behavior": "Hedged technology statements must not count as present."
+    },
+    {
+      "id": "source-404-conf-credit",
+      "blessed": false,
+      "legacy_behavior": "CONF +15 because a source URL exists, including 404.",
+      "target_behavior": "404 is a failed fetch and is not evidence coverage."
+    },
+    {
+      "id": "city-only-residency-credit",
+      "blessed": false,
+      "legacy_behavior": "SOV +40 for a named city with no listed facility.",
+      "target_behavior": "City-only disclosure cannot be treated as an exact-facility or fully evidenced residency claim."
+    },
+    {
+      "id": "unknown-collapsed-to-zero",
+      "blessed": false,
+      "legacy_behavior": "Hedged hypervisor contributes 0 CONF, same as empty.",
+      "target_behavior": "Unknown and inferred stay distinct from confirmed presence and confirmed absence."
+    }
+  ]
+}

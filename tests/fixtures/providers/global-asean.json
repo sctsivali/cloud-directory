@@ -1,0 +1,48 @@
+{
+  "id": "global-asean",
+  "name": "Orbit Grid",
+  "hq_country": "United States",
+  "legal_country": "United States",
+  "legal_note": "Fictional US operator with an ASEAN region. Legal control is not ASEAN.",
+  "origin": "global",
+  "is_local_asean": false,
+  "data_residency": "regional",
+  "coverage_tags": ["global_provider_with_asean_region", "source_403"],
+  "stack": {
+    "hypervisor": "KVM",
+    "orchestration": null,
+    "storage": null,
+    "control_plane": null,
+    "open_source": false
+  },
+  "locations": [{ "city": "Singapore", "country": "Singapore" }],
+  "buildings": [],
+  "tiers": [
+    {
+      "id": "global-asean-std",
+      "tier_name": "Standard 2",
+      "status": "OK",
+      "vcpu": 2,
+      "ram_gb": 8,
+      "price_usd_month": 12,
+      "currency": "USD",
+      "billing_period": "monthly",
+      "dc_city": "Singapore",
+      "dc_country": "Singapore"
+    }
+  ],
+  "sources": [
+    {
+      "url": "https://fixtures.example.test/orbit-grid/regions",
+      "status": "200",
+      "fixture": "ok-200.html",
+      "observed_at": "2026-09-01T00:00:00Z"
+    },
+    {
+      "url": "https://fixtures.example.test/orbit-grid/pricing",
+      "status": "403",
+      "fixture": "forbidden-403.html",
+      "observed_at": "2026-09-01T00:00:00Z"
+    }
+  ]
+}

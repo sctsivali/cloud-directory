@@ -1,0 +1,33 @@
+{
+  "id": "local-no-packages",
+  "name": "Kampung Host",
+  "hq_country": "Indonesia",
+  "legal_country": "Indonesia",
+  "origin": "local",
+  "is_local_asean": true,
+  "data_residency": "local",
+  "coverage_tags": [
+    "local_provider_without_packages",
+    "city_only_disclosure",
+    "hedged_kvm",
+    "source_404"
+  ],
+  "stack": {
+    "hypervisor": "likely KVM",
+    "orchestration": null,
+    "storage": null,
+    "control_plane": null,
+    "open_source": null
+  },
+  "locations": [{ "city": "Jakarta", "country": "Indonesia" }],
+  "buildings": [],
+  "tiers": [],
+  "sources": [
+    {
+      "url": "https://fixtures.example.test/kampung-host/pricing",
+      "status": "404",
+      "fixture": "missing-404.html",
+      "observed_at": "2026-09-01T00:00:00Z"
+    }
+  ]
+}

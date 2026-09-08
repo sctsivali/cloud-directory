@@ -1,0 +1,26 @@
+{
+  "version": "phase-0-baseline",
+  "immutable": true,
+  "blessed_for_new_engine": false,
+  "required_coverage": {
+    "local_provider_with_public_packages": "providers/local-packages.json",
+    "local_provider_without_packages": "providers/local-no-packages.json",
+    "global_provider_with_asean_region": "providers/global-asean.json",
+    "multi_region_provider": "providers/multi-region.json",
+    "exact_facility": "providers/local-packages.json",
+    "city_only_disclosure": "providers/local-no-packages.json",
+    "confirmed_kvm": "providers/local-packages.json",
+    "hedged_kvm": "providers/local-no-packages.json",
+    "negated_kvm": "providers/kvm-negated.json",
+    "current_price": "providers/local-packages.json",
+    "annual_commitment": "providers/evidence-stale.json",
+    "promo_price": "providers/kvm-negated.json",
+    "unsupported_currency": "providers/price-unsupported.json",
+    "source_200": "sources/ok-200.html",
+    "source_redirect": "sources/redirect-302.html",
+    "source_403": "sources/forbidden-403.html",
+    "source_404": "sources/missing-404.html",
+    "source_malformed": "sources/malformed.html",
+    "source_stale": "sources/stale-evidence.html"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "provider_id": "global-asean",
+  "blessed_for_new_engine": false,
+  "legacy": { "sov": 40, "conf": 85, "oss": 30, "min_price": 12 },
+  "known_defects": [
+    {
+      "id": "source-403-conf-credit",
+      "blessed": false,
+      "legacy_behavior": "A 403 pricing URL still satisfies CONF source-url presence.",
+      "target_behavior": "403 remains a distinct denied-fetch state and does not verify a claim."
+    },
+    {
+      "id": "provider-level-stack",
+      "blessed": false,
+      "legacy_behavior": "KVM is scored at provider grain for every offering.",
+      "target_behavior": "Technology must be scoped to the offering or deployment with evidence."
+    }
+  ]
+}

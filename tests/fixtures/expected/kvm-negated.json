@@ -1,0 +1,25 @@
+{
+  "provider_id": "kvm-negated",
+  "blessed_for_new_engine": false,
+  "legacy": { "sov": 80, "conf": 85, "oss": 30, "min_price": 3.99 },
+  "known_defects": [
+    {
+      "id": "negated-kvm-oss-credit",
+      "blessed": false,
+      "legacy_behavior": "OSS +30 because 'We do not use KVM' contains kvm.",
+      "target_behavior": "Negation is confirmed_absent, not present."
+    },
+    {
+      "id": "negation-counts-as-stated-hypervisor",
+      "blessed": false,
+      "legacy_behavior": "CONF +20 for a non-empty non-hedge hypervisor string that denies KVM.",
+      "target_behavior": "A negation is evidence of absence for that technology, not a generic hypervisor credit."
+    },
+    {
+      "id": "promo-price-as-min",
+      "blessed": false,
+      "legacy_behavior": "min_price uses the promo USD month as if it were the list price.",
+      "target_behavior": "Promo, list, and commitment prices are distinct observations."
+    }
+  ]
+}

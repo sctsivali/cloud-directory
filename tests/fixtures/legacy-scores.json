@@ -1,0 +1,233 @@
+{
+  "methodology": "legacy-sql-v1",
+  "blessed_for_new_engine": false,
+  "generated_from": "web/src/lib/legacy-scoring.ts",
+  "note": "Comparison evidence for the current engine. Do not treat these numbers as the target methodology.",
+  "scores": {
+    "local-packages": {
+      "id": "local-packages",
+      "name": "Nusantara Compute",
+      "blessed_for_new_engine": false,
+      "sov": 100,
+      "conf": 100,
+      "oss": 100,
+      "components": {
+        "sov": { "residency": 40, "legal": 25, "legal_matches_dc": 15, "listed_facility": 20 },
+        "conf": { "hq": 20, "hypervisor": 20, "listed_facility": 15, "named_tier_city": 15, "source_url": 15, "legal": 15 },
+        "oss": { "hypervisor": 30, "orchestration": 20, "storage": 20, "open_source": 15, "control_plane": 15 }
+      },
+      "min_price": 8.5,
+      "loc_count": 1,
+      "max_vcpu": 4,
+      "max_ram": 8,
+      "is_local_asean": true,
+      "hq_country": "Indonesia"
+    },
+    "local-no-packages": {
+      "id": "local-no-packages",
+      "name": "Kampung Host",
+      "blessed_for_new_engine": false,
+      "sov": 65,
+      "conf": 50,
+      "oss": 30,
+      "components": {
+        "sov": { "residency": 40, "legal": 25, "legal_matches_dc": 0, "listed_facility": 0 },
+        "conf": { "hq": 20, "hypervisor": 0, "listed_facility": 0, "named_tier_city": 0, "source_url": 15, "legal": 15 },
+        "oss": { "hypervisor": 30, "orchestration": 0, "storage": 0, "open_source": 0, "control_plane": 0 }
+      },
+      "min_price": null,
+      "loc_count": 1,
+      "max_vcpu": null,
+      "max_ram": null,
+      "is_local_asean": true,
+      "hq_country": "Indonesia"
+    },
+    "global-asean": {
+      "id": "global-asean",
+      "name": "Orbit Grid",
+      "blessed_for_new_engine": false,
+      "sov": 40,
+      "conf": 85,
+      "oss": 30,
+      "components": {
+        "sov": { "residency": 40, "legal": 0, "legal_matches_dc": 0, "listed_facility": 0 },
+        "conf": { "hq": 20, "hypervisor": 20, "listed_facility": 0, "named_tier_city": 15, "source_url": 15, "legal": 15 },
+        "oss": { "hypervisor": 30, "orchestration": 0, "storage": 0, "open_source": 0, "control_plane": 0 }
+      },
+      "min_price": 12,
+      "loc_count": 1,
+      "max_vcpu": 2,
+      "max_ram": 8,
+      "is_local_asean": false,
+      "hq_country": "United States"
+    },
+    "multi-region": {
+      "id": "multi-region",
+      "name": "Sea Mesh Cloud",
+      "blessed_for_new_engine": false,
+      "sov": 100,
+      "conf": 100,
+      "oss": 100,
+      "components": {
+        "sov": { "residency": 40, "legal": 25, "legal_matches_dc": 15, "listed_facility": 20 },
+        "conf": { "hq": 20, "hypervisor": 20, "listed_facility": 15, "named_tier_city": 15, "source_url": 15, "legal": 15 },
+        "oss": { "hypervisor": 30, "orchestration": 20, "storage": 20, "open_source": 15, "control_plane": 15 }
+      },
+      "min_price": 15,
+      "loc_count": 3,
+      "max_vcpu": 16,
+      "max_ram": 32,
+      "is_local_asean": true,
+      "hq_country": "Singapore"
+    },
+    "kvm-negated": {
+      "id": "kvm-negated",
+      "name": "Mekong Bits",
+      "blessed_for_new_engine": false,
+      "sov": 80,
+      "conf": 85,
+      "oss": 30,
+      "components": {
+        "sov": { "residency": 40, "legal": 25, "legal_matches_dc": 15, "listed_facility": 0 },
+        "conf": { "hq": 20, "hypervisor": 20, "listed_facility": 0, "named_tier_city": 15, "source_url": 15, "legal": 15 },
+        "oss": { "hypervisor": 30, "orchestration": 0, "storage": 0, "open_source": 0, "control_plane": 0 }
+      },
+      "min_price": 3.99,
+      "loc_count": 1,
+      "max_vcpu": 2,
+      "max_ram": 2,
+      "is_local_asean": true,
+      "hq_country": "Vietnam"
+    },
+    "price-unsupported": {
+      "id": "price-unsupported",
+      "name": "Peso Node",
+      "blessed_for_new_engine": false,
+      "sov": 80,
+      "conf": 65,
+      "oss": 0,
+      "components": {
+        "sov": { "residency": 40, "legal": 25, "legal_matches_dc": 15, "listed_facility": 0 },
+        "conf": { "hq": 20, "hypervisor": 0, "listed_facility": 0, "named_tier_city": 15, "source_url": 15, "legal": 15 },
+        "oss": { "hypervisor": 0, "orchestration": 0, "storage": 0, "open_source": 0, "control_plane": 0 }
+      },
+      "min_price": 5,
+      "loc_count": 1,
+      "max_vcpu": 1,
+      "max_ram": 1,
+      "is_local_asean": true,
+      "hq_country": "Philippines"
+    },
+    "evidence-stale": {
+      "id": "evidence-stale",
+      "name": "Stale Rack",
+      "blessed_for_new_engine": false,
+      "sov": 80,
+      "conf": 85,
+      "oss": 30,
+      "components": {
+        "sov": { "residency": 40, "legal": 25, "legal_matches_dc": 15, "listed_facility": 0 },
+        "conf": { "hq": 20, "hypervisor": 20, "listed_facility": 0, "named_tier_city": 15, "source_url": 15, "legal": 15 },
+        "oss": { "hypervisor": 30, "orchestration": 0, "storage": 0, "open_source": 0, "control_plane": 0 }
+      },
+      "min_price": 96,
+      "loc_count": 1,
+      "max_vcpu": 2,
+      "max_ram": 4,
+      "is_local_asean": true,
+      "hq_country": "Malaysia"
+    },
+    "solo-brunei": {
+      "id": "solo-brunei",
+      "name": "Brunei Node",
+      "blessed_for_new_engine": false,
+      "sov": 80,
+      "conf": 65,
+      "oss": 0,
+      "components": {
+        "sov": { "residency": 40, "legal": 25, "legal_matches_dc": 15, "listed_facility": 0 },
+        "conf": { "hq": 20, "hypervisor": 0, "listed_facility": 0, "named_tier_city": 15, "source_url": 15, "legal": 15 },
+        "oss": { "hypervisor": 0, "orchestration": 0, "storage": 0, "open_source": 0, "control_plane": 0 }
+      },
+      "min_price": 40,
+      "loc_count": 1,
+      "max_vcpu": 1,
+      "max_ram": 1,
+      "is_local_asean": true,
+      "hq_country": "Brunei"
+    }
+  },
+  "arena": {
+    "fetch_order": [
+      "solo-brunei",
+      "local-no-packages",
+      "kvm-negated",
+      "local-packages",
+      "price-unsupported",
+      "multi-region",
+      "evidence-stale",
+      "global-asean"
+    ],
+    "sov_asean": [
+      "local-packages",
+      "multi-region",
+      "solo-brunei",
+      "kvm-negated",
+      "price-unsupported",
+      "evidence-stale",
+      "local-no-packages"
+    ],
+    "oss_asean": [
+      "local-packages",
+      "multi-region",
+      "local-no-packages",
+      "kvm-negated",
+      "evidence-stale",
+      "solo-brunei",
+      "price-unsupported"
+    ],
+    "conf_asean": [
+      "local-packages",
+      "multi-region",
+      "kvm-negated",
+      "evidence-stale",
+      "solo-brunei",
+      "price-unsupported",
+      "local-no-packages"
+    ],
+    "cost_all": [
+      "kvm-negated",
+      "price-unsupported",
+      "local-packages",
+      "global-asean",
+      "multi-region",
+      "solo-brunei",
+      "evidence-stale",
+      "local-no-packages"
+    ],
+    "cover_asean": [
+      "multi-region",
+      "solo-brunei",
+      "local-no-packages",
+      "kvm-negated",
+      "local-packages",
+      "price-unsupported",
+      "evidence-stale"
+    ],
+    "perf_asean": [
+      "multi-region",
+      "local-packages",
+      "evidence-stale",
+      "kvm-negated",
+      "solo-brunei",
+      "price-unsupported",
+      "local-no-packages"
+    ],
+    "brunei_hard": ["solo-brunei"]
+  },
+  "pricing_probes": {
+    "unsupported_lak_80000": 5,
+    "php_56000": 1000,
+    "usd_8_5": 8.5
+  }
+}

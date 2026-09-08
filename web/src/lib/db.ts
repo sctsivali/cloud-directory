@@ -1,4 +1,5 @@
 import { Pool } from "pg";
+import { LEGACY_CONF_SQL, LEGACY_OSS_SQL, LEGACY_SOV_SQL } from "./legacy-scoring";
 
 const globalForPg = globalThis as unknown as { pool?: Pool };
 
@@ -11,72 +12,9 @@ export const pool =
 
 if (!globalForPg.pool) globalForPg.pool = pool;
 
-const ASEAN = `'Indonesia','Malaysia','Singapore','Thailand','Vietnam','Philippines','Cambodia','Laos','Myanmar','Brunei'`;
-
-const CITY_NAMED = `
-  btrim(COALESCE(%CITY%,'')) <> ''
-  AND btrim(%CITY%) !~* '^(undisclosed|unknown|not disclosed)'
-`;
-
-const SOV = `
-  (
-    CASE WHEN EXISTS (
-      SELECT 1 FROM tiers tx
-      WHERE tx.provider_id = p.id
-        AND tx.status = 'OK'
-        AND ${CITY_NAMED.replaceAll("%CITY%", "tx.dc_city")}
-        AND COALESCE(tx.dc_country,'') IN (${ASEAN})
-    ) OR EXISTS (
-      SELECT 1 FROM provider_locations pl
-      JOIN locations l ON l.id = pl.location_id
-      WHERE pl.provider_id = p.id
-        AND ${CITY_NAMED.replaceAll("%CITY%", "l.city")}
-        AND l.country IN (${ASEAN})
-    ) THEN 40 ELSE 0 END
-    + CASE WHEN COALESCE(NULLIF(p.legal_country,''), p.hq_country, '') IN (${ASEAN})
-      THEN 25 ELSE 0 END
-    + CASE WHEN COALESCE(p.legal_country,'') IN (${ASEAN}) AND EXISTS (
-        SELECT 1 FROM tiers tx
-        WHERE tx.provider_id = p.id
-          AND tx.status = 'OK'
-          AND ${CITY_NAMED.replaceAll("%CITY%", "tx.dc_city")}
-          AND tx.dc_country = p.legal_country
-      ) THEN 15 ELSE 0 END
-    + CASE WHEN EXISTS (
-        SELECT 1 FROM provider_buildings pb
-        JOIN buildings b ON b.id = pb.building_id
-        WHERE pb.provider_id = p.id AND b.listed
-      ) THEN 20 ELSE 0 END
-  )
-`;
-
-const CONF = `
-  (
-    CASE WHEN COALESCE(p.hq_country,'') <> '' THEN 20 ELSE 0 END
-    + CASE
-        WHEN btrim(COALESCE(st.hypervisor,'')) = '' THEN 0
-        WHEN COALESCE(st.hypervisor,'') ~* 'likely|implied|typical|unknown|confirmed:|not disclosed|belum ditemukan|sales model|derived' THEN 0
-        WHEN length(btrim(st.hypervisor)) > 60 THEN 0
-        ELSE 20
-      END
-    + CASE WHEN EXISTS (
-        SELECT 1 FROM provider_buildings pb
-        JOIN buildings b ON b.id = pb.building_id
-        WHERE pb.provider_id = p.id AND b.listed
-      ) THEN 15 ELSE 0 END
-    + CASE WHEN EXISTS (
-        SELECT 1 FROM tiers tx
-        WHERE tx.provider_id = p.id
-          AND COALESCE(tx.dc_country,'') <> ''
-          AND ${CITY_NAMED.replaceAll("%CITY%", "tx.dc_city")}
-      ) THEN 15 ELSE 0 END
-    + CASE WHEN EXISTS (
-        SELECT 1 FROM sources so
-        WHERE so.provider_id = p.id AND COALESCE(so.url,'') <> ''
-      ) THEN 15 ELSE 0 END
-    + CASE WHEN COALESCE(p.legal_country,'') <> '' THEN 15 ELSE 0 END
-  )
-`;
+const SOV = LEGACY_SOV_SQL;
+const CONF = LEGACY_CONF_SQL;
+const OSS = LEGACY_OSS_SQL;
 
 export type OverviewProvider = {
   id: string;
@@ -187,13 +125,7 @@ export async function getArena(): Promise<ArenaRow[]> {
       MAX(t.ram_gb)::float AS max_ram,
       ${SOV}::int AS sov_score,
       ${CONF}::int AS conf_score,
-      (
-        CASE WHEN COALESCE(st.hypervisor,'') ~* 'kvm|proxmox|xen' THEN 30 ELSE 0 END
-        + CASE WHEN COALESCE(st.orchestration,'') ~* 'kubernetes|k8s|docker' THEN 20 ELSE 0 END
-        + CASE WHEN COALESCE(st.storage,'') ~* 'ceph|openebs|longhorn|rook' THEN 20 ELSE 0 END
-        + CASE WHEN st.open_source IS TRUE THEN 15 ELSE 0 END
-        + CASE WHEN COALESCE(st.control_plane,'') ~* 'proxmox|openstack' THEN 15 ELSE 0 END
-      )::int AS oss_score
+      ${OSS}::int AS oss_score
     FROM providers p
     LEFT JOIN sovereignty s ON s.provider_id = p.id
     LEFT JOIN stacks st ON st.provider_id = p.id
@@ -261,13 +193,7 @@ export async function getProvider(id: string): Promise<ProviderDetail | null> {
       st.hypervisor, st.orchestration, st.storage, st.control_plane, st.container_runtime, st.virtualization, st.open_source, st.source_url,
       ${SOV}::int AS sov_score,
       ${CONF}::int AS conf_score,
-      (
-        CASE WHEN COALESCE(st.hypervisor,'') ~* 'kvm|proxmox|xen' THEN 30 ELSE 0 END
-        + CASE WHEN COALESCE(st.orchestration,'') ~* 'kubernetes|k8s|docker' THEN 20 ELSE 0 END
-        + CASE WHEN COALESCE(st.storage,'') ~* 'ceph|openebs|longhorn|rook' THEN 20 ELSE 0 END
-        + CASE WHEN st.open_source IS TRUE THEN 15 ELSE 0 END
-        + CASE WHEN COALESCE(st.control_plane,'') ~* 'proxmox|openstack' THEN 15 ELSE 0 END
-      )::int AS oss_score
+      ${OSS}::int AS oss_score
     FROM providers p
     LEFT JOIN sovereignty s ON s.provider_id = p.id
     LEFT JOIN stacks st ON st.provider_id = p.id

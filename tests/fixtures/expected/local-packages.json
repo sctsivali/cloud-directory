@@ -1,0 +1,6 @@
+{
+  "provider_id": "local-packages",
+  "blessed_for_new_engine": false,
+  "legacy": { "sov": 100, "conf": 100, "oss": 100, "min_price": 8.5 },
+  "known_defects": []
+}
