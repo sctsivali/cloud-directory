@@ -1,0 +1,95 @@
+# MCP contract (Phase 3)
+
+Status: Phase 3. Built-in Model Context Protocol server for `guide.cloudin.asia`. AI clients may read the directory and submit typed proposals. They cannot publish, execute SQL, or rewrite canonical facts.
+
+## Contract identity
+
+| Field | Value |
+|---|---|
+| Name | `cloud-directory-mcp` |
+| Contract version | `1.0.0` |
+| Backing schema version | `6` (`migrations/0006_proposals_reviews_revisions.sql`) |
+| Transport | stdio (official MCP TypeScript SDK) or in-process for tests |
+
+This contract is separate from the public HTTP API and from any WordPress/editorial MCP.
+
+## Capabilities
+
+Server-side only. A client cannot escalate by declaring extra MCP features.
+
+| Capability | Phase 3 |
+|---|---|
+| `read` | Available. Discovery includes the read tools below. |
+| `collect` | Reserved. No collect tools are registered. |
+| `propose` | Available. Typed proposal tools only. |
+| `review` | Available. Non-approval review decisions. |
+| `approve` | Available. Approval cannot be performed by the proposer. |
+| `publish` | **Unavailable.** Publication tools stay unreachable even if a session lists `publish`. |
+
+Discovery lists only tools the session is authorized to use **and** that are available in this phase. Handler-level enforcement rejects hidden names before any tool handler runs.
+
+## Read tools
+
+- `directory.get_provider`
+- `directory.search_providers`
+- `directory.get_offerings`
+- `directory.get_claims`
+- `directory.get_evidence`
+- `directory.get_source_snapshot`
+- `directory.explain_score`
+- `directory.get_quality_report`
+- `directory.get_proposal` (status of a durable proposal)
+
+Read tools do not change public scoring, wizard shortlists, or `/updates`. `explain_score` describes the current legacy methodology; it is not a new engine.
+
+## Proposal-only mutation tools
+
+Canonical writes are not exposed. These tools persist a proposal row:
+
+- `directory.propose_claim`
+- `directory.propose_offering`
+- `directory.propose_price_observation`
+- `directory.propose_location`
+- `directory.propose_facility`
+- `directory.propose_technology_deployment`
+- `directory.propose_retraction`
+- `directory.revise_proposal` (body change; an approved proposal returns to review)
+
+There is no generic SQL tool and no arbitrary field-mutation tool.
+
+## Review tools
+
+- `directory.review_proposal` — `reject` or `request_changes`
+- `directory.approve_proposal` — forbidden when the bound `principalId` equals the proposer
+
+Approvals are invalidated when the proposal body changes.
+
+## Publication tools (unavailable)
+
+Reserved names, not registered, not reachable in Phase 3:
+
+- `directory.publish_revision`
+- `directory.publish_change`
+
+Direct invocation by name is rejected before handler execution.
+
+## Idempotency and outcomes
+
+Proposal tools require `idempotencyKey`. Actor, reviewer, and revision identity come from a non-model-controlled `principalId` on `ToolContext` / server configuration (`MCP_PRINCIPAL_ID` is required for stdio). The value must be a strict canonical lowercase ASCII identifier. Model-supplied `actorId` and `reviewerId` fields are rejected. PostgreSQL also rejects non-canonical `proposals.actor_id`, `revisions.actor_id`, and `proposal_reviews.reviewer_id`. The server stores a SHA-256 digest of the canonical proposal body.
+
+| Situation | Outcome |
+|---|---|
+| New key | `created` |
+| Same key and same digest | `replayed` (same proposal id) |
+| Same key and different body | `rejected` / `idempotency_conflict` |
+| Malformed or extra fields | `rejected` / `malformed_payload` |
+| Commit cannot be confirmed | `ambiguous` — never insert a second row |
+
+Clients must not retry an insert after `ambiguous`. They should read by idempotency key.
+
+## Non-goals
+
+- Collectors and extractors (Phase 4)
+- Replacing public ranking (Phase 5)
+- Generating `/updates` from revisions (Phase 6)
+- Granting any model generic SQL

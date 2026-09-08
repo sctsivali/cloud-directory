@@ -1,0 +1,152 @@
+import { Client } from "./pg.ts";
+
+export type JsonObject = Record<string, unknown>;
+
+export type DirectoryReader = {
+  getProvider(id: string): Promise<JsonObject | null>;
+  searchProviders(args: { name?: string; country?: string; limit?: number }): Promise<JsonObject[]>;
+  getOfferings(providerId: string): Promise<JsonObject[]>;
+  getClaims(subjectType: string, subjectId: string): Promise<JsonObject[]>;
+  getEvidence(args: { claimId?: string; snapshotId?: string; evidenceId?: string }): Promise<JsonObject[]>;
+  getSourceSnapshot(id: string): Promise<JsonObject | null>;
+  explainScore(providerId: string): Promise<JsonObject | null>;
+  getQualityReport(providerId?: string): Promise<JsonObject>;
+};
+
+const LEGACY_METHODOLOGY = {
+  engine: "legacy",
+  methodologyVersion: "2026.08.18",
+  note: "Public scores are unchanged. MCP explain_score is not a new ranking engine.",
+  dimensions: [
+    { code: "SOV", name: "Control & residency" },
+    { code: "CONF", name: "Evidence quality" },
+    { code: "OSS", name: "Open technology" },
+  ],
+};
+
+export type Queryable = {
+  query: InstanceType<typeof Client>["query"];
+};
+
+export class PostgresDirectoryReader implements DirectoryReader {
+  private readonly client: Queryable;
+
+  constructor(client: Queryable) {
+    this.client = client;
+  }
+
+  async getProvider(id: string): Promise<JsonObject | null> {
+    const { rows } = await this.client.query(
+      `SELECT id, name, hq_country, legal_country, origin, is_local_asean, website
+       FROM providers WHERE id = $1`,
+      [id]
+    );
+    return rows[0] ?? null;
+  }
+
+  async searchProviders(args: {
+    name?: string;
+    country?: string;
+    limit?: number;
+  }): Promise<JsonObject[]> {
+    const limit = Math.min(Math.max(args.limit ?? 20, 1), 100);
+    const { rows } = await this.client.query(
+      `SELECT id, name, hq_country, legal_country, origin, is_local_asean
+       FROM providers
+       WHERE ($1::text IS NULL OR name ILIKE '%' || $1 || '%')
+         AND ($2::text IS NULL OR hq_country = $2 OR legal_country = $2)
+       ORDER BY name
+       LIMIT $3`,
+      [args.name ?? null, args.country ?? null, limit]
+    );
+    return rows;
+  }
+
+  async getOfferings(providerId: string): Promise<JsonObject[]> {
+    const { rows } = await this.client.query(
+      `SELECT id, provider_id, service_id, name, status, assessment_state
+       FROM offerings WHERE provider_id = $1 ORDER BY name`,
+      [providerId]
+    );
+    return rows;
+  }
+
+  async getClaims(subjectType: string, subjectId: string): Promise<JsonObject[]> {
+    const { rows } = await this.client.query(
+      `SELECT id, subject_type, subject_id, claim_type, value, knowledge_state, assessment_state,
+              observed_at, recorded_at, valid_from, valid_to
+       FROM claims WHERE subject_type = $1 AND subject_id = $2
+       ORDER BY recorded_at`,
+      [subjectType, subjectId]
+    );
+    return rows;
+  }
+
+  async getEvidence(args: {
+    claimId?: string;
+    snapshotId?: string;
+    evidenceId?: string;
+  }): Promise<JsonObject[]> {
+    const { rows } = await this.client.query(
+      `SELECT e.id, e.snapshot_id, e.excerpt, e.note, e.observed_at, e.assessment_state
+       FROM evidence e
+       LEFT JOIN claim_evidence ce ON ce.evidence_id = e.id
+       WHERE ($1::text IS NULL OR ce.claim_id = $1)
+         AND ($2::text IS NULL OR e.snapshot_id = $2)
+         AND ($3::text IS NULL OR e.id = $3)
+       GROUP BY e.id
+       ORDER BY e.id`,
+      [args.claimId ?? null, args.snapshotId ?? null, args.evidenceId ?? null]
+    );
+    return rows;
+  }
+
+  async getSourceSnapshot(id: string): Promise<JsonObject | null> {
+    const { rows } = await this.client.query(
+      `SELECT id, source_url, final_url, fetched_at, http_status, content_type,
+              content_sha256, body, byte_length, recorded_at
+       FROM fetch_snapshots WHERE id = $1`,
+      [id]
+    );
+    return rows[0] ?? null;
+  }
+
+  async explainScore(providerId: string): Promise<JsonObject | null> {
+    const provider = await this.getProvider(providerId);
+    if (!provider) return null;
+    return { ...LEGACY_METHODOLOGY, providerId, providerName: provider.name };
+  }
+
+  async getQualityReport(providerId?: string): Promise<JsonObject> {
+    const claimFilter = providerId
+      ? "WHERE subject_type = 'provider' AND subject_id = $1"
+      : "";
+    const params = providerId ? [providerId] : [];
+    const claims = await this.client.query(
+      `SELECT knowledge_state, assessment_state, count(*)::int AS n
+       FROM claims ${claimFilter}
+       GROUP BY knowledge_state, assessment_state`,
+      params
+    );
+    const evidence = await this.client.query(`SELECT count(*)::int AS n FROM evidence`);
+    const snapshots = await this.client.query(`SELECT count(*)::int AS n FROM fetch_snapshots`);
+    const byKnowledgeState: Record<string, number> = {};
+    const byAssessmentState: Record<string, number> = {};
+    let claimCount = 0;
+    for (const row of claims.rows as { knowledge_state: string; assessment_state: string; n: number }[]) {
+      claimCount += row.n;
+      byKnowledgeState[row.knowledge_state] = (byKnowledgeState[row.knowledge_state] ?? 0) + row.n;
+      byAssessmentState[row.assessment_state] = (byAssessmentState[row.assessment_state] ?? 0) + row.n;
+    }
+    return {
+      claimCount,
+      evidenceCount: evidence.rows[0]?.n ?? 0,
+      snapshotCount: snapshots.rows[0]?.n ?? 0,
+      byKnowledgeState,
+      byAssessmentState,
+      providerId: providerId ?? null,
+    };
+  }
+}
+
+export { LEGACY_METHODOLOGY };

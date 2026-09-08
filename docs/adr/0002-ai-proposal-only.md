@@ -1,8 +1,8 @@
 # ADR 0002: AI workers may only propose
 
-- Status: Accepted
+- Status: Implemented in Phase 3 (MCP proposal-only; publication still unavailable)
 - Date: 2026-09-09
-- Phase: 0 (decision recorded; MCP not implemented)
+- Phase: 3
 
 ## Context
 
@@ -15,5 +15,7 @@ AI workers never write canonical facts. They submit typed proposals through a le
 ## Consequences
 
 - Direct `INSERT`/`UPDATE` of public facts from an extractor is a defect, including in “authorized lab” framing.
-- Proposal identity, idempotency, review, and publication receipts are required before any AI-written field can appear publicly (Phase 3–4).
-- Phase 0 does not add MCP. This ADR exists so later work cannot treat a successful model call as a write.
+- Proposal identity, digest-bound idempotency, and review exist in schema version 6. Publication receipts remain Phase 6.
+- The built-in MCP server filters discovery by capability and rejects hidden names, including publication tools, before any handler runs.
+- Proposal, review, and revision identity is the server-bound `principalId` (`MCP_PRINCIPAL_ID` on stdio), never a model-supplied `actorId` or `reviewerId`.
+- A successful model call is still not a canonical write.

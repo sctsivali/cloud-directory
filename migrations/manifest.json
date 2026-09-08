@@ -1,5 +1,5 @@
 {
-  "schema_version": 5,
+  "schema_version": 6,
   "migrations": [
     {
       "version": 1,
@@ -25,6 +25,11 @@
       "version": 5,
       "filename": "0005_claims_evidence_snapshots.sql",
       "checksum": "aeb7b2e4f7422cd93e62ea91ae8073e0e8b068c5b00e247fab6b2d9efcab3c2d"
+    },
+    {
+      "version": 6,
+      "filename": "0006_proposals_reviews_revisions.sql",
+      "checksum": "305cb0b0a45016b9f1f5d98b2efd48066bdd7b62e1afeb6b812e7cd59d155131"
     }
   ]
 }

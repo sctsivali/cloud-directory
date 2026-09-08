@@ -49,9 +49,12 @@ EXPECTED_TABLES = (
     "claims",
     "evidence",
     "claim_evidence",
+    "proposals",
+    "proposal_reviews",
+    "revisions",
 )
 
-PHASE2_VERSIONS = [1, 2, 3, 4, 5]
+CURRENT_VERSIONS = [1, 2, 3, 4, 5, 6]
 
 BUILDING_PATCH_COLUMNS = (
     "facilities",
@@ -116,7 +119,7 @@ class TestMigrations(unittest.TestCase):
 
     def test_empty_database_migrates_to_current_schema(self):
         result = migrate.apply_migrations(TEST_DATABASE_URL)
-        self.assertEqual(result.applied, PHASE2_VERSIONS)
+        self.assertEqual(result.applied, CURRENT_VERSIONS)
         tables = _table_names(self.conn)
         for name in EXPECTED_TABLES:
             self.assertIn(name, tables, name)
@@ -134,7 +137,7 @@ class TestMigrations(unittest.TestCase):
         rows = self.conn.execute(
             "SELECT version, checksum FROM schema_migrations ORDER BY version"
         ).fetchall()
-        self.assertEqual([r[0] for r in rows], PHASE2_VERSIONS)
+        self.assertEqual([r[0] for r in rows], CURRENT_VERSIONS)
         expected = hashlib.sha256(
             (ROOT / "migrations" / "0001_legacy_baseline.sql").read_bytes()
         ).hexdigest()
@@ -172,7 +175,7 @@ class TestMigrations(unittest.TestCase):
         self.conn.commit()
 
         result = migrate.apply_migrations(TEST_DATABASE_URL)
-        self.assertEqual(result.applied, PHASE2_VERSIONS)
+        self.assertEqual(result.applied, CURRENT_VERSIONS)
 
         after = self.conn.execute(
             "SELECT id, name, hq_country, website FROM providers WHERE id = 'legacy-local'"

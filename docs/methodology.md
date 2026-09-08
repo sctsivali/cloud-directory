@@ -1,6 +1,6 @@
 # Methodology (legacy baseline)
 
-Status: Phase 2 does not change public indicators. Version label on the site remains editorial copy, not a stored `methodology_versions` row. Canonical claim/evidence tables exist but are not inputs to SOV, CONF, OSS, Arena, or the wizard.
+Status: Phase 3 does not change public indicators. MCP `directory.explain_score` describes this same legacy methodology. Version label on the site remains editorial copy, not a stored `methodology_versions` row. Canonical claim/evidence tables exist but are not inputs to SOV, CONF, OSS, Arena, or the wizard.
 
 These formulas are implemented in `web/src/lib/legacy-scoring.ts` and executed in PostgreSQL via `web/src/lib/db.ts`. Wizard derivation and shortlisting live in `web/src/lib/needs.ts`. Captured outputs in `tests/fixtures/legacy-scores.json` and `tests/fixtures/legacy-shortlists.json` are comparison evidence. They are not the accepted behavior of the future engine.
 

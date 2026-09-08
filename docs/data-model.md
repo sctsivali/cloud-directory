@@ -1,6 +1,6 @@
 # Data model
 
-Status: Phase 2. Public legacy tables from `migrations/0001_legacy_baseline.sql` remain the score/API grain. Migrations 0002–0005 add canonical identity, geography, technology, and evidence tables beside them. No production cutover is authorized by this document.
+Status: Phase 3. Public legacy tables from `migrations/0001_legacy_baseline.sql` remain the score/API grain. Migrations 0002–0005 add canonical identity, geography, technology, and evidence tables beside them. Migration 0006 adds durable proposals, reviews, and revisions. No production cutover is authorized by this document.
 
 ## Public legacy tables (unchanged grain)
 
@@ -77,9 +77,17 @@ Unknown is not false and is not confirmed absence. Contradictory stances resolve
 
 It is idempotent and does not rewrite public scoring tables.
 
-## Later domains (not in Phase 2)
+## Phase 3 workflow tables (`0006_proposals_reviews_revisions.sql`)
 
-Proposals, reviews, revisions, publication receipts, methodology versions, scoring runs, trends, and outlooks remain future work.
+- `proposals` — typed MCP submissions. Unique `idempotency_key`. `body_digest` is SHA-256 of the canonical body. Status: `pending_review`, `approved`, `rejected`, `changes_requested`. `actor_id` must be a canonical lowercase ASCII identifier (`^[a-z][a-z0-9_-]{0,63}$`).
+- `revisions` — ordered body history for a proposal. Changing an approved proposal inserts a revision and returns status to `pending_review`. `actor_id` uses the same canonical principal rule.
+- `proposal_reviews` — review decisions. `reviewer_id` uses the same canonical principal rule. A trigger rejects `approve` when `reviewer_id` equals `proposals.actor_id`. A later body change sets `invalidated_at` on prior approvals.
+
+Publication receipts are not created in this phase.
+
+## Later domains (not in Phase 3)
+
+Publication receipts, methodology versions, scoring runs, trends, and outlooks remain future work.
 
 ## Sanitized acceptance corpus
 

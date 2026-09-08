@@ -32,6 +32,13 @@ REQUIRED_PHASE2_MARKERS = (
     ("0005_claims_evidence_snapshots.sql", "CREATE TABLE IF NOT EXISTS claim_evidence"),
     ("0005_claims_evidence_snapshots.sql", "knowledge_state"),
     ("0005_claims_evidence_snapshots.sql", "legacy/unverified"),
+    ("0006_proposals_reviews_revisions.sql", "CREATE TABLE IF NOT EXISTS proposals"),
+    ("0006_proposals_reviews_revisions.sql", "CREATE TABLE IF NOT EXISTS proposal_reviews"),
+    ("0006_proposals_reviews_revisions.sql", "CREATE TABLE IF NOT EXISTS revisions"),
+    ("0006_proposals_reviews_revisions.sql", "body_digest"),
+    ("0006_proposals_reviews_revisions.sql", "idempotency_key"),
+    ("0006_proposals_reviews_revisions.sql", "proposal cannot self-approve"),
+    ("0006_proposals_reviews_revisions.sql", r"^[a-z][a-z0-9_-]{0,63}$"),
 )
 
 REQUIRED_BASELINE_MARKERS = (
@@ -93,7 +100,7 @@ class TestManifestLedger(unittest.TestCase):
         self.manifest_path = self.migrations_dir / "manifest.json"
         self.baseline = self.migrations_dir / "0001_legacy_baseline.sql"
 
-    def test_manifest_lists_contiguous_phase2_migrations_with_matching_checksums(self):
+    def test_manifest_lists_contiguous_phase3_migrations_with_matching_checksums(self):
         self.assertTrue(self.manifest_path.is_file(), "migrations/manifest.json is required")
         self.assertTrue(self.baseline.is_file(), "migrations/0001_legacy_baseline.sql is required")
         expected_files = [
@@ -102,10 +109,11 @@ class TestManifestLedger(unittest.TestCase):
             "0003_locations_facilities_deployments.sql",
             "0004_technologies.sql",
             "0005_claims_evidence_snapshots.sql",
+            "0006_proposals_reviews_revisions.sql",
         ]
         manifest = json.loads(self.manifest_path.read_text())
-        self.assertEqual(manifest["schema_version"], 5)
-        self.assertEqual(len(manifest["migrations"]), 5)
+        self.assertEqual(manifest["schema_version"], 6)
+        self.assertEqual(len(manifest["migrations"]), 6)
         for i, filename in enumerate(expected_files, start=1):
             row = manifest["migrations"][i - 1]
             self.assertEqual(row["version"], i)
@@ -115,7 +123,7 @@ class TestManifestLedger(unittest.TestCase):
             digest = hashlib.sha256(path.read_bytes()).hexdigest()
             self.assertEqual(row["checksum"], digest)
         loaded = migrate.load_manifest(self.migrations_dir)
-        self.assertEqual(loaded.schema_version, 5)
+        self.assertEqual(loaded.schema_version, 6)
         self.assertEqual([m.filename for m in loaded.migrations], expected_files)
         self.assertEqual(loaded.migrations[0].checksum, hashlib.sha256(self.baseline.read_bytes()).hexdigest())
 
@@ -168,6 +176,7 @@ class TestManifestLedger(unittest.TestCase):
         migrate.assert_supported_schema_version(applied_max=None, manifest_max=1)
         migrate.assert_supported_schema_version(applied_max=1, manifest_max=1)
         migrate.assert_supported_schema_version(applied_max=5, manifest_max=5)
+        migrate.assert_supported_schema_version(applied_max=6, manifest_max=6)
 
     def test_recorded_checksum_mismatch_fails_closed(self):
         with self.assertRaises(migrate.ChecksumMismatchError) as ctx:
