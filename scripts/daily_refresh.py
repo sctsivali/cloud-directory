@@ -6,20 +6,73 @@ Silent when nothing new and refresh is healthy.
 """
 from __future__ import annotations
 
-import csv, json, re, subprocess, sys
+import argparse, csv, json, re, subprocess, sys
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 
-ROOT = Path("/home/hermes-prime/arena-next")
-INGEST = ROOT / "data" / "ingest"
-GATE = ROOT / "scripts" / "ingest_provider.py"
-CANDIDATES = ROOT / "data" / "uncovered-candidates.csv"
-STATE = ROOT / "data" / ".discover-state.json"
-TMP = Path("/tmp/cd-daily")
 ASEAN = {
     "Indonesia", "Malaysia", "Singapore", "Thailand", "Vietnam",
     "Philippines", "Cambodia", "Laos", "Myanmar", "Brunei",
 }
+
+
+@dataclass(frozen=True)
+class RefreshPaths:
+    root: Path
+    ingest: Path
+    gate: Path
+    candidates: Path
+    state: Path
+    tmp: Path
+
+
+def repo_root() -> Path:
+    return Path(__file__).resolve().parent.parent
+
+
+def parse_args(argv=None):
+    p = argparse.ArgumentParser(
+        description="15-minute watchdog: refresh known files + ingest one uncovered provider."
+    )
+    p.add_argument("--root", type=Path, default=None, help="Repository root (defaults to this checkout)")
+    p.add_argument("--ingest-dir", type=Path, default=None)
+    p.add_argument("--gate", type=Path, default=None)
+    p.add_argument("--candidates", type=Path, default=None)
+    p.add_argument("--state", type=Path, default=None)
+    p.add_argument("--tmp", type=Path, default=Path("/tmp/cd-daily"))
+    return p.parse_args(argv)
+
+
+def paths_from_args(args) -> RefreshPaths:
+    root = (args.root or repo_root()).resolve()
+    return RefreshPaths(
+        root=root,
+        ingest=(args.ingest_dir or (root / "data" / "ingest")).resolve(),
+        gate=(args.gate or (root / "scripts" / "ingest_provider.py")).resolve(),
+        candidates=(args.candidates or (root / "data" / "uncovered-candidates.csv")).resolve(),
+        state=(args.state or (root / "data" / ".discover-state.json")).resolve(),
+        tmp=Path(args.tmp).resolve(),
+    )
+
+
+def configure(paths: RefreshPaths) -> None:
+    global ROOT, INGEST, GATE, CANDIDATES, STATE, TMP
+    ROOT = paths.root
+    INGEST = paths.ingest
+    GATE = paths.gate
+    CANDIDATES = paths.candidates
+    STATE = paths.state
+    TMP = paths.tmp
+
+
+ROOT: Path
+INGEST: Path
+GATE: Path
+CANDIDATES: Path
+STATE: Path
+TMP: Path
+configure(paths_from_args(parse_args([])))
 
 
 def fetch(url: str) -> tuple[int, str]:
@@ -325,7 +378,8 @@ def refresh_known() -> list[str]:
     return fail
 
 
-def main() -> int:
+def main(argv=None) -> int:
+    configure(paths_from_args(parse_args(argv)))
     fail = refresh_known()
     added = hunt_and_ingest()
     if not fail and not added:

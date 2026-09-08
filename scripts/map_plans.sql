@@ -1,3 +1,5 @@
+-- Schema ALTER in this file is deprecated.
+-- Canonical schema is migrations/0001_legacy_baseline.sql (scripts/migrate.py).
 BEGIN;
 ALTER TABLE tiers ADD COLUMN IF NOT EXISTS dc_location TEXT;
 ALTER TABLE tiers ADD COLUMN IF NOT EXISTS dc_city TEXT;

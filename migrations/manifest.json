@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "migrations": [
+    {
+      "version": 1,
+      "filename": "0001_legacy_baseline.sql",
+      "checksum": "c0fcb09fe38aae098eff51b0baf098765ce8221b950296135e07dd041d4498c6"
+    }
+  ]
+}

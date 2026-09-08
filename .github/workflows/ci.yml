@@ -1,0 +1,96 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: cloud_directory_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U test -d cloud_directory_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    env:
+      TEST_DATABASE_URL: postgres://test:test@localhost:5432/cloud_directory_test
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Node dependencies
+        working-directory: web
+        run: npm ci
+
+      - name: Typecheck
+        working-directory: web
+        run: npm run typecheck
+
+      - name: Test
+        working-directory: web
+        run: npm test
+
+      - name: Production build
+        working-directory: web
+        run: npm run build
+
+      - name: Install Python test dependencies
+        run: python -m pip install pytest "psycopg[binary]"
+
+      - name: Migration manifest checksum ledger
+        run: python scripts/migrate.py --verify-manifest
+
+      - name: Python tests
+        run: python -m pytest
+
+      - name: Clean-database migration
+        run: |
+          python - <<'PY'
+          import os
+          import psycopg
+          url = os.environ["TEST_DATABASE_URL"]
+          with psycopg.connect(url, autocommit=True) as conn:
+              conn.execute("DROP SCHEMA public CASCADE")
+              conn.execute("CREATE SCHEMA public")
+          PY
+          python scripts/migrate.py --database-url "$TEST_DATABASE_URL"
+
+      - name: Legacy upgrade migration
+        run: |
+          python - <<'PY'
+          import importlib.util
+          import os
+          from pathlib import Path
+          import psycopg
+
+          root = Path.cwd()
+          spec = importlib.util.spec_from_file_location("migrate", root / "scripts" / "migrate.py")
+          migrate = importlib.util.module_from_spec(spec)
+          spec.loader.exec_module(migrate)
+          url = os.environ["TEST_DATABASE_URL"]
+          sql = (root / "tests" / "fixtures" / "sql" / "representative_legacy.sql").read_text()
+          with psycopg.connect(url, autocommit=True) as conn:
+              conn.execute("DROP SCHEMA public CASCADE")
+              conn.execute("CREATE SCHEMA public")
+              for stmt in migrate.split_sql_statements(sql):
+                  conn.execute(stmt)
+          PY
+          python scripts/migrate.py --database-url "$TEST_DATABASE_URL"

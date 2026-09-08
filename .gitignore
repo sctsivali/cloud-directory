@@ -17,4 +17,7 @@ web/node_modules/
 *.tsbuildinfo
 .cloudflared/
 data/.discover-state.json
+__pycache__/
+*.py[cod]
+.pytest_cache/
 

@@ -1,0 +1,37 @@
+{
+  "rows": [
+    {
+      "provider": "Fixture Cloud",
+      "provider_country": "Indonesia",
+      "country": "Indonesia",
+      "provider_origin": "local",
+      "provider_type": "IaaS",
+      "region": "Jakarta",
+      "dc_location": "Jakarta",
+      "tier_name": "Small NVMe",
+      "vCPU": 2,
+      "ram_gb": 4,
+      "storage_gb": 40,
+      "storage_type": "NVMe",
+      "price": "80000",
+      "currency": "IDR",
+      "price_usd_per_month": 5.0,
+      "billing_period": "monthly",
+      "ipv4": 1,
+      "ipv6": true
+    },
+    {
+      "id": "explicit-id-1",
+      "provider": "Fixture Cloud",
+      "provider_country": "Indonesia",
+      "country": "Indonesia",
+      "tier_name": "Large",
+      "vCPU": 8,
+      "ram_gb": 16,
+      "storage_gb": 160,
+      "price": "16",
+      "currency": "USD",
+      "price_usd_per_month": 16.0
+    }
+  ]
+}
