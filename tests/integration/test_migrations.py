@@ -52,9 +52,11 @@ EXPECTED_TABLES = (
     "proposals",
     "proposal_reviews",
     "revisions",
+    "collection_tasks",
+    "model_runs",
 )
 
-CURRENT_VERSIONS = [1, 2, 3, 4, 5, 6]
+CURRENT_VERSIONS = [1, 2, 3, 4, 5, 6, 7]
 
 BUILDING_PATCH_COLUMNS = (
     "facilities",

@@ -33,7 +33,7 @@ Unknown is unknown. We do not invent building names, photos, or legal conclusion
 
 ## Schema
 
-PostgreSQL migrations live in `migrations/` with a checksum ledger (`migrations/manifest.json`, currently schema version 6). Apply with an explicit URL:
+PostgreSQL migrations live in `migrations/` with a checksum ledger (`migrations/manifest.json`, currently schema version 7). Apply with an explicit URL:
 
 ```bash
 python scripts/migrate.py --database-url "$TEST_DATABASE_URL"

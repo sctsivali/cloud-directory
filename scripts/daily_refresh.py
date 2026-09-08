@@ -6,7 +6,7 @@ Silent when nothing new and refresh is healthy.
 """
 from __future__ import annotations
 
-import argparse, csv, json, re, subprocess, sys
+import argparse, csv, json, re, subprocess, sys, warnings
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -41,6 +41,11 @@ def parse_args(argv=None):
     p.add_argument("--candidates", type=Path, default=None)
     p.add_argument("--state", type=Path, default=None)
     p.add_argument("--tmp", type=Path, default=Path("/tmp/cd-daily"))
+    p.add_argument(
+        "--legacy-direct-write",
+        action="store_true",
+        help="Deprecated. Apply ingest SQL directly. Kept for compatibility; do not use for enrichment.",
+    )
     return p.parse_args(argv)
 
 
@@ -76,6 +81,12 @@ configure(paths_from_args(parse_args([])))
 
 
 def fetch(url: str) -> tuple[int, str]:
+    """Deprecated unbounded fetch. Phase 4 collectors must use workers.collector.fetch."""
+    warnings.warn(
+        "daily_refresh.fetch is deprecated; use workers.collector.fetch_url with injected DNS/HTTP",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     try:
         from curl_cffi import requests as r
 
@@ -343,6 +354,11 @@ def log_update(kind: str, pid: str, title_id: str, title_en: str,
 
 
 def refresh_known() -> list[str]:
+    warnings.warn(
+        "daily_refresh.refresh_known applies canonical SQL and is deprecated",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     fail: list[str] = []
     TMP.mkdir(parents=True, exist_ok=True)
     for path in sorted(INGEST.glob("*.json")):
@@ -379,19 +395,32 @@ def refresh_known() -> list[str]:
 
 
 def main(argv=None) -> int:
-    configure(paths_from_args(parse_args(argv)))
-    fail = refresh_known()
-    added = hunt_and_ingest()
-    if not fail and not added:
-        return 0
-    now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
-    lines = [f"Cloud Directory 15m — {now}"]
-    if added:
-        lines.append(added)
-    if fail:
-        lines.append("Gagal refresh: " + "; ".join(fail[:8]))
-    print("\n".join(lines))
-    return 1 if fail else 0
+    args = parse_args(argv)
+    configure(paths_from_args(args))
+    if args.legacy_direct_write:
+        warnings.warn(
+            "legacy direct SQL refresh is deprecated; Phase 4 enrichment is proposal-only",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        fail = refresh_known()
+        added = hunt_and_ingest()
+        if not fail and not added:
+            return 0
+        now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+        lines = [f"Cloud Directory 15m — {now}"]
+        if added:
+            lines.append(added)
+        if fail:
+            lines.append("Gagal refresh: " + "; ".join(fail[:8]))
+        print("\n".join(lines))
+        return 1 if fail else 0
+    print(
+        "daily_refresh: refusing live fetch and canonical writes; "
+        "use workers.orchestrator with mocked or injected transports",
+        file=sys.stderr,
+    )
+    return 2
 
 
 if __name__ == "__main__":

@@ -2,7 +2,7 @@
 """Validate a provider ingest JSON then emit SQL. Never truncates."""
 from __future__ import annotations
 
-import json, sys, argparse
+import json, sys, argparse, warnings
 from pathlib import Path
 
 ASEAN = {
@@ -78,6 +78,12 @@ def validate(doc: dict) -> None:
 
 
 def emit_sql(doc: dict) -> str:
+    warnings.warn(
+        "ingest_provider.emit_sql writes canonical legacy tables; "
+        "Phase 4 enrichment must submit MCP proposals instead",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     p = doc["provider"]
     fx = float(doc.get("fx_idr_per_usd") or 16000)
     lines = ["BEGIN;"]

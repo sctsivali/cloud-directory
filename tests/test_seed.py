@@ -98,3 +98,14 @@ class TestDailyRefreshPaths(unittest.TestCase):
         default_paths = daily_refresh.paths_from_args(daily_refresh.parse_args([]))
         self.assertEqual(default_paths.root, ROOT.resolve())
         self.assertEqual(default_paths.ingest, (ROOT / "data" / "ingest").resolve())
+
+    def test_default_main_refuses_direct_canonical_writes(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "data" / "ingest").mkdir(parents=True)
+            (root / "scripts").mkdir()
+            rc = daily_refresh.main(["--root", str(root)])
+            self.assertEqual(rc, 2)
+        src = (ROOT / "scripts" / "daily_refresh.py").read_text()
+        self.assertIn("workers.orchestrator", src)
+        self.assertIn("--legacy-direct-write", src)

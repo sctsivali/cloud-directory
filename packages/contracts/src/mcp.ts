@@ -1,6 +1,6 @@
 export const MCP_CONTRACT_NAME = "cloud-directory-mcp";
 export const MCP_CONTRACT_VERSION = "1.0.0";
-export const MCP_SCHEMA_VERSION = 6;
+export const MCP_SCHEMA_VERSION = 7;
 
 export const CAPABILITIES = [
   "read",

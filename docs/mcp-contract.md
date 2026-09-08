@@ -1,6 +1,6 @@
-# MCP contract (Phase 3)
+# MCP contract (Phase 3, used by Phase 4 workers)
 
-Status: Phase 3. Built-in Model Context Protocol server for `guide.cloudin.asia`. AI clients may read the directory and submit typed proposals. They cannot publish, execute SQL, or rewrite canonical facts.
+Status: Phase 4 workers submit through this same proposal-only contract. Built-in Model Context Protocol server for `guide.cloudin.asia`. AI clients may read the directory and submit typed proposals. They cannot publish, execute SQL, or rewrite canonical facts.
 
 ## Contract identity
 
@@ -8,7 +8,7 @@ Status: Phase 3. Built-in Model Context Protocol server for `guide.cloudin.asia`
 |---|---|
 | Name | `cloud-directory-mcp` |
 | Contract version | `1.0.0` |
-| Backing schema version | `6` (`migrations/0006_proposals_reviews_revisions.sql`) |
+| Backing schema version | `7` (`migrations/0007_collection_pipeline.sql`) |
 | Transport | stdio (official MCP TypeScript SDK) or in-process for tests |
 
 This contract is separate from the public HTTP API and from any WordPress/editorial MCP.
@@ -20,7 +20,7 @@ Server-side only. A client cannot escalate by declaring extra MCP features.
 | Capability | Phase 3 |
 |---|---|
 | `read` | Available. Discovery includes the read tools below. |
-| `collect` | Reserved. No collect tools are registered. |
+| `collect` | Reserved on MCP. Collection runs in `workers/` with injected DNS/HTTP. Workers submit through a transport-level MCP proposal client. Identity is the server-bound principal (`MCP_PRINCIPAL_ID`), not a worker `actor_id`. |
 | `propose` | Available. Typed proposal tools only. |
 | `review` | Available. Non-approval review decisions. |
 | `approve` | Available. Approval cannot be performed by the proposer. |
@@ -55,7 +55,7 @@ Canonical writes are not exposed. These tools persist a proposal row:
 - `directory.propose_retraction`
 - `directory.revise_proposal` (body change; an approved proposal returns to review)
 
-There is no generic SQL tool and no arbitrary field-mutation tool.
+There is no generic SQL tool and no arbitrary field-mutation tool. Phase 4 workers invoke these tools over an MCP transport. They do not `INSERT` into `proposals`, `revisions`, or `proposal_reviews`, and they do not send `actorId` / `actor_id` in the tool payload.
 
 ## Review tools
 

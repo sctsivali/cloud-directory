@@ -1,6 +1,6 @@
 # Data model
 
-Status: Phase 3. Public legacy tables from `migrations/0001_legacy_baseline.sql` remain the score/API grain. Migrations 0002–0005 add canonical identity, geography, technology, and evidence tables beside them. Migration 0006 adds durable proposals, reviews, and revisions. No production cutover is authorized by this document.
+Status: Phase 4. Public legacy tables from `migrations/0001_legacy_baseline.sql` remain the score/API grain. Migrations 0002–0005 add canonical identity, geography, technology, and evidence tables beside them. Migration 0006 adds durable proposals, reviews, and revisions. Migration 0007 adds collection tasks, model runs, and fetch-receipt outcome columns. No production cutover is authorized by this document.
 
 ## Public legacy tables (unchanged grain)
 
@@ -85,7 +85,15 @@ It is idempotent and does not rewrite public scoring tables.
 
 Publication receipts are not created in this phase.
 
-## Later domains (not in Phase 3)
+## Phase 4 collection tables (`0007_collection_pipeline.sql`)
+
+- `collection_tasks` — durable fetch/extract/verify/propose work. Unique `idempotency_key`. Lease owner must be a canonical principal. `fetched_at` is immutable once set so replay cannot change freshness.
+- `model_runs` — immutable extractor provenance: model/provider, ruleset version, input digest, output digest, least-data envelope, exact JSON output. Unique per `(collection_task_id, adapter_name, input_digest)`.
+- `fetch_snapshots.fetch_state` — distinct `ok` / `redirect` / `forbidden` / `not_found` / `timeout` / `blocked` / `oversized` / `malformed` / `unsupported_content_type`. Redirect hops are stored on `redirect_chain` and every hop is revalidated.
+
+Workers persist receipts. They submit MCP proposals with status `pending_review` through the MCP server; they do not insert into `proposals`, `revisions`, `proposal_reviews`, or public `providers`, `tiers`, `stacks`, or `directory_updates`.
+
+## Later domains (not in Phase 4)
 
 Publication receipts, methodology versions, scoring runs, trends, and outlooks remain future work.
 
