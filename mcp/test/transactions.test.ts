@@ -4,7 +4,7 @@ import { ERROR_CODE, OUTCOME } from "../src/errors.ts";
 import { PostgresProposalRepository } from "../src/pg-store.ts";
 import { submitProposal } from "../src/proposal-tools.ts";
 import { approveProposal, reviewProposal, reviseProposal } from "../src/review-tools.ts";
-import { MemoryProposalRepository } from "../src/store.ts";
+import { MemoryProposalRepository, nowIso } from "../src/store.ts";
 import type { ConnectionProvider, QueryExecutor } from "../src/pg-store.ts";
 import { TEST_DATABASE_URL, withMigratedDatabase } from "./pg-harness.ts";
 
@@ -120,6 +120,38 @@ describe("in-memory compound transitions stay atomic", () => {
     assert.equal((await repo.listRevisions(created.proposal.id)).length, 1);
     assert.equal((await repo.listReviews(created.proposal.id))[0]?.invalidatedAt, null);
   });
+
+  it("derives revision ordinal from current in-write state, not a stale pre-read", async () => {
+    const repo = new MemoryProposalRepository();
+    const created = await submitProposal(
+      repo,
+      "directory.propose_claim",
+      { ...claim, idempotencyKey: "mem-ordinal-1" },
+      "worker-a"
+    );
+    assert.equal(created.outcome, OUTCOME.created);
+    if (created.outcome !== "created") return;
+    repo.revisions.push({
+      id: "sneaked-revision",
+      proposalId: created.proposal.id,
+      revisionOrdinal: 2,
+      body: { sneaked: true },
+      bodyDigest: "b".repeat(64),
+      actorId: "worker-a",
+      createdAt: nowIso(),
+    });
+    const revised = await reviseProposal(
+      repo,
+      {
+        proposalId: created.proposal.id,
+        body: { subjectId: "local-packages", claimType: "storage" },
+      },
+      "worker-a"
+    );
+    assert.equal(revised.outcome, OUTCOME.created);
+    const ordinals = (await repo.listRevisions(created.proposal.id)).map((row) => row.revisionOrdinal);
+    assert.deepEqual(ordinals, [1, 2, 3]);
+  });
 });
 
 describe("PostgreSQL repository acquires a dedicated transaction client", () => {
@@ -202,7 +234,71 @@ describe("PostgreSQL repository acquires a dedicated transaction client", () => 
     assert.equal(acquired, 2);
     assert.equal(released, 2);
   });
+
+  it("locks the proposal row before any review or revision mutation on that client", async () => {
+    const queries: string[] = [];
+    const now = new Date().toISOString();
+    const proposalRow = {
+      id: "p-lock-1",
+      tool_name: "directory.propose_claim",
+      actor_id: "worker-a",
+      idempotency_key: "lock-1",
+      body: { claimType: "hypervisor" },
+      body_digest: "a".repeat(64),
+      status: "pending_review",
+      created_at: now,
+      updated_at: now,
+    };
+    const provider = {
+      query: async () => ({ rows: [] }),
+      async connect() {
+        return {
+          query: async (queryText: string) => {
+            queries.push(String(queryText));
+            if (/FOR UPDATE/i.test(String(queryText))) return { rows: [proposalRow] };
+            if (/MAX\(revision_ordinal\)/i.test(String(queryText))) return { rows: [{ n: 1 }] };
+            return { rows: [] };
+          },
+          release() {},
+        };
+      },
+    };
+    const repo = new PostgresProposalRepository(provider as ConnectionProvider);
+    const reviewed = await repo.recordReviewAndStatus({
+      id: "revw-lock-1",
+      proposalId: proposalRow.id,
+      reviewerId: "editor-1",
+      decision: "reject",
+      comment: null,
+      createdAt: now,
+      invalidatedAt: null,
+    });
+    assert.equal(reviewed.write, "ok");
+    assertLockThenWrite(queries);
+    queries.length = 0;
+    const revised = await repo.reviseInvalidateAndUpdate(
+      {
+        id: "rev-lock-1",
+        proposalId: proposalRow.id,
+        body: { subjectId: "local-packages", claimType: "storage" },
+        actorId: "worker-a",
+        createdAt: now,
+      },
+      now
+    );
+    assert.equal(revised.write, "ok");
+    assertLockThenWrite(queries);
+  });
 });
+
+function assertLockThenWrite(queries: string[]): void {
+  const begin = queries.findIndex((query) => query.trim() === "BEGIN");
+  const lock = queries.findIndex((query) => /FOR UPDATE/i.test(query));
+  const write = queries.findIndex((query) => /^(INSERT|UPDATE|DELETE)\b/i.test(query.trim()));
+  assert.ok(begin >= 0, "missing BEGIN");
+  assert.ok(lock > begin, "FOR UPDATE must run after BEGIN");
+  assert.ok(write > lock, "mutation must run after FOR UPDATE");
+}
 
 describe("PostgreSQL compound transitions stay atomic", { skip: !TEST_DATABASE_URL }, () => {
   it("rolls back proposal+revision so a fault leaves no partial row", async () => {

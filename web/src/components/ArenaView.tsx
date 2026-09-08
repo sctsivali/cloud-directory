@@ -7,13 +7,14 @@ import { Flag, flagForCountry } from "./Flag";
 import type { ArenaRow } from "@/lib/db";
 import { rankArenaRows, type LegacyArenaSort, type LegacyArenaScope } from "@/lib/legacy-scoring";
 import { loadCompare, saveCompare } from "@/lib/needs";
+import { sortMetricLabel, type SortMetricId } from "@/lib/scoring";
 import { officialTechLogo, displayTechField, stackBlob, techMono, techsForBlob } from "@/lib/tech";
 
 type Tab = LegacyArenaSort;
 type Scope = LegacyArenaScope;
 
 export function ArenaView({ rows }: { rows: ArenaRow[] }) {
-  const { t } = useLang();
+  const { lang, t } = useLang();
   const [tab, setTab] = useState<Tab>("sov");
   const [scope, setScope] = useState<Scope>("asean");
   const [country, setCountry] = useState("all");
@@ -60,12 +61,7 @@ export function ArenaView({ rows }: { rows: ArenaRow[] }) {
   }
 
   function scoreCaption() {
-    if (tab === "sov") return t.scoreSov;
-    if (tab === "oss") return t.scoreOss;
-    if (tab === "conf") return t.scoreConf;
-    if (tab === "cost") return t.scoreCost;
-    if (tab === "cover") return t.scoreCover;
-    return t.scorePerf;
+    return sortMetricLabel(tab as SortMetricId, lang === "en" ? "en" : "id", t.scoreCost);
   }
 
   function score(r: ArenaRow) {
@@ -107,6 +103,11 @@ export function ArenaView({ rows }: { rows: ArenaRow[] }) {
         <a href="/methodology">{t.navMethod}</a>.
       </p>
       <p className="section-sub">{t.scoreDisclaimer}</p>
+      {rows.some((r) => r.score_engine === "legacy-fallback") ? (
+        <p className="section-sub">{t.scoreEngineLegacy}</p>
+      ) : (
+        <p className="section-sub">{t.scoreEngineCanonical}</p>
+      )}
       {fromNeed ? <p className="section-sub">{t.screenBanner}</p> : null}
 
       <div className="toolbar">

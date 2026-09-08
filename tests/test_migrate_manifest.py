@@ -43,6 +43,13 @@ REQUIRED_PHASE2_MARKERS = (
     ("0007_collection_pipeline.sql", "CREATE TABLE IF NOT EXISTS model_runs"),
     ("0007_collection_pipeline.sql", "lease_owner"),
     ("0007_collection_pipeline.sql", "input_digest"),
+    ("0008_scoring_runs.sql", "CREATE TABLE IF NOT EXISTS methodology_versions"),
+    ("0008_scoring_runs.sql", "CREATE TABLE IF NOT EXISTS scoring_runs"),
+    ("0008_scoring_runs.sql", "CREATE TABLE IF NOT EXISTS score_components"),
+    ("0008_scoring_runs.sql", "ruleset_hash"),
+    ("0008_scoring_runs.sql", "asean-offering-deployment-v1"),
+    ("0008_scoring_runs.sql", "evidence_readiness"),
+    ("0008_scoring_runs.sql", "ranking_lower_bound"),
 )
 
 REQUIRED_BASELINE_MARKERS = (
@@ -115,10 +122,11 @@ class TestManifestLedger(unittest.TestCase):
             "0005_claims_evidence_snapshots.sql",
             "0006_proposals_reviews_revisions.sql",
             "0007_collection_pipeline.sql",
+            "0008_scoring_runs.sql",
         ]
         manifest = json.loads(self.manifest_path.read_text())
-        self.assertEqual(manifest["schema_version"], 7)
-        self.assertEqual(len(manifest["migrations"]), 7)
+        self.assertEqual(manifest["schema_version"], 8)
+        self.assertEqual(len(manifest["migrations"]), 8)
         for i, filename in enumerate(expected_files, start=1):
             row = manifest["migrations"][i - 1]
             self.assertEqual(row["version"], i)
@@ -128,7 +136,7 @@ class TestManifestLedger(unittest.TestCase):
             digest = hashlib.sha256(path.read_bytes()).hexdigest()
             self.assertEqual(row["checksum"], digest)
         loaded = migrate.load_manifest(self.migrations_dir)
-        self.assertEqual(loaded.schema_version, 7)
+        self.assertEqual(loaded.schema_version, 8)
         self.assertEqual([m.filename for m in loaded.migrations], expected_files)
         self.assertEqual(loaded.migrations[0].checksum, hashlib.sha256(self.baseline.read_bytes()).hexdigest())
 
@@ -183,6 +191,7 @@ class TestManifestLedger(unittest.TestCase):
         migrate.assert_supported_schema_version(applied_max=5, manifest_max=5)
         migrate.assert_supported_schema_version(applied_max=6, manifest_max=6)
         migrate.assert_supported_schema_version(applied_max=7, manifest_max=7)
+        migrate.assert_supported_schema_version(applied_max=8, manifest_max=8)
 
     def test_recorded_checksum_mismatch_fails_closed(self):
         with self.assertRaises(migrate.ChecksumMismatchError) as ctx:

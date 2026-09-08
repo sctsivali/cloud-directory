@@ -1,4 +1,5 @@
 import { Pool } from "pg";
+import { CURRENT_METHODOLOGY, LEGACY_FALLBACK_LABEL } from "../../../packages/domain/src/scoring/index.ts";
 import { LEGACY_CONF_SQL, LEGACY_OSS_SQL, LEGACY_SOV_SQL } from "./legacy-scoring";
 
 const globalForPg = globalThis as unknown as { pool?: Pool };
@@ -102,6 +103,26 @@ export async function getOverview(): Promise<OverviewData> {
   };
 }
 
+export type ScoreEngineMeta = {
+  score_engine: "canonical" | "legacy-fallback";
+  algorithm_version: string;
+  ruleset_hash: string;
+  data_revision: string;
+  uncertainty: number | null;
+  fallback_label: string | null;
+};
+
+export function legacyScoreMeta(): ScoreEngineMeta {
+  return {
+    score_engine: "legacy-fallback",
+    algorithm_version: CURRENT_METHODOLOGY.algorithmVersion,
+    ruleset_hash: CURRENT_METHODOLOGY.rulesetHash,
+    data_revision: "legacy-public-tables",
+    uncertainty: 1,
+    fallback_label: LEGACY_FALLBACK_LABEL,
+  };
+}
+
 export type ArenaRow = OverviewProvider & {
   loc_count: number;
   oss_score: number;
@@ -111,7 +132,7 @@ export type ArenaRow = OverviewProvider & {
   storage: string | null;
   container_runtime: string | null;
   control_plane: string | null;
-};
+} & ScoreEngineMeta;
 
 export async function getArena(): Promise<ArenaRow[]> {
   const { rows } = await pool.query<ArenaRow>(`
@@ -134,7 +155,43 @@ export async function getArena(): Promise<ArenaRow[]> {
     GROUP BY p.id, s.data_residency, st.hypervisor, st.orchestration, st.storage, st.container_runtime, st.control_plane, st.open_source, st.source_url
     ORDER BY p.is_local_asean DESC, p.name
   `);
-  return rows;
+  const meta = await loadScoreMetaByProvider(rows.map((r) => r.id));
+  return rows.map((row) => ({ ...row, ...(meta.get(row.id) ?? legacyScoreMeta()) }));
+}
+
+async function loadScoreMetaByProvider(ids: string[]): Promise<Map<string, ScoreEngineMeta>> {
+  const out = new Map<string, ScoreEngineMeta>();
+  if (ids.length === 0) return out;
+  try {
+    const { rows } = await pool.query<{
+      provider_id: string;
+      algorithm_version: string;
+      ruleset_hash: string;
+      data_revision: string;
+      uncertainty: number | null;
+      engine: "canonical" | "legacy-fallback";
+    }>(
+      `SELECT DISTINCT ON (provider_id)
+         provider_id, algorithm_version, ruleset_hash, data_revision, uncertainty::float, engine
+       FROM scoring_runs
+       WHERE provider_id = ANY($1)
+       ORDER BY provider_id, created_at DESC`,
+      [ids]
+    );
+    for (const row of rows) {
+      out.set(row.provider_id, {
+        score_engine: row.engine,
+        algorithm_version: row.algorithm_version,
+        ruleset_hash: row.ruleset_hash,
+        data_revision: row.data_revision,
+        uncertainty: row.uncertainty,
+        fallback_label: row.engine === "legacy-fallback" ? LEGACY_FALLBACK_LABEL : null,
+      });
+    }
+  } catch {
+    /* scoring_runs absent: labeled legacy fallback */
+  }
+  return out;
 }
 
 export type ProviderDetail = {
@@ -182,7 +239,7 @@ export type ProviderDetail = {
     sov_score: number | null;
     oss_score: number | null;
   }[];
-};
+} & ScoreEngineMeta;
 
 export async function getProvider(id: string): Promise<ProviderDetail | null> {
   const { rows } = await pool.query(
@@ -265,11 +322,13 @@ export async function getProvider(id: string): Promise<ProviderDetail | null> {
       [id]
     ),
   ]);
+  const meta = await loadScoreMetaByProvider([id]);
   return {
     ...p,
     cities: locs.rows,
     sources: srcs.rows,
     tiers: tiers.rows,
+    ...(meta.get(id) ?? legacyScoreMeta()),
   };
 }
 

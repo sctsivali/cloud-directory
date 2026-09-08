@@ -1,3 +1,10 @@
+import {
+  CURRENT_METHODOLOGY,
+  explainForSurface,
+  scoreWithFallback,
+  toPublicScoreView,
+  type OfferingDeploymentSubject,
+} from "../../packages/domain/src/scoring/index.ts";
 import { Client } from "./pg.ts";
 
 export type JsonObject = Record<string, unknown>;
@@ -9,14 +16,17 @@ export type DirectoryReader = {
   getClaims(subjectType: string, subjectId: string): Promise<JsonObject[]>;
   getEvidence(args: { claimId?: string; snapshotId?: string; evidenceId?: string }): Promise<JsonObject[]>;
   getSourceSnapshot(id: string): Promise<JsonObject | null>;
-  explainScore(providerId: string): Promise<JsonObject | null>;
+  explainScore(
+    providerId: string,
+    args?: { offeringId?: string; deploymentId?: string }
+  ): Promise<JsonObject | null>;
   getQualityReport(providerId?: string): Promise<JsonObject>;
 };
 
 const LEGACY_METHODOLOGY = {
-  engine: "legacy",
+  engine: "legacy-fallback",
   methodologyVersion: "2026.08.18",
-  note: "Public scores are unchanged. MCP explain_score is not a new ranking engine.",
+  note: "Legacy fallback: canonical offering/deployment data unavailable.",
   dimensions: [
     { code: "SOV", name: "Control & residency" },
     { code: "CONF", name: "Evidence quality" },
@@ -111,10 +121,86 @@ export class PostgresDirectoryReader implements DirectoryReader {
     return rows[0] ?? null;
   }
 
-  async explainScore(providerId: string): Promise<JsonObject | null> {
+  async explainScore(
+    providerId: string,
+    args?: { offeringId?: string; deploymentId?: string }
+  ): Promise<JsonObject | null> {
     const provider = await this.getProvider(providerId);
     if (!provider) return null;
-    return { ...LEGACY_METHODOLOGY, providerId, providerName: provider.name };
+    const subjects = await this.loadCanonicalSubjects(providerId);
+    const filtered = subjects.filter((subject) => {
+      if (args?.offeringId && subject.offeringId !== args.offeringId) return false;
+      if (args?.deploymentId && subject.deploymentId !== args.deploymentId) return false;
+      return true;
+    });
+    if (filtered.length === 0) {
+      const fallback = scoreWithFallback({
+        canonical: null,
+        legacyProvider: {
+          id: providerId,
+          name: String(provider.name ?? providerId),
+          sov: 0,
+          oss: 0,
+          conf: 0,
+        },
+        methodology: CURRENT_METHODOLOGY,
+        dataRevision: "legacy-public-tables",
+      });
+      return {
+        ...toPublicScoreView(fallback),
+        providerId,
+        providerName: provider.name,
+        legacy: LEGACY_METHODOLOGY,
+        surface: "mcp",
+      };
+    }
+    const scored = filtered.map((subject) =>
+      explainForSurface("mcp", {
+        subject,
+        methodology: CURRENT_METHODOLOGY,
+        dataRevision: "canonical-claims",
+      })
+    );
+    return {
+      ...toPublicScoreView(scored[0]!),
+      providerId,
+      providerName: provider.name,
+      subjects: scored.map(toPublicScoreView),
+      surface: "mcp",
+    };
+  }
+
+  private async loadCanonicalSubjects(providerId: string): Promise<OfferingDeploymentSubject[]> {
+    const offerings = await this.getOfferings(providerId);
+    if (offerings.length === 0) return [];
+    let deployments: { id: string; offering_id: string | null }[] = [];
+    try {
+      const { rows } = await this.client.query(
+        `SELECT id, offering_id FROM deployments WHERE provider_id = $1`,
+        [providerId]
+      );
+      deployments = rows as { id: string; offering_id: string | null }[];
+    } catch {
+      return [];
+    }
+    const pairs: OfferingDeploymentSubject[] = [];
+    for (const offering of offerings) {
+      const offeringId = String(offering.id);
+      const matched = deployments.filter((d) => d.offering_id === offeringId);
+      const deploymentIds = matched.length ? matched.map((d) => d.id) : [];
+      if (deploymentIds.length === 0) continue;
+      const claims = await this.getClaims("offering", offeringId);
+      for (const deploymentId of deploymentIds) {
+        const depClaims = await this.getClaims("deployment", deploymentId);
+        const allClaims = [...claims, ...depClaims] as Array<{
+          claim_type: string;
+          knowledge_state: string;
+          value: unknown;
+        }>;
+        pairs.push(subjectFromClaims(providerId, offeringId, deploymentId, String(offering.name ?? offeringId), allClaims));
+      }
+    }
+    return pairs;
   }
 
   async getQualityReport(providerId?: string): Promise<JsonObject> {
@@ -147,6 +233,83 @@ export class PostgresDirectoryReader implements DirectoryReader {
       providerId: providerId ?? null,
     };
   }
+}
+
+function claimValueCountry(value: unknown): string | null {
+  if (typeof value === "string") return value;
+  if (value && typeof value === "object" && "country" in value) {
+    const country = (value as { country?: unknown }).country;
+    return typeof country === "string" ? country : null;
+  }
+  return null;
+}
+
+function boundFromClaims(
+  claims: Array<{ claim_type: string; knowledge_state: string; value: unknown }>,
+  types: string[]
+): { knowledgeState: "present" | "confirmed_absent" | "unknown" | "conflicting" | "not_applicable"; value: string | null } {
+  const match = claims.filter((c) => types.includes(c.claim_type));
+  if (match.some((c) => c.knowledge_state === "conflicting")) {
+    return { knowledgeState: "conflicting", value: null };
+  }
+  const present = match.find((c) => c.knowledge_state === "present");
+  if (present) {
+    return { knowledgeState: "present", value: claimValueCountry(present.value) };
+  }
+  if (match.some((c) => c.knowledge_state === "confirmed_absent")) {
+    return { knowledgeState: "confirmed_absent", value: null };
+  }
+  return { knowledgeState: "unknown", value: null };
+}
+
+function subjectFromClaims(
+  providerId: string,
+  offeringId: string,
+  deploymentId: string,
+  offeringName: string,
+  claims: Array<{ claim_type: string; knowledge_state: string; value: unknown }>
+): OfferingDeploymentSubject {
+  const country = boundFromClaims(claims, ["deployment_country", "country"]);
+  const primary = boundFromClaims(claims, ["primary_residency", "data_residency"]);
+  const backup = boundFromClaims(claims, ["backup_residency"]);
+  const metadata = boundFromClaims(claims, ["metadata_residency", "control_plane_residency"]);
+  const legal = boundFromClaims(claims, ["legal_entity", "contracting_entity"]);
+  return {
+    offeringId,
+    deploymentId,
+    providerId,
+    offeringName,
+    deploymentCountry: country,
+    primaryResidency: primary,
+    backupResidency: backup,
+    metadataResidency: metadata,
+    contractingEntity: {
+      knowledgeState: legal.knowledgeState,
+      value: legal.value
+        ? { id: "claimed", jurisdictionCountry: legal.value }
+        : null,
+    },
+    administrativeAccess: { knowledgeState: "unknown", value: null },
+    keyControl: { knowledgeState: "unknown", value: null },
+    facility: { knowledgeState: "unknown", value: null },
+    technologies: [],
+    commercial: { knowledgeState: "unknown", value: null },
+    evidenceItems: claims.map((c) => ({
+      claimType: c.claim_type,
+      assessmentState: "legacy/unverified",
+      knowledgeState:
+        c.knowledge_state === "present" ||
+        c.knowledge_state === "confirmed_absent" ||
+        c.knowledge_state === "unknown" ||
+        c.knowledge_state === "conflicting" ||
+        c.knowledge_state === "not_applicable"
+          ? c.knowledge_state
+          : "unknown",
+      independent: false,
+      freshnessDays: null,
+      excerptPresent: false,
+    })),
+  };
 }
 
 export { LEGACY_METHODOLOGY };

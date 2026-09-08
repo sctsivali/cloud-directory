@@ -1,6 +1,6 @@
-# Methodology (legacy baseline)
+# Methodology
 
-Status: Phase 4 does not change public indicators. MCP `directory.explain_score` describes this same legacy methodology. Version label on the site remains editorial copy, not a stored `methodology_versions` row. Collection proposals are not inputs to SOV, CONF, OSS, Arena, or the wizard.
+Status: Phase 5 introduces the versioned offering/deployment engine `asean-offering-deployment-v1` (algorithm `1.0.0`) in `packages/domain/src/scoring`. Arena, wizard, compare, provider, methodology, and MCP `directory.explain_score` share that engine. When canonical offering/deployment data is unavailable, those surfaces show a **clearly labeled legacy fallback** (`legacy-fallback`). Captured SOV/CONF/OSS outputs remain comparison evidence, not the accepted behavior of the new engine. Public ranking is not cut over from the shadow report alone.
 
 These formulas are implemented in `web/src/lib/legacy-scoring.ts` and executed in PostgreSQL via `web/src/lib/db.ts`. Wizard derivation and shortlisting live in `web/src/lib/needs.ts`. Captured outputs in `tests/fixtures/legacy-scores.json` and `tests/fixtures/legacy-shortlists.json` are comparison evidence. They are not the accepted behavior of the future engine.
 
@@ -60,6 +60,34 @@ Compare only displays SOV, OSS, CONF, HQ, hypervisor, and min price for selected
 6. ASEAN membership differs between SQL scoring, wizard country lists, and Arena filter chips.
 7. Replay/import time is not separated from observation time.
 
-## Target methodology (not in force)
+## Canonical engine (in force for explanations; public list still may fall back)
 
-The future engine must keep unknown distinct from false and from confirmed absence; evaluate residency, legal control, and technology on the relevant offering or deployment; refuse silent constraint relaxation; and version every public score against a data revision and methodology id. Outlooks stay out of this document until there is longitudinal evidence.
+Dimensions (unknown is not zero; confirmed_absent is a known 0; conflicting is null + uncertainty):
+
+1. Primary-data residency
+2. Backup residency
+3. Metadata / control-plane residency
+4. Contracting entity and legal control
+5. Administrative access and key control
+6. Evidence coverage
+7. Evidence quality
+8. Open technology and portability
+9. Commercial comparability
+
+Every explanation includes components, reason codes, uncertainty, an uncertainty-adjusted `rankingLowerBound`, algorithm version, ruleset hash, and data revision. Composite stays the weighted mean of **known** dimensions only; unknown is not scored as zero. `rankingLowerBound` is the same weighted sum over all applicable dimensions with unknown/conflicting treated as 0 for ordering only.
+
+Ties break by recommendation group, ranking lower bound, composite, uncertainty, evidence coverage, then offering/deployment/provider id. `eligible` always ranks before `needs_verification`.
+
+Evidence coverage intersects observed claim types with `methodology.requiredEvidenceClaimTypes`. Irrelevant evidence cannot inflate coverage.
+
+Evidence quality never credits conflicting items. Material conflict (required claim types, or a conflicting share at/above the versioned threshold) sets quality to conflicting/null and, when quality is a critical dimension, `needs_verification` with `EVIDENCE_CONFLICT` / `CRITICAL_DIMENSION_CONFLICTING`.
+
+Open-technology scoring uses the `openTechnologySlugs` on the methodology passed into `scoreOfferingDeployment`, not a process-global list.
+
+Recommendation groups: `eligible`, `needs_verification`, `excluded`. Country, legal entity, facility, and residency hard constraints evaluate the offering/deployment subject and never silently relax.
+
+Evidence-readiness (versioned on the ruleset, part of the ruleset hash): a subject that did not hard-fail is placed in `needs_verification` when a critical dimension is unknown or conflicting, or when required-evidence coverage is below `minCoverage`.
+
+Shadow comparison: `scripts/compare_scoring_versions.ts` and `docs/reports/scoring-shadow-template.md`.
+
+Outlooks stay out of this document until there is longitudinal evidence.

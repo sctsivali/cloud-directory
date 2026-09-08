@@ -1,6 +1,6 @@
 export const MCP_CONTRACT_NAME = "cloud-directory-mcp";
 export const MCP_CONTRACT_VERSION = "1.0.0";
-export const MCP_SCHEMA_VERSION = 7;
+export const MCP_SCHEMA_VERSION = 8;
 
 export const CAPABILITIES = [
   "read",
@@ -205,9 +205,13 @@ export const TOOL_DEFINITIONS: readonly ToolDefinition[] = [
   {
     name: "directory.explain_score",
     capability: "read",
-    description: "Explain the current public scoring methodology for a provider.",
+    description: "Explain the versioned offering/deployment score, or a labeled legacy fallback.",
     phase3Available: true,
-    inputSchema: objectSchema(["providerId"], { providerId: stringField }),
+    inputSchema: objectSchema(["providerId"], {
+      providerId: stringField,
+      offeringId: optionalString,
+      deploymentId: optionalString,
+    }),
   },
   {
     name: "directory.get_quality_report",

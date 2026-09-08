@@ -41,6 +41,7 @@ describe("mcp pg dependency isolation", () => {
     assert.match(store, /\.connect\(/);
     assert.match(store, /\.release\(/);
     assert.match(store, /\bfinally\b/);
+    assert.match(store, /SELECT \* FROM proposals WHERE id = \$1 FOR UPDATE/);
     assert.doesNotMatch(store, /\b(mutex|Mutex|AsyncMutex|asyncMutex|withLock)\b/);
   });
 });

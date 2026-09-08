@@ -59,6 +59,11 @@ export function ProviderView({ data }: { data: ProviderDetail }) {
         </div>
       </div>
         <p className="section-sub">{t.scoreDisclaimer}</p>
+        <p className="section-sub">
+          {data.score_engine === "canonical" ? t.scoreEngineCanonical : t.scoreEngineLegacy}
+          {data.algorithm_version ? ` · ${data.algorithm_version}` : ""}
+          {data.uncertainty != null ? ` · ${Math.round(data.uncertainty * 100)}%` : ""}
+        </p>
         {data.legal_country === "United States" ? <p className="risk-banner">{t.riskBannerUs}</p> : null}
         {data.legal_country === "China" ? <p className="risk-banner">{t.riskBannerCn}</p> : null}
         {data.legal_note ? <p className="section-sub">{data.legal_note}</p> : null}

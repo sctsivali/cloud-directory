@@ -1,6 +1,6 @@
-# MCP contract (Phase 3, used by Phase 4 workers)
+# MCP contract (Phase 3, used by Phase 4 workers; Phase 5 explain_score)
 
-Status: Phase 4 workers submit through this same proposal-only contract. Built-in Model Context Protocol server for `guide.cloudin.asia`. AI clients may read the directory and submit typed proposals. They cannot publish, execute SQL, or rewrite canonical facts.
+Status: Phase 4 workers submit through this same proposal-only contract. Phase 5 points `directory.explain_score` at the shared scoring engine (or a labeled legacy fallback). Built-in Model Context Protocol server for `guide.cloudin.asia`. AI clients may read the directory and submit typed proposals. They cannot publish, execute SQL, or rewrite canonical facts.
 
 ## Contract identity
 
@@ -8,7 +8,7 @@ Status: Phase 4 workers submit through this same proposal-only contract. Built-i
 |---|---|
 | Name | `cloud-directory-mcp` |
 | Contract version | `1.0.0` |
-| Backing schema version | `7` (`migrations/0007_collection_pipeline.sql`) |
+| Backing schema version | `8` (`migrations/0008_scoring_runs.sql`) |
 | Transport | stdio (official MCP TypeScript SDK) or in-process for tests |
 
 This contract is separate from the public HTTP API and from any WordPress/editorial MCP.
@@ -40,7 +40,7 @@ Discovery lists only tools the session is authorized to use **and** that are ava
 - `directory.get_quality_report`
 - `directory.get_proposal` (status of a durable proposal)
 
-Read tools do not change public scoring, wizard shortlists, or `/updates`. `explain_score` describes the current legacy methodology; it is not a new engine.
+Read tools do not write canonical facts or `/updates`. `explain_score` uses the same offering/deployment engine as Arena, wizard, compare, provider, and methodology. Optional `offeringId` / `deploymentId` select the subject. When no canonical subject exists, the tool returns a payload labeled `legacy-fallback`.
 
 ## Proposal-only mutation tools
 

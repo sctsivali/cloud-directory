@@ -1,8 +1,28 @@
 import { randomUUID } from "node:crypto";
+import { bodyDigest } from "./digest.ts";
 import type { ProposalRecord, ReviewRecord, RevisionRecord } from "./types.ts";
 
 export type InsertResult = "inserted" | "conflict" | "uncertain";
 export type CompoundWriteResult = "ok" | "uncertain";
+
+export type RevisionIntent = {
+  id: string;
+  proposalId: string;
+  body: Record<string, unknown>;
+  actorId: string;
+  createdAt: string;
+};
+
+export type ReviewWriteResult =
+  | { write: "ok"; proposal: ProposalRecord; review: ReviewRecord }
+  | { write: "uncertain" }
+  | { write: "not_found" }
+  | { write: "self_approval" };
+
+export type RevisionWriteResult =
+  | { write: "ok"; proposal: ProposalRecord; revision: RevisionRecord }
+  | { write: "uncertain" }
+  | { write: "not_found" };
 
 export type ProposalRepository = {
   findByIdempotencyKey(key: string): Promise<ProposalRecord | null>;
@@ -13,13 +33,53 @@ export type ProposalRepository = {
     proposal: ProposalRecord,
     revision: RevisionRecord
   ): Promise<InsertResult>;
-  recordReviewAndStatus(review: ReviewRecord, proposal: ProposalRecord): Promise<CompoundWriteResult>;
+  recordReviewAndStatus(review: ReviewRecord): Promise<ReviewWriteResult>;
   reviseInvalidateAndUpdate(
-    revision: RevisionRecord,
-    proposal: ProposalRecord,
+    revision: RevisionIntent,
     invalidateAt: string
-  ): Promise<CompoundWriteResult>;
+  ): Promise<RevisionWriteResult>;
 };
+
+export function statusForReviewDecision(decision: ReviewRecord["decision"]): ProposalRecord["status"] {
+  if (decision === "approve") return "approved";
+  if (decision === "reject") return "rejected";
+  return "changes_requested";
+}
+
+export function derivedReviewProposal(current: ProposalRecord, review: ReviewRecord): ProposalRecord {
+  return {
+    ...current,
+    status: statusForReviewDecision(review.decision),
+    updatedAt: review.createdAt,
+  };
+}
+
+export function derivedRevision(
+  current: ProposalRecord,
+  maxOrdinal: number,
+  intent: RevisionIntent
+): { proposal: ProposalRecord; revision: RevisionRecord } {
+  const nextBody = { toolName: current.toolName, ...intent.body };
+  const digest = bodyDigest(nextBody);
+  return {
+    proposal: {
+      ...current,
+      body: nextBody,
+      bodyDigest: digest,
+      status: "pending_review",
+      updatedAt: intent.createdAt,
+    },
+    revision: {
+      id: intent.id,
+      proposalId: current.id,
+      revisionOrdinal: maxOrdinal + 1,
+      body: intent.body,
+      bodyDigest: digest,
+      actorId: intent.actorId,
+      createdAt: intent.createdAt,
+    },
+  };
+}
 
 export function newProposalId(): string {
   return randomUUID();
@@ -83,26 +143,34 @@ export class MemoryProposalRepository implements ProposalRepository {
     }, "uncertain");
   }
 
-  async recordReviewAndStatus(
-    review: ReviewRecord,
-    proposal: ProposalRecord
-  ): Promise<CompoundWriteResult> {
-    return this.atomically(() => {
+  async recordReviewAndStatus(review: ReviewRecord): Promise<ReviewWriteResult> {
+    return this.atomically<ReviewWriteResult>(() => {
+      const current = this.proposals.get(review.proposalId);
+      if (!current) return { write: "not_found" as const };
+      if (review.decision === "approve" && current.actorId === review.reviewerId) {
+        return { write: "self_approval" as const };
+      }
+      const proposal = derivedReviewProposal(current, review);
       this.reviews.push({ ...review });
       this.afterWrite();
       this.proposals.set(proposal.id, { ...proposal, body: { ...proposal.body } });
       this.byKey.set(proposal.idempotencyKey, proposal.id);
       this.afterWrite();
-      return "ok" as const;
-    }, "uncertain");
+      return { write: "ok" as const, proposal: this.cloneProposal(proposal)!, review: { ...review } };
+    }, { write: "uncertain" as const });
   }
 
   async reviseInvalidateAndUpdate(
-    revision: RevisionRecord,
-    proposal: ProposalRecord,
+    intent: RevisionIntent,
     invalidateAt: string
-  ): Promise<CompoundWriteResult> {
-    return this.atomically(() => {
+  ): Promise<RevisionWriteResult> {
+    return this.atomically<RevisionWriteResult>(() => {
+      const current = this.proposals.get(intent.proposalId);
+      if (!current) return { write: "not_found" as const };
+      const maxOrdinal = this.revisions
+        .filter((row) => row.proposalId === intent.proposalId)
+        .reduce((max, row) => Math.max(max, row.revisionOrdinal), 0);
+      const { proposal, revision } = derivedRevision(current, maxOrdinal, intent);
       this.revisions.push({ ...revision, body: { ...revision.body } });
       this.afterWrite();
       for (const row of this.reviews) {
@@ -114,8 +182,12 @@ export class MemoryProposalRepository implements ProposalRepository {
       this.proposals.set(proposal.id, { ...proposal, body: { ...proposal.body } });
       this.byKey.set(proposal.idempotencyKey, proposal.id);
       this.afterWrite();
-      return "ok" as const;
-    }, "uncertain");
+      return {
+        write: "ok" as const,
+        proposal: this.cloneProposal(proposal)!,
+        revision: { ...revision, body: { ...revision.body } },
+      };
+    }, { write: "uncertain" as const });
   }
 
   private snapshot(): MemorySnapshot {

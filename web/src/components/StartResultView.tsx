@@ -10,13 +10,13 @@ import {
   clearNeeds,
   deriveNeeds,
   emptyNeeds,
-  loadCompare,
   loadNeeds,
+  recommendWizardRows,
   saveCompare,
-  shortlistProviders,
   type DerivedNeeds,
   type NeedsState,
 } from "@/lib/needs";
+import { sortMetricLabel } from "@/lib/scoring";
 
 export function StartResultView({ rows }: { rows: ArenaRow[] }) {
   const { lang, t } = useLang();
@@ -30,11 +30,15 @@ export function StartResultView({ rows }: { rows: ArenaRow[] }) {
 
   const derived: DerivedNeeds = useMemo(() => deriveNeeds(state), [state]);
   const href = arenaHref(derived);
-  const picks = useMemo(() => (ready ? shortlistProviders(rows, derived, 4) : []), [ready, rows, derived]);
+  const recommendation = useMemo(
+    () => (ready ? recommendWizardRows(rows, state, 4) : null),
+    [ready, rows, state]
+  );
+  const picks = recommendation?.picks ?? [];
 
   useEffect(() => {
-    if (!ready || picks.length === 0) return;
-    if (loadCompare().length === 0) saveCompare(picks.map((p) => p.id));
+    if (!ready) return;
+    saveCompare(picks.map((p) => p.id));
   }, [ready, picks]);
 
   if (!ready) return null;
@@ -53,6 +57,12 @@ export function StartResultView({ rows }: { rows: ArenaRow[] }) {
       <h1>{t.resultH1}</h1>
       <p className="lede">{lang === "en" ? derived.summary.en : derived.summary.id}</p>
       {derived.highImpact ? <p className="section-sub">{t.screenBanner}</p> : null}
+      {recommendation?.engine === "legacy-fallback" ? (
+        <p className="section-sub">{t.scoreEngineLegacy}</p>
+      ) : null}
+      {picks.length > 0 && recommendation && recommendation.eligible.length === 0 ? (
+        <p className="section-sub">{t.recNeedsVerification}</p>
+      ) : null}
 
       <section className="section">
         <h2>{t.resultShort}</h2>
@@ -83,7 +93,9 @@ export function StartResultView({ rows }: { rows: ArenaRow[] }) {
                     <div className="meta">{lang === "en" ? derived.why.en : derived.why.id}</div>
                   </div>
                   <div className="arena-score">
-                    <span className="score-label">{derived.sort === "cost" ? `${t.from} USD/bln` : t.scoreSov}</span>
+                    <span className="score-label">
+                      {sortMetricLabel(derived.sort, lang, derived.sort === "cost" ? `${t.from} USD/bln` : undefined)}
+                    </span>
                     <span className="score">
                       {score == null ? "—" : derived.sort === "cost" ? `$${Number(score).toFixed(2)}` : score}
                     </span>

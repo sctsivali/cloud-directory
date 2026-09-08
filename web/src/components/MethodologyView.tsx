@@ -2,9 +2,11 @@
 
 import { Icon, IconWell } from "./Icon";
 import { useLang } from "./Language";
+import { CURRENT_METHODOLOGY, LEGACY_FALLBACK_LABEL, allCanonicalDescriptors } from "@/lib/scoring";
 
 export function MethodologyView() {
-  const { t } = useLang();
+  const { lang, t } = useLang();
+  const descriptors = allCanonicalDescriptors();
   return (
     <>
       <p className="kicker">{t.methKicker}</p>
@@ -15,6 +17,9 @@ export function MethodologyView() {
       <section className="section">
         <h2>{t.methVerT}</h2>
         <p className="section-sub">{t.methVer}</p>
+        <p className="section-sub">
+          {CURRENT_METHODOLOGY.id} · {CURRENT_METHODOLOGY.algorithmVersion} · {CURRENT_METHODOLOGY.rulesetHash.slice(0, 12)}
+        </p>
         <p className="section-sub">{t.methConfBody}</p>
       </section>
 
@@ -22,20 +27,29 @@ export function MethodologyView() {
         <div className="flag-row">
           <IconWell name="shield" />
         </div>
-        <h2>{t.methSovT}</h2>
+        <h2>{t.methCanonicalT}</h2>
         <ol className="rule-list">
-          <li>{t.methSov1}</li>
-          <li>{t.methSov2}</li>
-          <li>{t.methSov3}</li>
-          <li>{t.methSov4}</li>
+          {descriptors.map((d) => (
+            <li key={d.id}>
+              {d.code}: {lang === "en" ? d.labels.en : d.labels.id}
+              {d.id in CURRENT_METHODOLOGY.ruleset.weights
+                ? ` · ${CURRENT_METHODOLOGY.ruleset.weights[d.id as keyof typeof CURRENT_METHODOLOGY.ruleset.weights]}`
+                : ""}
+            </li>
+          ))}
         </ol>
         <p className="section-sub">{t.methSovNote}</p>
       </section>
 
       <section className="section">
         <IconWell name="code" />
-        <h2>{t.methOssT}</h2>
+        <h2>{t.methFallbackT}</h2>
+        <p className="section-sub">{LEGACY_FALLBACK_LABEL}</p>
         <ol className="rule-list">
+          <li>{t.methSov1}</li>
+          <li>{t.methSov2}</li>
+          <li>{t.methSov3}</li>
+          <li>{t.methSov4}</li>
           <li>{t.methOss1}</li>
           <li>{t.methOss2}</li>
           <li>{t.methOss3}</li>

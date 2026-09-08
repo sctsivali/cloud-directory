@@ -84,7 +84,11 @@ export async function executeTool(
       const parsed = validateToolInput(name, input);
       if (!parsed.ok) return errorResult(ERROR_CODE.malformedPayload, parsed.errors.join("; "));
       const reader = await requireReader(ctx);
-      const explanation = await reader.explainScore(String((input as { providerId: string }).providerId));
+      const args = input as { providerId: string; offeringId?: string; deploymentId?: string };
+      const explanation = await reader.explainScore(String(args.providerId), {
+        offeringId: args.offeringId,
+        deploymentId: args.deploymentId,
+      });
       return jsonResult({ ok: true, explanation });
     }
     case "directory.get_quality_report": {

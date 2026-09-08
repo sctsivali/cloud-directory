@@ -1,5 +1,13 @@
 import { Pool } from "./pg.ts";
-import type { CompoundWriteResult, InsertResult, ProposalRepository } from "./store.ts";
+import {
+  derivedReviewProposal,
+  derivedRevision,
+  type InsertResult,
+  type ProposalRepository,
+  type ReviewWriteResult,
+  type RevisionIntent,
+  type RevisionWriteResult,
+} from "./store.ts";
 import type { ProposalRecord, ReviewRecord, RevisionRecord } from "./types.ts";
 
 export type QueryRows<T = Record<string, unknown>> = { rows: T[] };
@@ -157,28 +165,38 @@ export class PostgresProposalRepository implements ProposalRepository {
         ]
       );
     });
-    if (result === "ok") return "inserted";
-    if (result === "conflict") return "conflict";
+    if (result.status === "ok") return "inserted";
+    if (result.status === "conflict") return "conflict";
     return "uncertain";
   }
 
-  async recordReviewAndStatus(
-    review: ReviewRecord,
-    proposal: ProposalRecord
-  ): Promise<CompoundWriteResult> {
+  async recordReviewAndStatus(review: ReviewRecord): Promise<ReviewWriteResult> {
     const result = await this.transact(async (client) => {
+      const current = await this.lockProposal(client, review.proposalId);
+      if (!current) return { write: "not_found" as const };
+      if (review.decision === "approve" && current.actorId === review.reviewerId) {
+        return { write: "self_approval" as const };
+      }
+      const proposal = derivedReviewProposal(current, review);
       await this.insertReviewRow(client, review);
       await this.updateProposalRow(client, proposal);
+      return { write: "ok" as const, proposal, review };
     });
-    return result === "ok" ? "ok" : "uncertain";
+    return result.status === "ok" ? result.value : { write: "uncertain" };
   }
 
   async reviseInvalidateAndUpdate(
-    revision: RevisionRecord,
-    proposal: ProposalRecord,
+    intent: RevisionIntent,
     invalidateAt: string
-  ): Promise<CompoundWriteResult> {
+  ): Promise<RevisionWriteResult> {
     const result = await this.transact(async (client) => {
+      const current = await this.lockProposal(client, intent.proposalId);
+      if (!current) return { write: "not_found" as const };
+      const { rows } = await client.query<{ n: number }>(
+        "SELECT COALESCE(MAX(revision_ordinal), 0)::int AS n FROM revisions WHERE proposal_id = $1",
+        [intent.proposalId]
+      );
+      const { proposal, revision } = derivedRevision(current, rows[0]?.n ?? 0, intent);
       await client.query(
         `INSERT INTO revisions (
            id, proposal_id, revision_ordinal, body, body_digest, actor_id, created_at
@@ -200,8 +218,17 @@ export class PostgresProposalRepository implements ProposalRepository {
         [proposal.id, invalidateAt]
       );
       await this.updateProposalRow(client, proposal);
+      return { write: "ok" as const, proposal, revision };
     });
-    return result === "ok" ? "ok" : "uncertain";
+    return result.status === "ok" ? result.value : { write: "uncertain" };
+  }
+
+  private async lockProposal(client: QueryExecutor, id: string): Promise<ProposalRecord | null> {
+    const { rows } = await client.query<ProposalRow>(
+      "SELECT * FROM proposals WHERE id = $1 FOR UPDATE",
+      [id]
+    );
+    return rows[0] ? mapProposal(rows[0]) : null;
   }
 
   private async insertReviewRow(client: QueryExecutor, row: ReviewRecord): Promise<void> {
@@ -240,31 +267,33 @@ export class PostgresProposalRepository implements ProposalRepository {
     );
   }
 
-  private async transact(fn: (client: QueryExecutor) => Promise<void>): Promise<"ok" | "conflict" | "uncertain"> {
+  private async transact<T>(
+    fn: (client: QueryExecutor) => Promise<T>
+  ): Promise<{ status: "ok"; value: T } | { status: "conflict" } | { status: "uncertain" }> {
     let client: DedicatedClient | undefined;
     try {
       client = await this.provider.connect();
     } catch {
-      return "uncertain";
+      return { status: "uncertain" };
     }
     try {
       try {
         await client.query("BEGIN");
       } catch {
-        return "uncertain";
+        return { status: "uncertain" };
       }
       try {
-        await fn(client);
+        const value = await fn(client);
         await client.query("COMMIT");
-        return "ok";
+        return { status: "ok", value };
       } catch (err) {
         try {
           await client.query("ROLLBACK");
         } catch {
-          return "uncertain";
+          return { status: "uncertain" };
         }
-        if (pgCode(err) === "23505") return "conflict";
-        return "uncertain";
+        if (pgCode(err) === "23505") return { status: "conflict" };
+        return { status: "uncertain" };
       }
     } finally {
       try {

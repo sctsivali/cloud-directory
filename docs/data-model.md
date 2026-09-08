@@ -1,6 +1,6 @@
 # Data model
 
-Status: Phase 4. Public legacy tables from `migrations/0001_legacy_baseline.sql` remain the score/API grain. Migrations 0002–0005 add canonical identity, geography, technology, and evidence tables beside them. Migration 0006 adds durable proposals, reviews, and revisions. Migration 0007 adds collection tasks, model runs, and fetch-receipt outcome columns. No production cutover is authorized by this document.
+Status: Phase 5. Public legacy tables from `migrations/0001_legacy_baseline.sql` remain the display grain when canonical offering/deployment subjects are missing. Migrations 0002–0007 add catalog, evidence, proposals, and collection tables. Migration 0008 adds methodology versions and scoring runs. No production ranking cutover is authorized by this document.
 
 ## Public legacy tables (unchanged grain)
 
@@ -93,9 +93,13 @@ Publication receipts are not created in this phase.
 
 Workers persist receipts. They submit MCP proposals with status `pending_review` through the MCP server; they do not insert into `proposals`, `revisions`, `proposal_reviews`, or public `providers`, `tiers`, `stacks`, or `directory_updates`.
 
-## Later domains (not in Phase 4)
+## Phase 5 scoring tables (`0008_scoring_runs.sql`)
 
-Publication receipts, methodology versions, scoring runs, trends, and outlooks remain future work.
+- `methodology_versions` — algorithm version, SHA-256 `ruleset_hash`, dimension list, weights, and versioned `evidence_readiness` (critical dimensions, min coverage, material-conflict claim types/share). Seeded with `asean-offering-deployment-v1`.
+- `scoring_runs` — one run per offering/deployment (or labeled fallback). Stores `data_revision`, `recommendation_group`, `composite` (nullable), `ranking_lower_bound` (nullable; unknown not zeroed on composite), `uncertainty`, `reason_codes`, `engine`.
+- `score_components` — per-dimension `knowledge_state` and nullable `value`. Unknown/conflicting are stored as NULL, not zero.
+
+Publication receipts, trends, and outlooks remain future work.
 
 ## Sanitized acceptance corpus
 

@@ -27,7 +27,7 @@ describe("versioned MCP contract", () => {
     assert.equal(MCP_CONTRACT_NAME, "cloud-directory-mcp");
     assert.match(MCP_CONTRACT_VERSION, /^\d+\.\d+\.\d+$/);
     assert.equal(TOOL_CATALOG.contractVersion, MCP_CONTRACT_VERSION);
-    assert.equal(TOOL_CATALOG.schemaVersion, 7);
+    assert.equal(TOOL_CATALOG.schemaVersion, 8);
   });
 
   it("lists the Phase 3 read tools", () => {

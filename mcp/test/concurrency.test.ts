@@ -1,9 +1,9 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { OUTCOME } from "../src/errors.ts";
-import { PostgresProposalRepository, type ConnectionProvider } from "../src/pg-store.ts";
+import { PostgresProposalRepository, type ConnectionProvider, type QueryExecutor } from "../src/pg-store.ts";
 import { submitProposal } from "../src/proposal-tools.ts";
-import { reviewProposal, reviseProposal } from "../src/review-tools.ts";
+import { approveProposal, reviewProposal, reviseProposal } from "../src/review-tools.ts";
 import { createDirectoryMcpServer } from "../src/server.ts";
 import { TEST_DATABASE_URL, withMigratedDatabase } from "./pg-harness.ts";
 
@@ -306,4 +306,249 @@ describe("PostgreSQL concurrent MCP requests stay isolated", { skip: !TEST_DATAB
       }
     });
   });
+
+  it("lets a waiting approve see the committed revision instead of inserting a live approval under pending_review", async () => {
+    await withMigratedDatabase(async (client, pool) => {
+      const repo = new PostgresProposalRepository(pool);
+      const created = await submitProposal(
+        repo,
+        "directory.propose_claim",
+        { ...claim, idempotencyKey: "lockstep-revise-first" },
+        "worker-a"
+      );
+      assert.equal(created.outcome, OUTCOME.created);
+      if (created.outcome !== "created") return;
+      const hold = holdAfterForUpdate(pool);
+      const reviseRepo = new PostgresProposalRepository(hold.provider);
+      const reviseP = reviseProposal(
+        reviseRepo,
+        {
+          proposalId: created.proposal.id,
+          body: { subjectId: "local-packages", claimType: "storage" },
+        },
+        "worker-a"
+      );
+      try {
+        await hold.locked;
+        let approveSettled = false;
+        const approveP = approveProposal(
+          repo,
+          { proposalId: created.proposal.id },
+          "editor-1"
+        ).finally(() => {
+          approveSettled = true;
+        });
+        await waitForForUpdateWaiter(client);
+        assert.equal(approveSettled, false);
+        hold.release();
+        const [revised, approved] = await Promise.all([reviseP, approveP]);
+        assert.equal(revised.outcome, OUTCOME.created);
+        assert.equal(approved.outcome, OUTCOME.created);
+        await assertProposalInvariant(client, created.proposal.id);
+        const status = await client.query("SELECT status FROM proposals WHERE id = $1", [
+          created.proposal.id,
+        ]);
+        assert.equal(status.rows[0].status, "approved");
+        const revisions = await client.query(
+          "SELECT count(*)::int AS n FROM revisions WHERE proposal_id = $1",
+          [created.proposal.id]
+        );
+        assert.equal(revisions.rows[0].n, 2);
+        const live = await client.query(
+          `SELECT count(*)::int AS n FROM proposal_reviews
+           WHERE proposal_id = $1 AND decision = 'approve' AND invalidated_at IS NULL`,
+          [created.proposal.id]
+        );
+        assert.equal(live.rows[0].n, 1);
+      } finally {
+        hold.release();
+      }
+    });
+  });
+
+  it("lets a waiting revise invalidate the committed approval instead of overwriting status around it", async () => {
+    await withMigratedDatabase(async (client, pool) => {
+      const repo = new PostgresProposalRepository(pool);
+      const created = await submitProposal(
+        repo,
+        "directory.propose_claim",
+        { ...claim, idempotencyKey: "lockstep-approve-first" },
+        "worker-a"
+      );
+      assert.equal(created.outcome, OUTCOME.created);
+      if (created.outcome !== "created") return;
+      const hold = holdAfterForUpdate(pool);
+      const approveRepo = new PostgresProposalRepository(hold.provider);
+      const approveP = approveProposal(approveRepo, { proposalId: created.proposal.id }, "editor-1");
+      try {
+        await hold.locked;
+        let reviseSettled = false;
+        const reviseP = reviseProposal(
+          repo,
+          {
+            proposalId: created.proposal.id,
+            body: { subjectId: "local-packages", claimType: "storage" },
+          },
+          "worker-a"
+        ).finally(() => {
+          reviseSettled = true;
+        });
+        await waitForForUpdateWaiter(client);
+        assert.equal(reviseSettled, false);
+        hold.release();
+        const [approved, revised] = await Promise.all([approveP, reviseP]);
+        assert.equal(approved.outcome, OUTCOME.created);
+        assert.equal(revised.outcome, OUTCOME.created);
+        await assertProposalInvariant(client, created.proposal.id);
+        const status = await client.query("SELECT status FROM proposals WHERE id = $1", [
+          created.proposal.id,
+        ]);
+        assert.equal(status.rows[0].status, "pending_review");
+        const revisions = await client.query(
+          "SELECT count(*)::int AS n FROM revisions WHERE proposal_id = $1",
+          [created.proposal.id]
+        );
+        assert.equal(revisions.rows[0].n, 2);
+        const live = await client.query(
+          `SELECT count(*)::int AS n FROM proposal_reviews
+           WHERE proposal_id = $1 AND decision = 'approve' AND invalidated_at IS NULL`,
+          [created.proposal.id]
+        );
+        assert.equal(live.rows[0].n, 0);
+      } finally {
+        hold.release();
+      }
+    });
+  });
+
+  it("releases a waiting approve onto the original row when the locked reviser faults", async () => {
+    await withMigratedDatabase(async (client, pool) => {
+      const live = new PostgresProposalRepository(pool);
+      const created = await submitProposal(
+        live,
+        "directory.propose_claim",
+        { ...claim, idempotencyKey: "lockstep-revise-fault" },
+        "worker-a"
+      );
+      assert.equal(created.outcome, OUTCOME.created);
+      if (created.outcome !== "created") return;
+      const hold = holdAfterForUpdate(pool, {
+        faultWhen: (queryText) => /^INSERT INTO revisions\b/i.test(queryText.trim()),
+      });
+      const reviseP = reviseProposal(
+        new PostgresProposalRepository(hold.provider),
+        {
+          proposalId: created.proposal.id,
+          body: { subjectId: "local-packages", claimType: "storage" },
+        },
+        "worker-a"
+      );
+      try {
+        await hold.locked;
+        const approveP = approveProposal(live, { proposalId: created.proposal.id }, "editor-1");
+        await waitForForUpdateWaiter(client);
+        hold.release();
+        const [revised, approved] = await Promise.all([reviseP, approveP]);
+        assert.equal(revised.outcome, OUTCOME.ambiguous);
+        assert.equal(approved.outcome, OUTCOME.created);
+        await assertProposalInvariant(client, created.proposal.id);
+        const status = await client.query("SELECT status FROM proposals WHERE id = $1", [
+          created.proposal.id,
+        ]);
+        assert.equal(status.rows[0].status, "approved");
+        const revisions = await client.query(
+          "SELECT count(*)::int AS n FROM revisions WHERE proposal_id = $1",
+          [created.proposal.id]
+        );
+        assert.equal(revisions.rows[0].n, 1);
+        const liveApprovals = await client.query(
+          `SELECT count(*)::int AS n FROM proposal_reviews
+           WHERE proposal_id = $1 AND decision = 'approve' AND invalidated_at IS NULL`,
+          [created.proposal.id]
+        );
+        assert.equal(liveApprovals.rows[0].n, 1);
+      } finally {
+        hold.release();
+      }
+    });
+  });
 });
+
+function holdAfterForUpdate(
+  pool: { query: ConnectionProvider["query"]; connect: ConnectionProvider["connect"] },
+  options?: { faultWhen?: (queryText: string) => boolean }
+): { provider: ConnectionProvider; locked: Promise<void>; release: () => void } {
+  let signalLocked = () => {};
+  const locked = new Promise<void>((resolve) => {
+    signalLocked = resolve;
+  });
+  let releaseHold = () => {};
+  const hold = new Promise<void>((resolve) => {
+    releaseHold = resolve;
+  });
+  const provider: ConnectionProvider = {
+    query: (queryText, values) => pool.query(queryText, values),
+    async connect() {
+      const leased = await pool.connect();
+      return {
+        query: (async (queryText: string, values?: unknown[]) => {
+          const text = String(queryText);
+          if (options?.faultWhen?.(text)) {
+            throw Object.assign(new Error("injected locked-writer fault"), { code: "XX000" });
+          }
+          const result = await leased.query(text, values);
+          if (/FOR UPDATE/i.test(text)) {
+            signalLocked();
+            await hold;
+          }
+          return result;
+        }) as QueryExecutor["query"],
+        release: () => leased.release(),
+      };
+    },
+  };
+  return { provider, locked, release: () => releaseHold() };
+}
+
+async function waitForForUpdateWaiter(
+  client: { query: (queryText: string, values?: unknown[]) => Promise<{ rows: Array<{ n: number }> }> },
+  timeoutMs = 4000
+): Promise<void> {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    const blocked = await client.query(
+      `SELECT count(*)::int AS n
+       FROM pg_stat_activity
+       WHERE pid <> pg_backend_pid()
+         AND wait_event_type = 'Lock'
+         AND query ILIKE '%FOR UPDATE%'`
+    );
+    if (blocked.rows[0].n >= 1) return;
+    await new Promise((resolve) => setTimeout(resolve, 25));
+  }
+  throw new Error("expected a FOR UPDATE waiter on the proposal row");
+}
+
+async function assertProposalInvariant(
+  client: { query: (queryText: string, values?: unknown[]) => Promise<{ rows: Array<Record<string, unknown>> }> },
+  proposalId: string
+): Promise<void> {
+  const proposal = await client.query("SELECT status FROM proposals WHERE id = $1", [proposalId]);
+  const reviews = await client.query(
+    "SELECT decision, invalidated_at FROM proposal_reviews WHERE proposal_id = $1",
+    [proposalId]
+  );
+  const status = proposal.rows[0]?.status;
+  const liveApprovals = reviews.rows.filter(
+    (row) => row.decision === "approve" && row.invalidated_at == null
+  );
+  if (status === "pending_review") {
+    assert.equal(liveApprovals.length, 0);
+    return;
+  }
+  if (status === "approved") {
+    assert.equal(liveApprovals.length, 1);
+    return;
+  }
+  throw new Error(`unexpected status ${String(status)}`);
+}
