@@ -11,6 +11,29 @@ from tests.helpers import ROOT, load_script
 
 migrate = load_script("migrate")
 
+REQUIRED_PHASE2_MARKERS = (
+    ("0002_entities_services_offerings.sql", "CREATE TABLE IF NOT EXISTS legal_entities"),
+    ("0002_entities_services_offerings.sql", "CREATE TABLE IF NOT EXISTS provider_entity_relationships"),
+    ("0002_entities_services_offerings.sql", "CREATE TABLE IF NOT EXISTS services"),
+    ("0002_entities_services_offerings.sql", "CREATE TABLE IF NOT EXISTS offerings"),
+    ("0002_entities_services_offerings.sql", "CREATE TABLE IF NOT EXISTS offering_versions"),
+    ("0003_locations_facilities_deployments.sql", "map_precision"),
+    ("0003_locations_facilities_deployments.sql", "CREATE TABLE IF NOT EXISTS facilities"),
+    ("0003_locations_facilities_deployments.sql", "CREATE TABLE IF NOT EXISTS deployments"),
+    ("0003_locations_facilities_deployments.sql", "CREATE TABLE IF NOT EXISTS deployment_facilities"),
+    ("0003_locations_facilities_deployments.sql", "CREATE OR REPLACE VIEW map_projections"),
+    ("0004_technologies.sql", "CREATE TABLE IF NOT EXISTS technologies"),
+    ("0004_technologies.sql", "CREATE TABLE IF NOT EXISTS technology_versions"),
+    ("0004_technologies.sql", "CREATE TABLE IF NOT EXISTS technology_deployments"),
+    ("0004_technologies.sql", "has_universal_scope_evidence"),
+    ("0005_claims_evidence_snapshots.sql", "CREATE TABLE IF NOT EXISTS fetch_snapshots"),
+    ("0005_claims_evidence_snapshots.sql", "CREATE TABLE IF NOT EXISTS claims"),
+    ("0005_claims_evidence_snapshots.sql", "CREATE TABLE IF NOT EXISTS evidence"),
+    ("0005_claims_evidence_snapshots.sql", "CREATE TABLE IF NOT EXISTS claim_evidence"),
+    ("0005_claims_evidence_snapshots.sql", "knowledge_state"),
+    ("0005_claims_evidence_snapshots.sql", "legacy/unverified"),
+)
+
 REQUIRED_BASELINE_MARKERS = (
     "CREATE TABLE IF NOT EXISTS providers",
     "CREATE TABLE IF NOT EXISTS buildings",
@@ -70,20 +93,31 @@ class TestManifestLedger(unittest.TestCase):
         self.manifest_path = self.migrations_dir / "manifest.json"
         self.baseline = self.migrations_dir / "0001_legacy_baseline.sql"
 
-    def test_manifest_lists_version_1_baseline_with_matching_checksum(self):
+    def test_manifest_lists_contiguous_phase2_migrations_with_matching_checksums(self):
         self.assertTrue(self.manifest_path.is_file(), "migrations/manifest.json is required")
         self.assertTrue(self.baseline.is_file(), "migrations/0001_legacy_baseline.sql is required")
+        expected_files = [
+            "0001_legacy_baseline.sql",
+            "0002_entities_services_offerings.sql",
+            "0003_locations_facilities_deployments.sql",
+            "0004_technologies.sql",
+            "0005_claims_evidence_snapshots.sql",
+        ]
         manifest = json.loads(self.manifest_path.read_text())
-        self.assertEqual(manifest["schema_version"], 1)
-        self.assertEqual(len(manifest["migrations"]), 1)
-        row = manifest["migrations"][0]
-        self.assertEqual(row["version"], 1)
-        self.assertEqual(row["filename"], "0001_legacy_baseline.sql")
-        digest = hashlib.sha256(self.baseline.read_bytes()).hexdigest()
-        self.assertEqual(row["checksum"], digest)
+        self.assertEqual(manifest["schema_version"], 5)
+        self.assertEqual(len(manifest["migrations"]), 5)
+        for i, filename in enumerate(expected_files, start=1):
+            row = manifest["migrations"][i - 1]
+            self.assertEqual(row["version"], i)
+            self.assertEqual(row["filename"], filename)
+            path = self.migrations_dir / filename
+            self.assertTrue(path.is_file(), filename)
+            digest = hashlib.sha256(path.read_bytes()).hexdigest()
+            self.assertEqual(row["checksum"], digest)
         loaded = migrate.load_manifest(self.migrations_dir)
-        self.assertEqual(loaded.schema_version, 1)
-        self.assertEqual(loaded.migrations[0].checksum, digest)
+        self.assertEqual(loaded.schema_version, 5)
+        self.assertEqual([m.filename for m in loaded.migrations], expected_files)
+        self.assertEqual(loaded.migrations[0].checksum, hashlib.sha256(self.baseline.read_bytes()).hexdigest())
 
     def test_baseline_sql_assembles_schema_and_ingest_patches(self):
         sql = self.baseline.read_text()
@@ -91,6 +125,13 @@ class TestManifestLedger(unittest.TestCase):
             self.assertIn(marker, sql, f"baseline missing {marker!r}")
         self.assertNotIn("INSERT INTO providers", sql)
         self.assertNotIn("/home/hermes-prime", sql)
+
+    def test_phase2_sql_defines_catalog_geography_technology_and_claims(self):
+        for filename, marker in REQUIRED_PHASE2_MARKERS:
+            sql = (self.migrations_dir / filename).read_text()
+            self.assertIn(marker, sql, f"{filename} missing {marker!r}")
+            self.assertNotIn("/home/hermes-prime", sql)
+            self.assertNotIn("INSERT INTO providers", sql)
 
     def test_verify_manifest_fails_closed_on_checksum_drift(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -126,6 +167,7 @@ class TestManifestLedger(unittest.TestCase):
         self.assertIn("newer", msg)
         migrate.assert_supported_schema_version(applied_max=None, manifest_max=1)
         migrate.assert_supported_schema_version(applied_max=1, manifest_max=1)
+        migrate.assert_supported_schema_version(applied_max=5, manifest_max=5)
 
     def test_recorded_checksum_mismatch_fails_closed(self):
         with self.assertRaises(migrate.ChecksumMismatchError) as ctx:

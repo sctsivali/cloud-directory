@@ -34,7 +34,24 @@ EXPECTED_TABLES = (
     "correction_requests",
     "provider_claims",
     "schema_migrations",
+    "legal_entities",
+    "provider_entity_relationships",
+    "services",
+    "offerings",
+    "offering_versions",
+    "facilities",
+    "deployments",
+    "deployment_facilities",
+    "technologies",
+    "technology_versions",
+    "technology_deployments",
+    "fetch_snapshots",
+    "claims",
+    "evidence",
+    "claim_evidence",
 )
+
+PHASE2_VERSIONS = [1, 2, 3, 4, 5]
 
 BUILDING_PATCH_COLUMNS = (
     "facilities",
@@ -99,21 +116,29 @@ class TestMigrations(unittest.TestCase):
 
     def test_empty_database_migrates_to_current_schema(self):
         result = migrate.apply_migrations(TEST_DATABASE_URL)
-        self.assertEqual(result.applied, [1])
+        self.assertEqual(result.applied, PHASE2_VERSIONS)
         tables = _table_names(self.conn)
         for name in EXPECTED_TABLES:
             self.assertIn(name, tables, name)
+        views = {
+            r[0]
+            for r in self.conn.execute(
+                "SELECT viewname FROM pg_views WHERE schemaname = 'public'"
+            ).fetchall()
+        }
+        self.assertIn("map_projections", views)
         cols = _columns(self.conn, "buildings")
         for col in BUILDING_PATCH_COLUMNS:
             self.assertIn(col, cols, col)
-        row = self.conn.execute(
+        self.assertIn("map_precision", _columns(self.conn, "locations"))
+        rows = self.conn.execute(
             "SELECT version, checksum FROM schema_migrations ORDER BY version"
-        ).fetchone()
-        self.assertEqual(row[0], 1)
+        ).fetchall()
+        self.assertEqual([r[0] for r in rows], PHASE2_VERSIONS)
         expected = hashlib.sha256(
             (ROOT / "migrations" / "0001_legacy_baseline.sql").read_bytes()
         ).hexdigest()
-        self.assertEqual(row[1], expected)
+        self.assertEqual(rows[0][1], expected)
         count = self.conn.execute("SELECT count(*) FROM providers").fetchone()[0]
         self.assertEqual(count, 0)
 
@@ -147,7 +172,7 @@ class TestMigrations(unittest.TestCase):
         self.conn.commit()
 
         result = migrate.apply_migrations(TEST_DATABASE_URL)
-        self.assertEqual(result.applied, [1])
+        self.assertEqual(result.applied, PHASE2_VERSIONS)
 
         after = self.conn.execute(
             "SELECT id, name, hq_country, website FROM providers WHERE id = 'legacy-local'"
@@ -244,6 +269,8 @@ class TestMigrations(unittest.TestCase):
 
     def test_unsupported_newer_schema_version_fails_closed(self):
         migrate.apply_migrations(TEST_DATABASE_URL)
+        manifest = migrate.verify_manifest(ROOT / "migrations")
+        expected_versions = list(range(1, manifest.schema_version + 1)) + [99]
         self.conn.execute(
             """
             INSERT INTO schema_migrations (version, name, checksum)
@@ -252,19 +279,19 @@ class TestMigrations(unittest.TestCase):
             ("f" * 64,),
         )
         self.conn.commit()
+        before = self.conn.execute(
+            "SELECT version, name, checksum FROM schema_migrations ORDER BY version"
+        ).fetchall()
+        self.assertEqual([r[0] for r in before], expected_versions)
         with self.assertRaises(migrate.VersionError) as ctx:
             migrate.apply_migrations(TEST_DATABASE_URL)
         self.assertIn("unsupported", str(ctx.exception).lower())
         self.assertIn("newer", str(ctx.exception).lower())
-        self.assertEqual(
-            [
-                r[0]
-                for r in self.conn.execute(
-                    "SELECT version FROM schema_migrations ORDER BY version"
-                ).fetchall()
-            ],
-            [1, 99],
-        )
+        after = self.conn.execute(
+            "SELECT version, name, checksum FROM schema_migrations ORDER BY version"
+        ).fetchall()
+        self.assertEqual([r[0] for r in after], expected_versions)
+        self.assertEqual(list(after), list(before))
 
 
 class TestMigrationsSkipContract(unittest.TestCase):

@@ -6,8 +6,8 @@
     "dev": "next dev -H 0.0.0.0 -p 3000",
     "build": "next build",
     "start": "next start -H 0.0.0.0 -p 3000",
-    "typecheck": "tsc --noEmit && tsc --noEmit -p ../tests/tsconfig.json",
-    "test": "node --experimental-strip-types --test ../tests/*.test.ts"
+    "typecheck": "tsc --noEmit && tsc --noEmit -p ../tests/tsconfig.json && tsc --noEmit -p ../packages/domain/tsconfig.json",
+    "test": "node --experimental-strip-types --test ../tests/*.test.ts ../packages/domain/test/*.test.ts"
   },
   "dependencies": {
     "next": "^15.5.0",

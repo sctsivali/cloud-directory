@@ -1,47 +1,86 @@
 # Data model
 
-Status: Phase 0 baseline of the tables in `schema.sql`. Target domains are named so later migrations have a vocabulary. No migration is authorized by this document.
+Status: Phase 2. Public legacy tables from `migrations/0001_legacy_baseline.sql` remain the score/API grain. Migrations 0002–0005 add canonical identity, geography, technology, and evidence tables beside them. No production cutover is authorized by this document.
 
-## Current tables
+## Public legacy tables (unchanged grain)
 
 ### Identity
 
-`providers` is the only identity grain. Fields mix brand, headquarters, legal home, origin (`local` / `regional` / `global` / `unknown`), and `is_local_asean`. There is no legal-entity table and no provider–entity relationship history.
+`providers` is still the public identity grain. Fields mix brand, headquarters, legal home, origin (`local` / `regional` / `global` / `unknown`), and `is_local_asean`. `legal_country` is a string, not a legal-entity row.
 
 ### Catalog and price
 
-`tiers` stores public packages on a provider. Price is a single `price_usd_month` plus optional native amount and currency. Billing period, promo, commitment, tax, and FX observation are not first-class. Ingest (`scripts/ingest_provider.py`) converts unknown currencies with the IDR fallback rate.
+`tiers` stores public packages on a provider. Price is a single `price_usd_month` plus optional native amount and currency.
 
 ### Geography
 
-`locations` and `provider_locations` record city/country pairs. `buildings` and `provider_buildings` record named halls. `listed` is the only precision flag. City-only disclosure and exact facility pins are not distinct types. Map coordinates can be attached to a building even when the public source only named a city.
+`locations` and `provider_locations` record city/country pairs. Phase 2 adds `locations.map_precision` with default `undisclosed` so existing coordinates are not treated as exact-facility pins. `buildings` and `provider_buildings` remain the public hall tables. `listed` is still the only public precision flag those surfaces use.
 
 ### Technology
 
-`stacks` is one row per provider. Hypervisor, orchestration, storage, runtime, and control plane are free text. There is no technology catalog, version, or deployment scope. A provider-level string is treated as if it applies to every package.
+`stacks` is still one row per provider for public OSS scoring. The new technology catalog does not feed `legacy-scoring.ts`.
 
 ### Evidence and time
 
-`sources` is a URL list with `scraped_at` and `status`. There is no immutable fetch snapshot, excerpt, claim, or observation time distinct from ingest time. A non-empty URL is enough for the confidence score.
+`sources` is still a URL list with `scraped_at` and `status`. HTTP success is not verification.
 
 ### Transparency
 
-`directory_updates` is a hand-written or script-inserted feed. It is not a revision ledger.
+`directory_updates` is still a hand-written or script-inserted feed.
 
-`sovereignty` stores editorial residency labels used in display, not in the numeric SOV formula.
+## Phase 2 canonical tables
 
-## Target domains (future)
+### Identity and catalog (`0002_entities_services_offerings.sql`)
 
-See the implementation plan. Identity splits into providers, legal entities, and relationships. Catalog splits into services, offerings, offering versions, and price observations. Geography splits into locations, facilities, deployments, and derived map projections with an explicit precision enum. Technology becomes a catalog plus scoped deployments. Evidence becomes sources, fetch snapshots, claims, and claim–evidence links with knowledge and assessment states. Workflow becomes proposals, reviews, revisions, and publication receipts. Analytics becomes methodology versions, scoring runs, trends, and outlooks.
+- `legal_entities` — named legal identity; never inferred from `providers.legal_country` alone.
+- `provider_entity_relationships` — brand / operator / contracting / parent / subsidiary / unknown, with optional validity window.
+- `services` — provider catalog grouping.
+- `offerings` — commercial products; legacy `tiers` copy in with lineage `(legacy_table, legacy_pk)`.
+- `offering_versions` — versioned attributes; `observed_at` is copied from `tiers.updated_at` when known and is distinct from `recorded_at`.
 
-## Knowledge and assessment (target enums)
+### Geography (`0003_locations_facilities_deployments.sql`)
+
+Map precision enum: `facility_exact`, `campus`, `city_centroid`, `region_centroid`, `undisclosed`.
+
+- `facilities` — canonical halls with lineage to `buildings`. Conservative copy always uses `undisclosed`.
+- `deployments` — provider presence at a location; optional offering scope.
+- `deployment_facilities` — which facilities a deployment uses.
+- `map_projections` — **view**, not a fact table. `is_exact_pin` is true only for `facility_exact` with coordinates. City-only evidence cannot create that pin.
+
+### Technology (`0004_technologies.sql`)
+
+- `technologies` / `technology_versions`
+- `technology_deployments` — `scope` in `provider`, `service`, `offering`, `deployment`. `has_universal_scope_evidence` defaults false; provider-level rows do not inherit onto offerings without it.
+
+### Claims and evidence (`0005_claims_evidence_snapshots.sql`)
+
+- `fetch_snapshots` — immutable (UPDATE/DELETE raise). `fetched_at` is the fetch clock; `recorded_at` is ingest/replay.
+- `claims` — typed subject, `knowledge_state`, `assessment_state`, optional `observed_at` (no default), `valid_from` / `valid_to`.
+- `evidence` — excerpt against a snapshot; excerpt must occur in snapshot body.
+- `claim_evidence` — `supports` / `contradicts` / `neutral`.
 
 Knowledge state: `present`, `confirmed_absent`, `unknown`, `not_applicable`, `conflicting`.
 
-Assessment state: `extracted`, `inferred`, `provider_asserted`, `editorially_reviewed`, `independently_verified`, `rejected`.
+Assessment state: `extracted`, `inferred`, `provider_asserted`, `editorially_reviewed`, `independently_verified`, `rejected`, plus `legacy/unverified` for conservative migration.
 
-The current schema cannot represent these states. Empty fields and failed fetches are not `unknown`; they are usually scored as zero.
+Unknown is not false and is not confirmed absence. Contradictory stances resolve to `conflicting`. Expired `valid_to` cannot be presented as freshly verified.
+
+## Conservative legacy copy
+
+`scripts/migrate_legacy_data.py` copies existing public rows into the Phase 2 tables:
+
+- preserves original values and known timestamps;
+- labels assessment `legacy/unverified`;
+- keeps lineage `(legacy_table, legacy_pk[, legacy_column])`;
+- does not create `legal_entities`, `fetch_snapshots`, or `evidence`;
+- does not set `map_precision` to `facility_exact`.
+
+It is idempotent and does not rewrite public scoring tables.
+
+## Later domains (not in Phase 2)
+
+Proposals, reviews, revisions, publication receipts, methodology versions, scoring runs, trends, and outlooks remain future work.
 
 ## Sanitized acceptance corpus
 
-Phase 0 fixtures in `tests/fixtures/` are fictional. They cover the provider, source, technology, pricing, and geography cases required to reproduce known defects. They are immutable comparison evidence, not a production extract.
+Phase 0 fixtures in `tests/fixtures/` are fictional. They remain comparison evidence for the legacy engine, not expected behavior of the future scorer.

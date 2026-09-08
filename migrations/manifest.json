@@ -1,10 +1,30 @@
 {
-  "schema_version": 1,
+  "schema_version": 5,
   "migrations": [
     {
       "version": 1,
       "filename": "0001_legacy_baseline.sql",
       "checksum": "c0fcb09fe38aae098eff51b0baf098765ce8221b950296135e07dd041d4498c6"
+    },
+    {
+      "version": 2,
+      "filename": "0002_entities_services_offerings.sql",
+      "checksum": "66b2b98be9d1bd52eab2bf53e473a45eb651061f0100757712e04d9086641da1"
+    },
+    {
+      "version": 3,
+      "filename": "0003_locations_facilities_deployments.sql",
+      "checksum": "b012ff78f3d7c4492146f5ab7ab32f190ef0a6cad19d812191b1d221f7fb9b5f"
+    },
+    {
+      "version": 4,
+      "filename": "0004_technologies.sql",
+      "checksum": "f50a1aa8f94097c697bf836f26969ef3ea0359c41a2c527cc1173e2d31bae38e"
+    },
+    {
+      "version": 5,
+      "filename": "0005_claims_evidence_snapshots.sql",
+      "checksum": "aeb7b2e4f7422cd93e62ea91ae8073e0e8b068c5b00e247fab6b2d9efcab3c2d"
     }
   ]
 }

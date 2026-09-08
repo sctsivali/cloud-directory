@@ -1,8 +1,8 @@
 # ADR 0003: Facts are temporal claims with evidence
 
-- Status: Accepted
+- Status: Implemented in Phase 2 (claim/evidence tables exist; public scoring still uses legacy sources)
 - Date: 2026-09-09
-- Phase: 0 (decision recorded; claim tables not created)
+- Phase: 2
 
 ## Context
 
@@ -14,7 +14,9 @@ Public material facts become typed claims with knowledge state, assessment state
 
 ## Consequences
 
-- Legacy rows migrate as `legacy/unverified` unless evidence and observation time are known (Phase 2).
-- City-only evidence cannot create an exact-facility pin.
-- Technology inheritance requires explicit universal-scope evidence.
+- Legacy rows migrate as `legacy/unverified` unless evidence and observation time are known (Phase 2 script: `scripts/migrate_legacy_data.py`).
+- City-only evidence cannot create an exact-facility pin (`packages/domain` geography validators and `map_projections.is_exact_pin`).
+- Technology inheritance requires explicit universal-scope evidence (`technology_deployments.has_universal_scope_evidence`).
+- Fetch snapshots are immutable; a quoted excerpt must occur in the snapshot body.
 - Phase 0 fixtures include 200, redirect, 403, 404, malformed, and stale sources so those states can be scored and later replaced without inventing history.
+- Public SOV/CONF/OSS and wizard shortlisting are unchanged in Phase 2.
