@@ -9,6 +9,7 @@ import {
 import type { ChangeEvent } from "../src/revisions/types.ts";
 
 const event: ChangeEvent = {
+  verificationState: "verified",
   id: "evt-1",
   receiptId: "rcpt-1",
   revisionId: "rev-1",
@@ -82,18 +83,14 @@ describe("public change-event feed", () => {
     assert.equal(redacted.value_sensitivity, "redacted");
   });
 
-  it("prefers change events and falls back to directory_updates when none exist", () => {
+  it("uses verified change events and never falls back to unverified legacy updates", () => {
     const fromEvents = selectPublicUpdates([event], [fallback]);
     assert.equal(fromEvents.length, 1);
     assert.equal(fromEvents[0]?.id, "evt-1");
     assert.equal(fromEvents[0]?.revision_id, "rev-1");
 
     const fromFallback = selectPublicUpdates([], [fallback]);
-    assert.equal(fromFallback.length, 1);
-    assert.equal(fromFallback[0]?.id, 7);
-    assert.equal(fromFallback[0]?.title_en, "Legacy changed");
-    assert.equal(fromFallback[0]?.revision_id, null);
-    assert.equal(fromFallback[0]?.change_type, "updated");
+    assert.deepEqual(fromFallback, []);
   });
 
   it("keeps API and view fields in parity for the same event", () => {

@@ -79,7 +79,7 @@ export async function publishApprovedRevision(
     dataRevision: String(record.dataRevision ?? ""),
     publisherPrincipal: principal,
     expectedCanonicalDigest:
-      typeof record.expectedCanonicalDigest === "string" ? record.expectedCanonicalDigest : undefined,
+      record.expectedCanonicalDigest as string | null,
     rollbackOfReceiptId: typeof record.rollbackOfReceiptId === "string" ? record.rollbackOfReceiptId : undefined,
   };
   const result = await publishRevision(ctx.publication, request);

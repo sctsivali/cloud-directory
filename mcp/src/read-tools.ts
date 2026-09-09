@@ -406,7 +406,7 @@ export class PostgresDirectoryReader implements DirectoryReader {
     try {
       const { rows } = await this.client.query(
         `SELECT r.id AS receipt_id, r.revision_id, r.change_type, r.entity_type, r.entity_id, r.field_name,
-                r.before_value, r.after_value, r.verification_state, r.methodology_version, r.data_revision,
+                r.before_value, r.after_value, r.verification_state, r.methodology_version, r.data_revision, r.knowledge_state, r.assessment_state,
                 r.published_at::text AS published_at, r.supersedes_receipt_id,
                 e.observed_at::text AS observed_at, e.provider_id, e.value_sensitivity
          FROM publication_receipts r

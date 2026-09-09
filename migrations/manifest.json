@@ -1,5 +1,5 @@
 {
-  "schema_version": 11,
+  "schema_version": 12,
   "migrations": [
     {
       "version": 1,
@@ -55,6 +55,11 @@
       "version": 11,
       "filename": "0011_sod_state_replay.sql",
       "checksum": "35d3d63dfb3c231748f431312ee80de8aa80f7b6927bd3c1eb4bedb8b49007bf"
+    },
+    {
+      "version": 12,
+      "filename": "0012_typed_publication_state.sql",
+      "checksum": "e0b6c77aee40245a1f4933d98c139755f22558b1087bebc4c9941c3bfedefbe2"
     }
   ]
 }

@@ -2,6 +2,9 @@ import { z } from "zod";
 import type { JsonObjectSchema, JsonPropertySchema } from "../../packages/contracts/src/mcp.ts";
 
 function propertyToZod(prop: JsonPropertySchema): z.ZodTypeAny {
+  if (Array.isArray(prop.type)) {
+    return propertyToZod({ ...prop, type: "string" }).nullable();
+  }
   switch (prop.type) {
     case "string": {
       if (prop.enum && prop.enum.length > 0) {

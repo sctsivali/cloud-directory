@@ -107,6 +107,7 @@ export function revalidateLockedPublication(args: {
     proposalId: args.proposal.id,
     expectedRevisionId: args.plan.revision.id,
     expectedBodyDigest: args.plan.revision.bodyDigest,
+    expectedCanonicalDigest: args.plan.expectedCanonicalDigest,
     idempotencyKey: args.plan.idempotencyKey,
     methodologyVersion: args.plan.methodologyVersion,
     dataRevision: args.plan.dataRevision,
@@ -142,6 +143,11 @@ export async function publishRevision(
   store: PublicationStore,
   request: PublishRequest
 ): Promise<PublicationOutcome> {
+  if (!Object.prototype.hasOwnProperty.call(request, "expectedCanonicalDigest") ||
+      (request.expectedCanonicalDigest !== null &&
+       (typeof request.expectedCanonicalDigest !== "string" || !request.expectedCanonicalDigest.trim()))) {
+    return rejectedOutcome(PUBLICATION_ERROR.malformedPayload, "expectedCanonicalDigest must be explicit: null for absence or a non-empty digest");
+  }
   if (!request.proposalId || !request.expectedRevisionId || !request.expectedBodyDigest || !request.idempotencyKey) {
     return rejectedOutcome(PUBLICATION_ERROR.malformedPayload, "publication request is incomplete");
   }
@@ -194,7 +200,7 @@ export async function publishRevision(
   const subject = deriveSubject(proposal, revision, request.rollbackOfReceiptId ?? null);
   const current = await store.getCanonicalState(subject.entityType, subject.entityId, subject.fieldName);
   const currentDigest = current?.valueDigest ?? null;
-  const expectedDigest = request.expectedCanonicalDigest === undefined ? currentDigest : request.expectedCanonicalDigest;
+  const expectedDigest = request.expectedCanonicalDigest;
   if ((expectedDigest ?? null) !== (currentDigest ?? null)) {
     return rejectedOutcome(PUBLICATION_ERROR.casConflict, "canonical state does not match expected digest");
   }
@@ -233,6 +239,8 @@ export async function publishRevision(
   const now = new Date().toISOString();
   const attemptId = existingAttempt?.id ?? newLedgerId("att");
   const plan: PreparedPublication = {
+    knowledgeState: subject.knowledgeState,
+    assessmentState: subject.assessmentState,
     attemptId,
     receiptId: newLedgerId("rcpt"),
     eventId: newLedgerId("evt"),
@@ -248,7 +256,7 @@ export async function publishRevision(
     evidenceSnapshotIds: subject.evidenceSnapshotIds,
     beforeValue,
     afterValue,
-    expectedCanonicalDigest: currentDigest,
+    expectedCanonicalDigest: request.expectedCanonicalDigest,
     entityType: subject.entityType,
     entityId: subject.entityId,
     fieldName: subject.fieldName,

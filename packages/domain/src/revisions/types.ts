@@ -53,7 +53,12 @@ export type ReviewSnapshot = {
   boundBodyDigest: string | null;
 };
 
-export type CanonicalState = {
+export type TypedLedgerState = {
+  knowledgeState?: import("../knowledge-state.ts").KnowledgeState;
+  assessmentState?: import("../knowledge-state.ts").AssessmentState;
+};
+
+export type CanonicalState = TypedLedgerState & {
   entityType: string;
   entityId: string;
   fieldName: string;
@@ -75,7 +80,7 @@ export type PublicationAttempt = {
   updatedAt: string;
 };
 
-export type PublicationReceipt = {
+export type PublicationReceipt = TypedLedgerState & {
   id: string;
   attemptId: string;
   proposalId: string;
@@ -103,7 +108,8 @@ export type PublicationReceipt = {
   verifiedAt: string | null;
 };
 
-export type ChangeEvent = {
+export type ChangeEvent = TypedLedgerState & {
+  verificationState?: PublicationReceipt["verificationState"];
   id: string;
   receiptId: string;
   revisionId: string;
@@ -138,7 +144,7 @@ export type PublishRequest = {
   methodologyVersion: string;
   dataRevision: string;
   publisherPrincipal: string;
-  expectedCanonicalDigest?: string | null;
+  expectedCanonicalDigest: string | null;
   rollbackOfReceiptId?: string | null;
 };
 
@@ -148,7 +154,7 @@ export type PublicationOutcome =
   | { outcome: "rejected"; code: PublicationErrorCode; message: string; errors?: string[] }
   | { outcome: "ambiguous"; code: "commit_uncertain"; message: string; idempotencyKey: string; attemptId?: string };
 
-export type PreparedPublication = {
+export type PreparedPublication = TypedLedgerState & {
   attemptId: string;
   receiptId: string;
   eventId: string;

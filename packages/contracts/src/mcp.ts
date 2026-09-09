@@ -77,7 +77,7 @@ export type AvailableToolName = Phase3ToolName | PublicationToolName | Verificat
 export type JsonSchemaType = "string" | "number" | "integer" | "boolean" | "object" | "array";
 
 export type JsonPropertySchema = {
-  type: JsonSchemaType;
+  type: JsonSchemaType | readonly ["string", "null"];
   minLength?: number;
   enum?: readonly string[];
   additionalProperties?: false;
@@ -462,6 +462,7 @@ export const TOOL_DEFINITIONS: readonly ToolDefinition[] = [
         "proposalId",
         "expectedRevisionId",
         "expectedBodyDigest",
+        "expectedCanonicalDigest",
         "idempotencyKey",
         "methodologyVersion",
         "dataRevision",
@@ -473,7 +474,7 @@ export const TOOL_DEFINITIONS: readonly ToolDefinition[] = [
         idempotencyKey: stringField,
         methodologyVersion: stringField,
         dataRevision: stringField,
-        expectedCanonicalDigest: optionalString,
+        expectedCanonicalDigest: { type: ["string", "null"], minLength: 1 },
         rollbackOfReceiptId: optionalString,
       }
     ),
@@ -488,6 +489,7 @@ export const TOOL_DEFINITIONS: readonly ToolDefinition[] = [
         "revisionId",
         "expectedRevisionId",
         "expectedBodyDigest",
+        "expectedCanonicalDigest",
         "idempotencyKey",
         "methodologyVersion",
         "dataRevision",
@@ -499,7 +501,7 @@ export const TOOL_DEFINITIONS: readonly ToolDefinition[] = [
         idempotencyKey: stringField,
         methodologyVersion: stringField,
         dataRevision: stringField,
-        expectedCanonicalDigest: optionalString,
+        expectedCanonicalDigest: { type: ["string", "null"], minLength: 1 },
         rollbackOfReceiptId: optionalString,
       }
     ),
@@ -575,6 +577,9 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
 
 function propertyOk(schema: JsonPropertySchema, value: unknown): boolean {
   if (value === undefined) return true;
+  if (Array.isArray(schema.type)) {
+    return value === null || propertyOk({ ...schema, type: "string" }, value);
+  }
   switch (schema.type) {
     case "string":
       if (typeof value !== "string") return false;
@@ -629,7 +634,7 @@ export function validateToolInput(name: string, input: unknown): ContractValidat
     }
   }
   for (const field of tool.inputSchema.required) {
-    if (input[field] === undefined || input[field] === null) {
+    if (!Object.prototype.hasOwnProperty.call(input, field) || input[field] === undefined) {
       errors.push(`${field} is required`);
       continue;
     }

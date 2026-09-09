@@ -41,6 +41,18 @@ const revision = {
 };
 
 describe("typed publication adapters", () => {
+  it("carries explicit typed states and defaults missing states conservatively for every adapter", () => {
+    for (const tool of ["claim", "offering", "price_observation", "location", "facility", "technology_deployment", "retraction"]) {
+      const missing = deriveSubject(snapshot(`directory.propose_${tool}`, {}), revision, null);
+      assert.equal(missing.knowledgeState, "unknown", tool);
+      assert.equal(missing.assessmentState, "legacy/unverified", tool);
+      const typed = deriveSubject(snapshot(`directory.propose_${tool}`, {
+        knowledgeState: "confirmed_absent", assessmentState: "editorially_reviewed",
+      }), revision, null);
+      assert.equal(typed.knowledgeState, "confirmed_absent", tool);
+      assert.equal(typed.assessmentState, "editorially_reviewed", tool);
+    }
+  });
   it("keeps claims on the subject/field key and does not collide offerings under a provider", () => {
     const claim = deriveSubject(
       snapshot("directory.propose_claim", {
@@ -304,6 +316,7 @@ describe("verified ledger public read model", () => {
       proposalId: retract.proposal.id,
       expectedRevisionId: retract.revision.id,
       expectedBodyDigest: retract.proposal.bodyDigest,
+      expectedCanonicalDigest: store.canonicalDigest("provider", "local-packages", "hypervisor"),
       idempotencyKey: "pub-retract",
       methodologyVersion: CURRENT_METHODOLOGY.id,
       dataRevision: "drv-retract",

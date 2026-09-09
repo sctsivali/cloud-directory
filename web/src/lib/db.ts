@@ -2,7 +2,7 @@ import { Pool } from "pg";
 import { CURRENT_METHODOLOGY, LEGACY_FALLBACK_LABEL } from "../../../packages/domain/src/scoring/index.ts";
 import {
   selectPublicUpdates,
-  type LegacyDirectoryUpdate,
+  PUBLIC_UPDATES_QUERY,
   type PublicDirectoryUpdate,
 } from "../../../packages/domain/src/revisions/public-feed.ts";
 import type { ChangeEvent } from "../../../packages/domain/src/revisions/types.ts";
@@ -537,6 +537,7 @@ function mapChangeEventRow(row: Record<string, unknown>): ChangeEvent {
   return {
     id: String(row.id),
     receiptId: String(row.receipt_id),
+    verificationState: row.verification_state as ChangeEvent["verificationState"],
     revisionId: String(row.revision_id),
     proposalId: String(row.proposal_id),
     changeType: row.change_type as ChangeEvent["changeType"],
@@ -563,38 +564,15 @@ function mapChangeEventRow(row: Record<string, unknown>): ChangeEvent {
 }
 
 export async function getDirectoryUpdates(): Promise<DirectoryUpdate[]> {
-  try {
-    const events = await pool.query(`
-      SELECT id, receipt_id, revision_id, proposal_id, change_type, entity_type, entity_id, field_name,
-             old_value, new_value, value_sensitivity, source_id, evidence_snapshot_ids,
-             detected_at::text AS detected_at, observed_at::text AS observed_at,
-             reviewed_at::text AS reviewed_at, published_at::text AS published_at,
-             correction_of_event_id, title_id, title_en, summary_id, summary_en, provider_id, href
-      FROM change_events
-      ORDER BY published_at DESC, id DESC
-      LIMIT 80
-    `);
-    if (events.rows.length > 0) {
-      return selectPublicUpdates(events.rows.map(mapChangeEventRow), []);
-    }
-  } catch {
-    // Fall back to the legacy public table when the ledger is absent or empty.
-  }
-  const { rows } = await pool.query<LegacyDirectoryUpdate>(`
-    SELECT id, kind, provider_id, title_id, title_en, summary_id, summary_en, href,
-           occurred_at::text AS occurred_at
-    FROM directory_updates
-    ORDER BY occurred_at DESC, id DESC
-    LIMIT 80
-  `);
-  return selectPublicUpdates([], rows);
+  const events = await pool.query(PUBLIC_UPDATES_QUERY);
+  return selectPublicUpdates(events.rows.map(mapChangeEventRow), []);
 }
 
 async function loadIntelligenceFacts(): Promise<VerifiedFact[]> {
   try {
     const { rows } = await pool.query(
       `SELECT r.id AS receipt_id, r.revision_id, r.change_type, r.entity_type, r.entity_id, r.field_name,
-              r.before_value, r.after_value, r.verification_state, r.methodology_version, r.data_revision,
+              r.before_value, r.after_value, r.verification_state, r.methodology_version, r.data_revision, r.knowledge_state, r.assessment_state,
               r.published_at::text AS published_at, r.supersedes_receipt_id,
               e.observed_at::text AS observed_at, e.provider_id, e.value_sensitivity
        FROM publication_receipts r

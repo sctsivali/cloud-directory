@@ -24,7 +24,7 @@ export function publicationRequestDigest(input: {
   methodologyVersion: string;
   dataRevision: string;
   publisherPrincipal: string;
-  expectedCanonicalDigest?: string | null;
+  expectedCanonicalDigest: string | null;
   rollbackOfReceiptId?: string | null;
 }): string {
   return bodyDigestFromValue({
@@ -34,7 +34,7 @@ export function publicationRequestDigest(input: {
     methodologyVersion: input.methodologyVersion,
     dataRevision: input.dataRevision,
     publisherPrincipal: input.publisherPrincipal,
-    expectedCanonicalDigest: input.expectedCanonicalDigest ?? null,
+    expectedCanonicalDigest: input.expectedCanonicalDigest,
     rollbackOfReceiptId: input.rollbackOfReceiptId ?? null,
   });
 }

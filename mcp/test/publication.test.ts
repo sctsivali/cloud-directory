@@ -26,6 +26,9 @@ import { submitProposal } from "../src/proposal-tools.ts";
 import { approveProposal, reviseProposal } from "../src/review-tools.ts";
 import { createDirectoryMcpServer } from "../src/server.ts";
 import { TEST_DATABASE_URL, withMigratedDatabase } from "./pg-harness.ts";
+import { publishRevision } from "../../packages/domain/src/revisions/publish.ts";
+import { verifyPublication } from "../../packages/domain/src/revisions/verify.ts";
+import { PUBLIC_UPDATES_QUERY } from "../../packages/domain/src/revisions/public-feed.ts";
 
 const claim = {
   subjectType: "provider",
@@ -79,6 +82,7 @@ function publishArgs(proposalId: string, revisionId: string, bodyDigest: string,
     proposalId,
     expectedRevisionId: revisionId,
     expectedBodyDigest: bodyDigest,
+    expectedCanonicalDigest: null as string | null,
     idempotencyKey: key,
     methodologyVersion: CURRENT_METHODOLOGY.id,
     dataRevision: `drv-${key}`,
@@ -86,6 +90,78 @@ function publishArgs(proposalId: string, revisionId: string, bodyDigest: string,
 }
 
 describe("PostgreSQL publication ledger", { skip: !TEST_DATABASE_URL }, () => {
+  it("Batch A: typed states, effective transitions, and verified-only factual SQL", async () => {
+    await withMigratedDatabase(async (client, pool) => {
+      const store = new PostgresPublicationStore(pool);
+      const expected = ["create", "update", "retract", "create"];
+      for (const [index, knowledgeState] of ["present", "present", "confirmed_absent", "present"].entries()) {
+        const key = `batch-a-${index}`;
+        const ready = await approveProposalBody(pool, "directory.propose_claim", {
+          ...claim, value: { text: key, knowledgeState: "conflicting" }, knowledgeState,
+          observedAt: ["2026-05-01T00:00:00.000Z", "2026-06-01T00:00:00.000Z", "2026-07-01T00:00:00.000Z", "2026-08-01T00:00:00.000Z"][index],
+        }, key);
+        const result = await publishRevision(store, {
+          ...publishArgs(ready.proposal.id, ready.revision.id, ready.proposal.bodyDigest, key),
+          expectedCanonicalDigest: (await store.getCanonicalState("provider", "local-packages", "hypervisor"))?.valueDigest ?? null,
+          publisherPrincipal: "publisher-1",
+        });
+        assert.equal(result.outcome, "created");
+        if (result.outcome !== "created") throw new Error(JSON.stringify(result));
+        assert.equal(result.receipt.changeType, expected[index]);
+        assert.equal(result.event.changeType, expected[index]);
+        for (const table of ["canonical_states", "publication_receipts", "change_events"]) {
+          const rows = await client.query(`SELECT knowledge_state, assessment_state FROM ${table}`);
+          assert.ok(rows.rows.some((row) => row.knowledge_state === knowledgeState && row.assessment_state === "independently_verified"));
+        }
+        const canonical = await store.getCanonicalState("provider", "local-packages", "hypervisor");
+        assert.equal(canonical?.knowledgeState, knowledgeState);
+        assert.equal(result.receipt.knowledgeState, knowledgeState);
+        assert.equal(result.event.knowledgeState, knowledgeState);
+        assert.equal((await client.query(PUBLIC_UPDATES_QUERY)).rows.length, index, "pending receipt excluded");
+        const verified = await verifyPublication(store, {
+          receiptId: result.receipt.id, eventId: result.event.id,
+          expectedValueDigest: bodyDigestFromValue(result.receipt.afterValue),
+          expectedDataRevision: result.receipt.dataRevision, verifierPrincipal: "verifier-1",
+        });
+        assert.equal(verified.outcome, "created");
+        const feed = await client.query(PUBLIC_UPDATES_QUERY);
+        assert.equal(feed.rows.length, index + 1);
+        assert.ok(feed.rows.every((row) => row.verification_state === "verified"));
+        const dto = selectPublicUpdates([{ ...result.event, verificationState: "verified" }], []);
+        assert.equal(dto[0]?.verification_state, "verified");
+      }
+      for (const state of ["pending", "failed", "uncertain"]) {
+        const key = `batch-a-hidden-${state}`;
+        const ready = await approveClaim(pool, key);
+        const result = await publishRevision(store, {
+          ...publishArgs(ready.proposal.id, ready.revision.id, ready.proposal.bodyDigest, key),
+          expectedCanonicalDigest: (await store.getCanonicalState("provider", "local-packages", "hypervisor"))?.valueDigest ?? null,
+          publisherPrincipal: "publisher-1",
+        });
+        if (result.outcome !== "created") throw new Error(JSON.stringify(result));
+        if (state !== "pending") await client.query("UPDATE publication_receipts SET verification_state = $1 WHERE id = $2", [state, result.receipt.id]);
+        assert.equal((await client.query(PUBLIC_UPDATES_QUERY)).rows.length, 4);
+        const reader = new PostgresDirectoryReader(pool);
+        const timeline = await reader.getTimeline({ providerId: "local-packages" });
+        assert.equal((timeline.events as unknown[]).length, 4, `MCP excludes ${state}`);
+        const additions = await reader.getTrends({ providerId: "local-packages", metric: "verified_additions" });
+        assert.equal((additions.series as { value: number | null }[]).reduce((sum, point) => sum + (point.value ?? 0), 0), 2, "only effective creates count as verified additions");
+      }
+      const columns = await client.query(`SELECT table_name, column_name, column_default, is_nullable
+        FROM information_schema.columns WHERE table_schema = 'public'
+        AND table_name IN ('canonical_states','publication_receipts','change_events')
+        AND column_name IN ('knowledge_state','assessment_state')`);
+      assert.equal(columns.rows.length, 6);
+      for (const row of columns.rows) {
+        assert.equal(row.is_nullable, "NO");
+        assert.ok(String(row.column_default).includes(row.column_name === "knowledge_state" ? "unknown" : "legacy/unverified"));
+      }
+      await assert.rejects(client.query("UPDATE publication_receipts SET knowledge_state = 'conflicting'"), /immutable/);
+      await assert.rejects(client.query("UPDATE publication_receipts SET assessment_state = 'rejected'"), /immutable/);
+      await assert.rejects(client.query("UPDATE canonical_states SET knowledge_state = 'invented'"), /check constraint/);
+      await assert.rejects(client.query("UPDATE canonical_states SET assessment_state = 'invented'"), /check constraint/);
+    });
+  });
   it("publishes through the MCP publish session and records a receipt", async () => {
     await withMigratedDatabase(async (client, pool) => {
       const ready = await approveClaim(pool, "pg-pub-1");
@@ -343,6 +419,7 @@ describe("PostgreSQL publication ledger", { skip: !TEST_DATABASE_URL }, () => {
             revisionId: rollbackReady.revision.id,
             expectedRevisionId: rollbackReady.revision.id,
             expectedBodyDigest: rollbackReady.proposal.bodyDigest,
+            expectedCanonicalDigest: (await publication.getCanonicalState("provider", "local-packages", "hypervisor"))!.valueDigest,
             idempotencyKey: "pg-roll-new",
             methodologyVersion: CURRENT_METHODOLOGY.id,
             dataRevision: "drv-roll",
@@ -419,8 +496,8 @@ describe("PostgreSQL publication ledger", { skip: !TEST_DATABASE_URL }, () => {
         })),
         []
       );
-      assert.equal(selected.length, 2);
-      assert.deepEqual(toApiUpdate(selected[0]!), toApiUpdate(toPublicUpdate({
+      assert.deepEqual(selected, [], "pending publications are not factual updates");
+      assert.deepEqual(toApiUpdate(mapped[0]!), toApiUpdate(toPublicUpdate({
         id: String(events.rows[0].id),
         receiptId: "x",
         revisionId: String(events.rows[0].revision_id),
@@ -685,12 +762,12 @@ describe("PostgreSQL publication ledger", { skip: !TEST_DATABASE_URL }, () => {
       const mismatchedPub = payloadOf(
         await publisher.invoke(
           "directory.publish_revision",
-          publishArgs(
+          { ...publishArgs(
             mismatchReady.proposal.id,
             mismatchReady.revision.id,
             mismatchReady.proposal.bodyDigest,
             "pg-verify-miss"
-          )
+          ), expectedCanonicalDigest: bodyDigestFromValue(receipt.afterValue) }
         )
       );
       const missReceipt = mismatchedPub.receipt as { id: string; afterValue: unknown; dataRevision: string };
@@ -840,6 +917,20 @@ describe("PostgreSQL publication ledger", { skip: !TEST_DATABASE_URL }, () => {
       });
       const leftArgs = publishArgs(left.proposal.id, left.revision.id, left.proposal.bodyDigest, "pg-absent-a");
       const rightArgs = publishArgs(right.proposal.id, right.revision.id, right.proposal.bodyDigest, "pg-absent-b");
+      assert.equal(leftArgs.expectedCanonicalDigest, null);
+      assert.equal(rightArgs.expectedCanonicalDigest, null);
+      // Force both pre-reads to see absence, then exercise transactional CAS.
+      const getCanonicalState = publication.getCanonicalState.bind(publication);
+      let arrivals = 0;
+      let release!: () => void;
+      const bothAbsent = new Promise<void>(resolve => { release = resolve; });
+      publication.getCanonicalState = async (...args) => {
+        const current = await getCanonicalState(...args);
+        assert.equal(current, null);
+        if (++arrivals === 2) release();
+        await bothAbsent;
+        return current;
+      };
       const raced = await Promise.all([
         publisher.invoke("directory.publish_revision", leftArgs),
         publisher.invoke("directory.publish_revision", rightArgs),
@@ -865,6 +956,35 @@ describe("PostgreSQL publication ledger", { skip: !TEST_DATABASE_URL }, () => {
       );
       assert.equal(canonical.rows.length, 1);
       assert.deepEqual(canonical.rows[0].value, winner.afterValue);
+    });
+  });
+
+  it("explicit CAS: rejects omission and late null, permits exact non-null update", async () => {
+    await withMigratedDatabase(async (client, pool) => {
+      const left = await approveClaim(pool, "explicit-left");
+      const right = await approveProposalBody(pool, "directory.propose_claim", { ...claim, value: { text: "Xen" } }, "explicit-right");
+      const publication = new PostgresPublicationStore(pool);
+      const publisher = createDirectoryMcpServer({ capabilities: ["publish"],
+        context: { reader: null, repo: left.repo, publication, principalId: "publisher-1" } });
+      const leftArgs = publishArgs(left.proposal.id, left.revision.id, left.proposal.bodyDigest, "explicit-left");
+      const rightArgs = publishArgs(right.proposal.id, right.revision.id, right.proposal.bodyDigest, "explicit-right");
+      const { expectedCanonicalDigest: _, ...omitted } = leftArgs;
+      const rejected = payloadOf(await publisher.invoke("directory.publish_revision", omitted));
+      assert.equal(rejected.outcome, OUTCOME.rejected);
+      assert.equal(rejected.code, "malformed_payload");
+      assert.equal((await client.query("SELECT * FROM publication_receipts")).rows.length, 0);
+      assert.equal(payloadOf(await publisher.invoke("directory.publish_revision", leftArgs)).outcome, OUTCOME.created);
+      // Deterministically start the second request only after the first commit.
+      const late = payloadOf(await publisher.invoke("directory.publish_revision", rightArgs));
+      assert.equal(late.outcome, OUTCOME.rejected);
+      assert.equal(late.code, "canonical_state_conflict");
+      assert.equal((await client.query("SELECT * FROM publication_receipts")).rows.length, 1);
+      const canonical = await publication.getCanonicalState("provider", "local-packages", "hypervisor");
+      assert.equal(typeof canonical?.valueDigest, "string");
+      const updated = payloadOf(await publisher.invoke("directory.publish_revision", { ...rightArgs, expectedCanonicalDigest: canonical!.valueDigest }));
+      assert.equal(updated.outcome, OUTCOME.created);
+      assert.equal((updated.receipt as { changeType: string }).changeType, "update");
+      assert.equal((await client.query("SELECT * FROM publication_receipts")).rows.length, 2);
     });
   });
 
@@ -961,12 +1081,9 @@ describe("PostgreSQL publication ledger", { skip: !TEST_DATABASE_URL }, () => {
       assert.equal(verified.outcome, OUTCOME.created);
 
       const events = await client.query(
-        `SELECT id, receipt_id, revision_id, proposal_id, change_type, entity_type, entity_id, field_name,
-                old_value, new_value, value_sensitivity, source_id, evidence_snapshot_ids,
-                detected_at::text AS detected_at, observed_at::text AS observed_at,
-                reviewed_at::text AS reviewed_at, published_at::text AS published_at,
-                correction_of_event_id, title_id, title_en, summary_id, summary_en, provider_id, href
-         FROM change_events`
+        `SELECT e.*, r.verification_state
+         FROM change_events e JOIN publication_receipts r ON r.id = e.receipt_id
+         WHERE r.verification_state = 'verified'`
       );
       const updates = selectPublicUpdates(
         events.rows.map((row) =>
@@ -1001,6 +1118,7 @@ describe("PostgreSQL publication ledger", { skip: !TEST_DATABASE_URL }, () => {
         ).map((_, i) => ({
           id: String(events.rows[i].id),
           receiptId: String(events.rows[i].receipt_id),
+          verificationState: events.rows[i].verification_state as "verified",
           revisionId: String(events.rows[i].revision_id),
           proposalId: String(events.rows[i].proposal_id),
           changeType: events.rows[i].change_type as "create",
@@ -1154,7 +1272,9 @@ describe("PostgreSQL publication ledger", { skip: !TEST_DATABASE_URL }, () => {
         const published = payloadOf(
           await publisher.invoke(
             "directory.publish_revision",
-            publishArgs(ready.proposal.id, ready.revision.id, ready.proposal.bodyDigest, row.key)
+            { ...publishArgs(ready.proposal.id, ready.revision.id, ready.proposal.bodyDigest, row.key),
+              expectedCanonicalDigest: row.tool === "directory.propose_retraction"
+                ? (await publication.getCanonicalState("provider", "local-packages", "hypervisor"))!.valueDigest : null }
           )
         );
         assert.equal(published.outcome, OUTCOME.created, row.key);

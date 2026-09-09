@@ -297,6 +297,7 @@ describe("stable latest-state identity", () => {
     assert.equal(series.find((p) => p.period.key === "2025-04")!.value, 0);
     assert.equal(series.find((p) => p.period.key === "2025-05")!.value, 1);
     const ledger = factFromLedgerRow({
+      knowledgeState: "present",
       receiptId: "r-rb-rollback",
       revisionId: "rev-rb-rollback",
       changeType: "rollback",

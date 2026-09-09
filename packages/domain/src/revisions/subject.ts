@@ -1,5 +1,6 @@
 import type { ProposalSnapshot, PublicationReceipt, RevisionSnapshot } from "./types.ts";
 import { stableHashId } from "./public-projection.ts";
+import { ledgerState } from "./state.ts";
 
 const REDACTED_FIELDS = ["password", "secret", "token", "credential", "private_key"];
 
@@ -122,7 +123,7 @@ function adaptOffering(body: Record<string, unknown>, hrefFallback: string): Der
       providerId,
       serviceId,
       status: asString(body.status),
-      knowledgeState: "present",
+      knowledgeState: ledgerState(body).knowledgeState,
     },
     evidenceSnapshotIds: evidence.ids,
     observedAt: asString(body.observedAt),
@@ -149,7 +150,7 @@ function adaptPrice(body: Record<string, unknown>, hrefFallback: string): Derive
       commitment: asString(body.commitment),
       promo: asBool(body.promo) ?? false,
       comparable: true,
-      knowledgeState: "present",
+      knowledgeState: ledgerState(body).knowledgeState,
     },
     evidenceSnapshotIds: evidence.ids,
     observedAt: asString(body.observedAt),
@@ -177,7 +178,7 @@ function adaptLocation(body: Record<string, unknown>, hrefFallback: string): Der
       mapPrecision: asString(body.mapPrecision) ?? "undisclosed",
       lat: asNumber(body.lat),
       lng: asNumber(body.lng),
-      knowledgeState: "present",
+      knowledgeState: ledgerState(body).knowledgeState,
     },
     evidenceSnapshotIds: evidence.ids,
     observedAt: asString(body.observedAt),
@@ -207,7 +208,7 @@ function adaptFacility(body: Record<string, unknown>, hrefFallback: string): Der
       lng: asNumber(body.lng),
       mapPrecision: asString(body.mapPrecision) ?? "undisclosed",
       facilityId: entityId,
-      knowledgeState: "present",
+      knowledgeState: ledgerState(body).knowledgeState,
     },
     evidenceSnapshotIds: evidence.ids,
     observedAt: asString(body.observedAt),
@@ -238,7 +239,7 @@ function adaptTechnology(body: Record<string, unknown>, hrefFallback: string): D
       hasUniversalScopeEvidence: body.hasUniversalScopeEvidence === true,
       slug: technologyId,
       technologySlug: technologyId,
-      knowledgeState: "present",
+      knowledgeState: ledgerState(body).knowledgeState,
     },
     evidenceSnapshotIds: evidence.ids,
     observedAt: asString(body.observedAt),
@@ -284,13 +285,13 @@ export function deriveSubject(
   proposal: ProposalSnapshot,
   revision: RevisionSnapshot,
   rollbackOfReceiptId: string | null
-): DerivedSubject {
+): DerivedSubject & Required<import("./types.ts").TypedLedgerState> {
   const body = { ...proposal.body, ...revision.body };
   const hrefFallback = `/revisions/${revision.id}`;
   const adapter = ADAPTERS[proposal.toolName];
   const derived = adapter ? adapter(body, hrefFallback) : adaptClaim(body, "create", hrefFallback);
   if (rollbackOfReceiptId) {
-    return { ...derived, changeType: "rollback" };
+    return { ...derived, ...ledgerState({}), changeType: "rollback" };
   }
-  return derived;
+  return { ...derived, ...ledgerState(body) };
 }

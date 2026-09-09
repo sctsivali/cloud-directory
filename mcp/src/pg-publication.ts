@@ -1,4 +1,5 @@
 import { bodyDigestFromValue } from "../../packages/domain/src/revisions/digest.ts";
+import { effectiveChangeType, ledgerState } from "../../packages/domain/src/revisions/state.ts";
 import { applyUncertainAttempt, attemptIdentityEqual, publicationReplayAllowed, verificationReplayAllowed, verificationStateAllowed } from "../../packages/domain/src/revisions/attempts.ts";
 import { revalidateLockedPublication } from "../../packages/domain/src/revisions/publish.ts";
 import { validateRollbackBindings } from "../../packages/domain/src/revisions/rollback.ts";
@@ -118,6 +119,7 @@ function mapReview(row: Record<string, unknown>): ReviewSnapshot {
 
 function mapReceipt(row: Record<string, unknown>): PublicationReceipt {
   return {
+    ...ledgerState({ knowledgeState: row.knowledge_state, assessmentState: row.assessment_state }),
     id: String(row.id),
     attemptId: String(row.attempt_id),
     proposalId: String(row.proposal_id),
@@ -148,6 +150,7 @@ function mapReceipt(row: Record<string, unknown>): PublicationReceipt {
 
 function mapEvent(row: Record<string, unknown>): ChangeEvent {
   return {
+    ...ledgerState({ knowledgeState: row.knowledge_state, assessmentState: row.assessment_state }),
     id: String(row.id),
     receiptId: String(row.receipt_id),
     revisionId: String(row.revision_id),
@@ -270,6 +273,7 @@ export class PostgresPublicationStore implements PublicationStore {
       entityId: String(row.entity_id),
       fieldName: String(row.field_name),
       value: row.value,
+      ...ledgerState({ knowledgeState: row.knowledge_state, assessmentState: row.assessment_state }),
       valueDigest: String(row.value_digest),
       dataRevision: String(row.data_revision),
       updatedAt: iso(row.updated_at as Date | string) ?? "",
@@ -365,7 +369,7 @@ export class PostgresPublicationStore implements PublicationStore {
 
       await lockCanonicalKey(client, plan.entityType, plan.entityId, plan.fieldName);
       const current = await client.query(
-        `SELECT value_digest FROM canonical_states
+        `SELECT value_digest, value, knowledge_state FROM canonical_states
          WHERE entity_type = $1 AND entity_id = $2 AND field_name = $3
          FOR UPDATE`,
         [plan.entityType, plan.entityId, plan.fieldName]
@@ -423,11 +427,15 @@ export class PostgresPublicationStore implements PublicationStore {
       }
 
       const afterDigest = bodyDigestFromValue(plan.afterValue);
+      plan = { ...plan, changeType: effectiveChangeType(current.rows[0] ? {
+        value: current.rows[0].value,
+        knowledgeState: ledgerState({ knowledgeState: current.rows[0].knowledge_state }).knowledgeState,
+      } : null, plan) };
       if (!current.rows[0]) {
         const inserted = await client.query(
           `INSERT INTO canonical_states (
-             entity_type, entity_id, field_name, value, value_digest, data_revision, updated_at
-           ) VALUES ($1,$2,$3,$4::jsonb,$5,$6,$7)
+             entity_type, entity_id, field_name, value, value_digest, data_revision, updated_at, knowledge_state, assessment_state
+           ) VALUES ($1,$2,$3,$4::jsonb,$5,$6,$7,$8,$9)
            ON CONFLICT (entity_type, entity_id, field_name) DO NOTHING
            RETURNING entity_type`,
           [
@@ -438,6 +446,8 @@ export class PostgresPublicationStore implements PublicationStore {
             afterDigest,
             plan.dataRevision,
             plan.publishedAt,
+            plan.knowledgeState ?? "unknown",
+            plan.assessmentState ?? "legacy/unverified",
           ]
         );
         if (!inserted.rows[0]) {
@@ -449,7 +459,7 @@ export class PostgresPublicationStore implements PublicationStore {
              value = $4::jsonb,
              value_digest = $5,
              data_revision = $6,
-             updated_at = $7
+             updated_at = $7, knowledge_state = $9, assessment_state = $10
            WHERE entity_type = $1 AND entity_id = $2 AND field_name = $3
              AND value_digest IS NOT DISTINCT FROM $8
            RETURNING entity_type`,
@@ -462,6 +472,8 @@ export class PostgresPublicationStore implements PublicationStore {
             plan.dataRevision,
             plan.publishedAt,
             plan.expectedCanonicalDigest,
+            plan.knowledgeState ?? "unknown",
+            plan.assessmentState ?? "legacy/unverified",
           ]
         );
         if (!updated.rows[0]) {
@@ -518,9 +530,9 @@ export class PostgresPublicationStore implements PublicationStore {
            id, attempt_id, proposal_id, revision_id, revision_ordinal, body_digest, approval_id, approval_digest,
            reviewer_id, publisher_id, methodology_version, data_revision, idempotency_key, evidence_snapshot_ids,
            before_value, after_value, entity_type, entity_id, field_name, change_type, verification_state,
-           published_at, supersedes_receipt_id
+           published_at, supersedes_receipt_id, knowledge_state, assessment_state
          ) VALUES (
-           $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14::jsonb,$15::jsonb,$16::jsonb,$17,$18,$19,$20,$21,$22,$23
+           $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14::jsonb,$15::jsonb,$16::jsonb,$17,$18,$19,$20,$21,$22,$23,$24,$25
          )`,
         [
           plan.receiptId,
@@ -546,6 +558,8 @@ export class PostgresPublicationStore implements PublicationStore {
           plan.verificationState,
           plan.publishedAt,
           plan.supersedesReceiptId,
+          plan.knowledgeState ?? "unknown",
+          plan.assessmentState ?? "legacy/unverified",
         ]
       );
 
@@ -554,9 +568,9 @@ export class PostgresPublicationStore implements PublicationStore {
            id, receipt_id, revision_id, proposal_id, change_type, entity_type, entity_id, field_name,
            old_value, new_value, value_sensitivity, source_id, evidence_snapshot_ids, detected_at,
            observed_at, reviewed_at, published_at, correction_of_event_id, title_id, title_en,
-           summary_id, summary_en, provider_id, href
+           summary_id, summary_en, provider_id, href, knowledge_state, assessment_state
          ) VALUES (
-           $1,$2,$3,$4,$5,$6,$7,$8,$9::jsonb,$10::jsonb,$11,$12,$13::jsonb,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24
+           $1,$2,$3,$4,$5,$6,$7,$8,$9::jsonb,$10::jsonb,$11,$12,$13::jsonb,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26
          )`,
         [
           plan.eventId,
@@ -583,6 +597,8 @@ export class PostgresPublicationStore implements PublicationStore {
           plan.summaryEn,
           plan.providerId,
           plan.href,
+          plan.knowledgeState ?? "unknown",
+          plan.assessmentState ?? "legacy/unverified",
         ]
       );
 

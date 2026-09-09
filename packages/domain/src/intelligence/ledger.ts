@@ -1,9 +1,11 @@
-import type { KnowledgeState } from "../knowledge-state.ts";
+import { ledgerState } from "../revisions/state.ts";
 import type { ChangeType, VerificationState, VerifiedFact } from "./types.ts";
 import { INTELLIGENCE_METHODOLOGY_ID } from "./types.ts";
 import { extractCountryFromValue } from "./countries.ts";
 
 export type LedgerFactRow = {
+  knowledgeState?: import("../knowledge-state.ts").KnowledgeState;
+  assessmentState?: import("../knowledge-state.ts").AssessmentState;
   receiptId: string;
   revisionId: string;
   changeType: string;
@@ -34,30 +36,6 @@ function asVerification(value: string): VerificationState {
     return value;
   }
   return "pending";
-}
-
-function asKnowledge(value: unknown): KnowledgeState {
-  if (
-    value === "present" ||
-    value === "confirmed_absent" ||
-    value === "unknown" ||
-    value === "not_applicable" ||
-    value === "conflicting"
-  ) {
-    return value;
-  }
-  return "present";
-}
-
-function deriveKnowledge(changeType: string, after: unknown): KnowledgeState {
-  if (changeType === "retract") return "confirmed_absent";
-  const explicit = readString(after, "knowledgeState") ?? readString(after, "knowledge_state");
-  if (changeType === "rollback") {
-    if (after == null) return "confirmed_absent";
-    if (explicit) return asKnowledge(explicit);
-    return "present";
-  }
-  return asKnowledge(explicit);
 }
 
 function readString(value: unknown, key: string): string | null {
@@ -101,7 +79,7 @@ export function factFromLedgerRow(row: LedgerFactRow): VerifiedFact {
     observedAt: toIsoTimestamp(row.observedAt) ?? publishedAt,
     publishedAt,
     verificationState: asVerification(row.verificationState),
-    knowledgeState: deriveKnowledge(row.changeType, after),
+    ...ledgerState({ knowledgeState: row.knowledgeState, assessmentState: row.assessmentState }),
     afterValue: after,
     beforeValue: row.beforeValue,
     methodologyVersion: row.methodologyVersion ?? INTELLIGENCE_METHODOLOGY_ID,
@@ -126,6 +104,7 @@ export function factsFromLedgerRows(rows: LedgerFactRow[]): VerifiedFact[] {
 
 export function ledgerFactRowFromJoin(row: Record<string, unknown>): LedgerFactRow {
   return {
+    ...ledgerState({ knowledgeState: row.knowledge_state, assessmentState: row.assessment_state }),
     receiptId: String(row.receipt_id),
     revisionId: String(row.revision_id),
     changeType: String(row.change_type),

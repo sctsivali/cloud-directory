@@ -1,6 +1,18 @@
 import type { ChangeEvent } from "./types.ts";
 import { redactPublicPair } from "./public-projection.ts";
 
+/** Shared factual query: fail closed, including when the ledger is empty. */
+export const PUBLIC_UPDATES_QUERY = `
+  SELECT e.*, r.verification_state,
+         e.detected_at::text AS detected_at, e.observed_at::text AS observed_at,
+         e.reviewed_at::text AS reviewed_at, e.published_at::text AS published_at
+  FROM change_events e
+  JOIN publication_receipts r ON r.id = e.receipt_id
+  WHERE r.verification_state = 'verified'
+  ORDER BY e.published_at DESC, e.id DESC
+  LIMIT 80
+`;
+
 export type LegacyDirectoryUpdate = {
   id: number;
   kind: "discovered" | "updated";
@@ -14,6 +26,7 @@ export type LegacyDirectoryUpdate = {
 };
 
 export type PublicDirectoryUpdate = {
+  verification_state: "verified" | "legacy/unverified" | "pending" | "failed" | "uncertain" | "rolled_back";
   id: string | number;
   kind: "discovered" | "updated" | "correction" | "rollback";
   change_type: string;
@@ -52,6 +65,7 @@ export function toPublicUpdate(event: ChangeEvent): PublicDirectoryUpdate {
   const values = redactPublicPair(event.oldValue, event.newValue, event.valueSensitivity);
   return {
     id: event.id,
+    verification_state: event.verificationState ?? "pending",
     kind: kindForChange(event.changeType),
     change_type: event.changeType,
     provider_id: event.providerId,
@@ -82,6 +96,7 @@ export function toPublicUpdate(event: ChangeEvent): PublicDirectoryUpdate {
 export function toLegacyPublicUpdate(row: LegacyDirectoryUpdate): PublicDirectoryUpdate {
   return {
     id: row.id,
+    verification_state: "legacy/unverified",
     kind: row.kind,
     change_type: row.kind,
     provider_id: row.provider_id,
@@ -111,10 +126,9 @@ export function toLegacyPublicUpdate(row: LegacyDirectoryUpdate): PublicDirector
 
 export function selectPublicUpdates(
   events: ChangeEvent[],
-  fallback: LegacyDirectoryUpdate[]
+  _fallback: LegacyDirectoryUpdate[]
 ): PublicDirectoryUpdate[] {
-  if (events.length > 0) return events.map(toPublicUpdate);
-  return fallback.map(toLegacyPublicUpdate);
+  return events.filter((event) => event.verificationState === "verified").map(toPublicUpdate);
 }
 
 export function toApiUpdate(update: PublicDirectoryUpdate): PublicDirectoryUpdate {

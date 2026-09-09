@@ -1,5 +1,6 @@
 import { applyUncertainAttempt, attemptIdentityEqual, publicationReplayAllowed, verificationReplayAllowed, verificationStateAllowed } from "./attempts.ts";
 import { bodyDigestFromValue } from "./digest.ts";
+import { effectiveChangeType } from "./state.ts";
 import { revalidateLockedPublication } from "./publish.ts";
 import { validateRollbackBindings } from "./rollback.ts";
 import { judgeVerification } from "./verify.ts";
@@ -236,11 +237,14 @@ export class MemoryPublicationStore implements PublicationStore {
         this.afterWrite();
       }
       const afterDigest = bodyDigestFromValue(plan.afterValue);
+      plan = { ...plan, changeType: effectiveChangeType(this.canonical.get(key) ?? null, plan) };
       this.canonical.set(key, {
         entityType: plan.entityType,
         entityId: plan.entityId,
         fieldName: plan.fieldName,
         value: plan.afterValue,
+        knowledgeState: plan.knowledgeState ?? "unknown",
+        assessmentState: plan.assessmentState ?? "legacy/unverified",
         valueDigest: afterDigest,
         dataRevision: plan.dataRevision,
         updatedAt: now,
@@ -267,6 +271,8 @@ export class MemoryPublicationStore implements PublicationStore {
         entityId: plan.entityId,
         fieldName: plan.fieldName,
         changeType: plan.changeType,
+        knowledgeState: plan.knowledgeState ?? "unknown",
+        assessmentState: plan.assessmentState ?? "legacy/unverified",
         verificationState: plan.verificationState,
         publishedAt: now,
         supersedesReceiptId: plan.supersedesReceiptId,
@@ -285,6 +291,8 @@ export class MemoryPublicationStore implements PublicationStore {
         entityId: plan.entityId,
         fieldName: plan.fieldName,
         oldValue: plan.beforeValue,
+        knowledgeState: plan.knowledgeState ?? "unknown",
+        assessmentState: plan.assessmentState ?? "legacy/unverified",
         newValue: plan.afterValue,
         valueSensitivity: plan.valueSensitivity,
         sourceId: plan.sourceId,

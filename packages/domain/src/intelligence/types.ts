@@ -75,6 +75,7 @@ export type ObservationWindow = {
 };
 
 export type VerifiedFact = {
+  assessmentState?: import("../knowledge-state.ts").AssessmentState;
   receiptId: string;
   revisionId: string;
   changeType: ChangeType;
