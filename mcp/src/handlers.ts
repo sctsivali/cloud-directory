@@ -1,3 +1,4 @@
+import { normalizeIntelligenceRequest, intelligenceRequestError } from '../../packages/domain/src/intelligence/request.ts';
 import { validateToolInput, type Capability } from "../../packages/contracts/src/mcp.ts";
 import type { PublicationStore } from "../../packages/domain/src/revisions/types.ts";
 import { guardTrendQuery } from "../../packages/domain/src/intelligence/trends.ts";
@@ -39,7 +40,19 @@ export async function executeTool(
   name: string,
   rawInput: unknown
 ): Promise<{ content: { type: "text"; text: string }[] }> {
-  const input = rawInput ?? {};
+  let input = rawInput ?? {};
+  if (name === 'directory.get_trends' || name === 'directory.get_outlook_eligibility') {
+    try {
+      const normalized = normalizeIntelligenceRequest(input, name === 'directory.get_outlook_eligibility');
+      input = { ...(input as Record<string, unknown>),
+        country: normalized.countryCode ?? undefined, providerId: normalized.providerId ?? undefined,
+        metric: normalized.metric ?? undefined, dataRevision: normalized.dataRevision ?? undefined,
+        windowStart: normalized.window?.start, windowEnd: normalized.window?.end,
+        limit: normalized.limit, page: normalized.page,
+      };
+    }
+    catch (error) { return jsonResult(intelligenceRequestError(error)); }
+  }
   switch (name) {
     case "directory.get_provider": {
       const parsed = validateToolInput(name, input);

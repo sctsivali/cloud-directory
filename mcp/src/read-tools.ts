@@ -1,3 +1,4 @@
+import { readTrendRequest, resolveIntelligenceRequest, intelligenceRequestError } from '../../packages/domain/src/intelligence/request.ts';
 import {
   CURRENT_METHODOLOGY,
   explainForSurface,
@@ -306,28 +307,7 @@ export class PostgresDirectoryReader implements DirectoryReader {
   }
 
   async getTrends(args: IntelligenceReadArgs): Promise<JsonObject> {
-    const built = await this.buildIntelligence(args);
-    if ("error" in built) return built;
-    const report = buildTrendReport(built.query);
-    const view = publicTrendView(report);
-    if (args.metric && isTrendMetric(args.metric)) {
-      return {
-        ok: true,
-        metric: args.metric,
-        series: view.series[args.metric],
-        diagnostics: view.diagnostics[args.metric],
-        eligibility: view.eligibility[args.metric],
-        methodologyId: view.methodologyId,
-        methodologyHash: view.methodologyHash,
-        dataRevision: view.dataRevision,
-        observationWindow: view.observationWindow,
-        windowAvailable: view.windowAvailable,
-        insufficientEvidence: view.insufficientEvidence,
-        countryCode: view.countryCode,
-        providerId: view.providerId,
-      };
-    }
-    return { ok: true, ...view };
+    return readTrendRequest(this.client, args);
   }
 
   async getTimeline(args: IntelligenceReadArgs): Promise<JsonObject> {
@@ -348,13 +328,10 @@ export class PostgresDirectoryReader implements DirectoryReader {
   }
 
   async getOutlookEligibility(args: IntelligenceReadArgs): Promise<JsonObject> {
-    const built = await this.buildIntelligence(args);
-    if ("error" in built) return built;
-    if (!args.metric || !isTrendMetric(args.metric)) {
-      return { ok: false, error: "metric is required" };
-    }
-    const outlook = buildOutlook(built.query, args.metric);
-    return { ok: true, ...publicOutlookEligibilityView(outlook) };
+    try {
+      const built = await resolveIntelligenceRequest(this.client, args, undefined, true);
+      return { ok: true, ...publicOutlookEligibilityView(buildOutlook(built.query, built.metric!)) };
+    } catch (error) { return intelligenceRequestError(error); }
   }
 
   private async buildIntelligence(args: IntelligenceReadArgs): Promise<

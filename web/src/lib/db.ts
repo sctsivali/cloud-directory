@@ -565,6 +565,9 @@ export async function getDirectoryUpdates(): Promise<DirectoryUpdate[]> {
   return selectPublicUpdates(events.rows.map(mapChangeEventRow), []);
 }
 
+import { readTrendRequest } from '../../../packages/domain/src/intelligence/request.ts';
+export async function getTrendsResponse(raw: unknown) { return readTrendRequest(pool, raw); }
+
 export async function getTrendReport(args?: {
   countryCode?: string | null;
   providerId?: string | null;
