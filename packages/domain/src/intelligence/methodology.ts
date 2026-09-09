@@ -91,6 +91,12 @@ export const INTELLIGENCE_RULESET = {
   algorithmVersion: INTELLIGENCE_ALGORITHM_VERSION,
   period: "month",
   staleAfterDays: 180,
+  sampling: {
+    minEffectiveSampleSize: 4,
+    maxStaleShare: 0.4,
+    continuity: 'observed-published-verified-in-period',
+    effectiveUnit: 'unique-evidence-or-receipt',
+  },
   requiredEvidenceClaimTypes: [
     "primary_residency",
     "backup_residency",

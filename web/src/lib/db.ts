@@ -1,4 +1,5 @@
 import { Pool } from "pg";
+import { loadDataRevision } from '../../../packages/domain/src/intelligence/data-revisions.ts';
 import { CURRENT_METHODOLOGY, LEGACY_FALLBACK_LABEL } from "../../../packages/domain/src/scoring/index.ts";
 import {
   selectPublicUpdates,
@@ -12,16 +13,12 @@ import {
   buildOutlook,
   buildProviderTimeline,
   buildTrendReport,
-  factsFromLedgerRows,
   inferObservationWindow,
-  ledgerFactRowFromJoin,
   publicOutlookEligibilityView,
   publicTrendView,
   requireRegisteredIso2,
   windowFromInferred,
-  MAX_TREND_FACTS,
   type TrendMetric,
-  type VerifiedFact,
 } from "../../../packages/domain/src/intelligence/index.ts";
 import { projectPublicTimelineDocument } from "../../../packages/domain/src/revisions/public-projection.ts";
 
@@ -568,32 +565,13 @@ export async function getDirectoryUpdates(): Promise<DirectoryUpdate[]> {
   return selectPublicUpdates(events.rows.map(mapChangeEventRow), []);
 }
 
-async function loadIntelligenceFacts(): Promise<VerifiedFact[]> {
-  try {
-    const { rows } = await pool.query(
-      `SELECT r.id AS receipt_id, r.revision_id, r.change_type, r.entity_type, r.entity_id, r.field_name,
-              r.before_value, r.after_value, r.verification_state, r.methodology_version, r.data_revision, r.knowledge_state, r.assessment_state,
-              r.published_at::text AS published_at, r.supersedes_receipt_id,
-              e.observed_at::text AS observed_at, e.provider_id, e.value_sensitivity
-       FROM publication_receipts r
-       JOIN change_events e ON e.receipt_id = r.id
-       ORDER BY r.published_at DESC, r.id DESC
-       LIMIT $1`,
-      [MAX_TREND_FACTS]
-    );
-    return factsFromLedgerRows(rows.map((row) => ledgerFactRowFromJoin(row as Record<string, unknown>)));
-  } catch {
-    return [];
-  }
-}
-
 export async function getTrendReport(args?: {
   countryCode?: string | null;
   providerId?: string | null;
   dataRevision?: string | null;
   window?: { start: string; end: string } | null;
 }): Promise<ReturnType<typeof publicTrendView>> {
-  const facts = await loadIntelligenceFacts();
+  const { facts, id: dataRevision } = await loadDataRevision(pool, args?.dataRevision);
   const window = args?.window ?? windowFromInferred(inferObservationWindow(facts));
   return publicTrendView(
     buildTrendReport({
@@ -601,28 +579,28 @@ export async function getTrendReport(args?: {
       window,
       countryCode: args?.countryCode ?? null,
       providerId: args?.providerId ?? null,
-      dataRevision: args?.dataRevision ?? null,
+      dataRevision,
     })
   );
 }
 
 export async function getProviderTimelineDoc(providerId: string) {
-  const facts = await loadIntelligenceFacts();
+  const { facts, id: dataRevision } = await loadDataRevision(pool);
   const window = windowFromInferred(inferObservationWindow(facts));
-  return projectPublicTimelineDocument(buildProviderTimeline({ facts, window, providerId }));
+  return projectPublicTimelineDocument(buildProviderTimeline({ facts, window, providerId, dataRevision }));
 }
 
 export async function getCountryPageData(code: string) {
   const country = requireRegisteredIso2(code);
-  const facts = await loadIntelligenceFacts();
+  const { facts, id: dataRevision } = await loadDataRevision(pool);
   const window = windowFromInferred(inferObservationWindow(facts));
-  const timeline = projectPublicTimelineDocument(buildCountryTimeline({ facts, window, countryCode: country.iso2 }));
-  const trends = publicTrendView(buildTrendReport({ facts, window, countryCode: country.iso2 }));
+  const timeline = projectPublicTimelineDocument(buildCountryTimeline({ facts, window, countryCode: country.iso2, dataRevision }));
+  const trends = publicTrendView(buildTrendReport({ facts, window, countryCode: country.iso2, dataRevision }));
   return { country, timeline, trends };
 }
 
-export async function getOutlookEligibility(metric: TrendMetric, countryCode?: string | null) {
-  const facts = await loadIntelligenceFacts();
+export async function getOutlookEligibility(metric: TrendMetric, countryCode?: string | null, requestedRevision?: string | null) {
+  const { facts, id: dataRevision } = await loadDataRevision(pool, requestedRevision);
   const window = windowFromInferred(inferObservationWindow(facts));
-  return publicOutlookEligibilityView(buildOutlook({ facts, window, countryCode: countryCode ?? null }, metric));
+  return publicOutlookEligibilityView(buildOutlook({ facts, window, countryCode: countryCode ?? null, dataRevision }, metric));
 }

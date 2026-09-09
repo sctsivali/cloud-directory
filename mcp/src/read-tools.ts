@@ -26,6 +26,7 @@ import {
 } from "../../packages/domain/src/intelligence/index.ts";
 import { projectPublicTimelineDocument, projectVerifiedPublicReadModel } from "../../packages/domain/src/revisions/public-projection.ts";
 import { Client } from "./pg.ts";
+import { loadDataRevision, DataRevisionError } from '../../packages/domain/src/intelligence/data-revisions.ts';
 
 export type JsonObject = Record<string, unknown>;
 
@@ -384,10 +385,13 @@ export class PostgresDirectoryReader implements DirectoryReader {
       countryCode = canonicalizeCountryCode(args.country) ?? resolveCountry(args.country)?.iso2 ?? null;
       if (!countryCode) return { ok: false, error: `unregistered country: ${args.country}` };
     }
-    const facts = await this.loadLedgerFacts();
-    if (facts.length > MAX_TREND_FACTS) {
-      return { ok: false, error: "fact limit exceeded", code: "fact_limit_exceeded" };
+    let snapshot;
+    try { snapshot = await loadDataRevision(this.client, args.dataRevision); }
+    catch (error) {
+      if (error instanceof DataRevisionError) return { ok: false, error: error.message, code: error.code };
+      throw error;
     }
+    const facts = snapshot.facts;
     const window = guarded.window ?? windowFromInferred(inferObservationWindow(facts));
     return {
       query: {
@@ -395,7 +399,7 @@ export class PostgresDirectoryReader implements DirectoryReader {
         window,
         countryCode,
         providerId: args.providerId ?? null,
-        dataRevision: args.dataRevision ?? null,
+        dataRevision: snapshot.id,
       },
       limit: guarded.limit,
       page: guarded.page,
@@ -407,7 +411,7 @@ export class PostgresDirectoryReader implements DirectoryReader {
       const { rows } = await this.client.query(
         `SELECT r.id AS receipt_id, r.revision_id, r.change_type, r.entity_type, r.entity_id, r.field_name,
                 r.before_value, r.after_value, r.verification_state, r.methodology_version, r.data_revision, r.knowledge_state, r.assessment_state,
-                r.published_at::text AS published_at, r.supersedes_receipt_id,
+                r.published_at::text AS published_at, r.verified_at::text AS verified_at, r.evidence_snapshot_ids, r.supersedes_receipt_id,
                 e.observed_at::text AS observed_at, e.provider_id, e.value_sensitivity
          FROM publication_receipts r
          JOIN change_events e ON e.receipt_id = r.id

@@ -15,6 +15,8 @@ export type LedgerFactRow = {
   providerId?: string | null;
   observedAt?: string | null;
   publishedAt: string;
+  verifiedAt?: string | null;
+  evidenceSnapshotIds?: string[];
   verificationState: string;
   afterValue: unknown;
   beforeValue: unknown;
@@ -77,7 +79,10 @@ export function factFromLedgerRow(row: LedgerFactRow): VerifiedFact {
     providerId: row.providerId ?? readString(after, "providerId") ?? null,
     countryCode: extractCountryFromValue(after),
     observedAt: toIsoTimestamp(row.observedAt) ?? publishedAt,
+    observationTimeKnown: Boolean(row.observedAt && Number.isFinite(new Date(row.observedAt).getTime())),
     publishedAt,
+    verifiedAt: toIsoTimestamp(row.verifiedAt),
+    evidenceSnapshotIds: row.evidenceSnapshotIds ?? [],
     verificationState: asVerification(row.verificationState),
     ...ledgerState({ knowledgeState: row.knowledgeState, assessmentState: row.assessmentState }),
     afterValue: after,
@@ -114,6 +119,8 @@ export function ledgerFactRowFromJoin(row: Record<string, unknown>): LedgerFactR
     providerId: row.provider_id ? String(row.provider_id) : null,
     observedAt: row.observed_at ? String(row.observed_at) : null,
     publishedAt: String(row.published_at),
+    verifiedAt: row.verified_at ? String(row.verified_at) : null,
+    evidenceSnapshotIds: Array.isArray(row.evidence_snapshot_ids) ? row.evidence_snapshot_ids.filter((id): id is string => typeof id === 'string') : [],
     verificationState: String(row.verification_state),
     afterValue: row.after_value,
     beforeValue: row.before_value,

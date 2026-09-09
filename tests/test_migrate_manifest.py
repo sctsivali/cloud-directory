@@ -153,10 +153,11 @@ class TestManifestLedger(unittest.TestCase):
             "0010_trend_series_outlook.sql",
             "0011_sod_state_replay.sql",
             "0012_typed_publication_state.sql",
+            "0013_immutable_data_revisions.sql",
         ]
         manifest = json.loads(self.manifest_path.read_text())
-        self.assertEqual(manifest["schema_version"], 12)
-        self.assertEqual(len(manifest["migrations"]), 12)
+        self.assertEqual(manifest["schema_version"], 13)
+        self.assertEqual(len(manifest["migrations"]), 13)
         for i, filename in enumerate(expected_files, start=1):
             row = manifest["migrations"][i - 1]
             self.assertEqual(row["version"], i)
@@ -166,7 +167,7 @@ class TestManifestLedger(unittest.TestCase):
             digest = hashlib.sha256(path.read_bytes()).hexdigest()
             self.assertEqual(row["checksum"], digest)
         loaded = migrate.load_manifest(self.migrations_dir)
-        self.assertEqual(loaded.schema_version, 12)
+        self.assertEqual(loaded.schema_version, 13)
         self.assertEqual([m.filename for m in loaded.migrations], expected_files)
         self.assertEqual(loaded.migrations[0].checksum, hashlib.sha256(self.baseline.read_bytes()).hexdigest())
 

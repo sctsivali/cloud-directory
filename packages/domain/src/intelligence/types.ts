@@ -18,7 +18,7 @@ export const TREND_METRICS = [
 export type TrendMetric = (typeof TREND_METRICS)[number];
 
 export const INTELLIGENCE_METHODOLOGY_ID = "asean-trend-series-v1";
-export const INTELLIGENCE_ALGORITHM_VERSION = "1.1.0";
+export const INTELLIGENCE_ALGORITHM_VERSION = "1.2.0";
 export const FORECAST_METHOD = "ruleset_ols";
 
 export const OUTLOOK_LAYERS = [
@@ -87,6 +87,10 @@ export type VerifiedFact = {
   observedAt: string;
   publishedAt: string;
   verificationState: VerificationState;
+  verifiedAt?: string | null;
+  /** False when observedAt is only a legacy publication-time display fallback. */
+  observationTimeKnown?: boolean;
+  evidenceSnapshotIds?: string[];
   knowledgeState: KnowledgeState;
   afterValue: unknown;
   beforeValue: unknown;
@@ -110,6 +114,13 @@ export type VerifiedFact = {
 };
 
 export type TrendPoint = {
+  stockPopulation: number;
+  freshObservationCount: number;
+  carriedForwardCount: number;
+  effectiveSampleSize: number;
+  freshReceiptIds: string[];
+  effectiveSampleIds: string[];
+  staleShare: number;
   metric: TrendMetric;
   period: Period;
   value: number | null;
@@ -127,6 +138,8 @@ export type TrendPoint = {
 };
 
 export type SeriesDiagnostics = {
+  effectiveSampleSize?: number;
+  maxStaleShare?: number;
   observationCount: number;
   continuity: number;
   comparablePopulation: number;
@@ -150,6 +163,8 @@ export type MetricGate = {
 export type GateFailure = {
   code:
     | "observation_count"
+    | "effective_sample_size"
+    | "stale_share"
     | "continuity"
     | "comparable_population"
     | "revision_quality"

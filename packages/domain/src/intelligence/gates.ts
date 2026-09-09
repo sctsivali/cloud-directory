@@ -1,4 +1,4 @@
-import { gateFor } from "./methodology.ts";
+import { gateFor, INTELLIGENCE_RULESET } from "./methodology.ts";
 import type { Eligibility, GateFailure, SeriesDiagnostics, TrendMetric } from "./types.ts";
 
 function fail(
@@ -19,6 +19,13 @@ export function evaluateForecastEligibility(
 ): Eligibility {
   const gate = gateFor(metric);
   const failed: GateFailure[] = [];
+  const effective = diagnostics.effectiveSampleSize ?? 0;
+  const staleShare = diagnostics.maxStaleShare ?? 1;
+  const minimum = Math.max(gate.minObservationCount, INTELLIGENCE_RULESET.sampling.minEffectiveSampleSize);
+  if (effective < minimum) failed.push(fail('effective_sample_size', effective, minimum));
+  if (staleShare > INTELLIGENCE_RULESET.sampling.maxStaleShare) {
+    failed.push(fail('stale_share', staleShare, INTELLIGENCE_RULESET.sampling.maxStaleShare));
+  }
   if (diagnostics.observationCount < gate.minObservationCount) {
     failed.push(fail("observation_count", diagnostics.observationCount, gate.minObservationCount));
   }

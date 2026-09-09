@@ -13,6 +13,7 @@ export function makeFact(partial: Omit<VerifiedFact, "methodologyVersion" | "dat
     methodologyVersion: INTELLIGENCE_METHODOLOGY_ID,
     dataRevision: LONGITUDINAL_DATA_REVISION,
     publishedAt: partial.publishedAt ?? partial.observedAt,
+    verifiedAt: partial.publishedAt ?? partial.observedAt,
     ...partial,
   };
 }

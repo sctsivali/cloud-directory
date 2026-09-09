@@ -100,7 +100,7 @@ describe("outlook contract", () => {
 
   it("walk-forward backtest is deterministic", () => {
     const doc = buildOutlook(denseQuery, "comparable_basket_price_index");
-    const again = backtestTrend(doc.observedFact.points);
+    const again = backtestTrend(doc.observedFact.points, denseQuery);
     assert.deepEqual(again, doc.backtest);
   });
 

@@ -1,5 +1,5 @@
 {
-  "schema_version": 12,
+  "schema_version": 13,
   "migrations": [
     {
       "version": 1,
@@ -60,6 +60,11 @@
       "version": 12,
       "filename": "0012_typed_publication_state.sql",
       "checksum": "e0b6c77aee40245a1f4933d98c139755f22558b1087bebc4c9941c3bfedefbe2"
+    },
+    {
+      "version": 13,
+      "filename": "0013_immutable_data_revisions.sql",
+      "checksum": "4b1a8093d8e7cb44e262fe4e393a65a1f4639e4d40871fb2644bb9a2302ac6c6"
     }
   ]
 }

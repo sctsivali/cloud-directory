@@ -1,4 +1,5 @@
 import { getOutlookEligibility, getTrendReport } from "@/lib/db";
+import { DataRevisionError } from '../../../../../packages/domain/src/intelligence/data-revisions.ts';
 import { apiJson, apiOptions } from "@/lib/api-json";
 import { TREND_METRICS, type TrendMetric, INTELLIGENCE_API_VERSION, guardTrendQuery } from "@/lib/intelligence";
 
@@ -13,6 +14,15 @@ function optionalInt(raw: string | null): number | undefined {
 }
 
 export async function GET(req: Request) {
+  try {
+    return await getTrends(req);
+  } catch (error) {
+    if (error instanceof DataRevisionError) return apiJson({ ok: false, code: error.code, error: error.message, apiVersion: INTELLIGENCE_API_VERSION }, 400);
+    throw error;
+  }
+}
+
+async function getTrends(req: Request) {
   const url = new URL(req.url);
   const metric = url.searchParams.get("metric");
   const country = url.searchParams.get("country");
@@ -26,12 +36,13 @@ export async function GET(req: Request) {
     return apiJson({ ok: false, code: guarded.code, error: guarded.message, apiVersion: INTELLIGENCE_API_VERSION }, 400);
   }
   const report = await getTrendReport({
+    dataRevision: url.searchParams.get('dataRevision'),
     countryCode: country,
     providerId,
     ...(guarded.window ? { window: guarded.window } : {}),
   });
   if (metric && (TREND_METRICS as readonly string[]).includes(metric)) {
-    const eligibility = await getOutlookEligibility(metric as TrendMetric, country);
+    const eligibility = await getOutlookEligibility(metric as TrendMetric, country, report.dataRevision);
     return apiJson({
       apiVersion: INTELLIGENCE_API_VERSION,
       metric,

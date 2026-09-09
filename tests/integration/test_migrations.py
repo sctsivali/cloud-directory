@@ -65,9 +65,10 @@ EXPECTED_TABLES = (
     "trend_series",
     "outlook_assessments",
     "outlook_backtests",
+    "data_revisions",
 )
 
-CURRENT_VERSIONS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+CURRENT_VERSIONS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
 
 BUILDING_PATCH_COLUMNS = (
     "facilities",

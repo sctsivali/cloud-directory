@@ -1,7 +1,7 @@
 import { evaluateForecastEligibility } from "./gates.ts";
 import { INTELLIGENCE_RULESET, INTELLIGENCE_RULESET_HASH } from "./methodology.ts";
 import { INTELLIGENCE_ALGORITHM_VERSION, INTELLIGENCE_METHODOLOGY_ID } from "./types.ts";
-import { buildTrendSeries, diagnosticsFor, filterFacts } from "./trends.ts";
+import { availableAt, buildTrendSeries, diagnosticsFor, filterFacts } from "./trends.ts";
 import type {
   BacktestResult,
   ForecastLayer,
@@ -119,7 +119,7 @@ function assess(metric: TrendMetric, signal: TrendSignal, eligibilityReason: str
 
 function olsForecast(points: TrendPoint[], horizonEnd: string, allowed: boolean): ForecastLayer | null {
   if (!allowed) return null;
-  const rows = numericPoints(points);
+  const rows = numericPoints(points.filter(p => p.continuityContribution));
   const fit = olsFit(rows);
   if (!fit || rows.length < 3) return null;
   const xHorizon = (new Date(horizonEnd).getTime() - fit.t0) / MS_DAY;
@@ -137,22 +137,31 @@ function olsForecast(points: TrendPoint[], horizonEnd: string, allowed: boolean)
   };
 }
 
-export function backtestTrend(points: TrendPoint[]): BacktestResult {
+export function backtestTrend(points: TrendPoint[], query?: IntelligenceQuery): BacktestResult {
   const rows = numericPoints(points);
   const window = {
     start: points[0]?.period.start ?? new Date(0).toISOString(),
     end: points[points.length - 1]?.period.end ?? new Date(0).toISOString(),
   };
+  if (!query) return { status: 'insufficient', hitRate: null, sampleCount: 0, window, notes: 'Point-in-time receipt provenance required.' };
   if (rows.length < 4) {
     return { status: "insufficient", hitRate: null, sampleCount: rows.length, window, notes: "Need at least four numeric points." };
   }
   let hits = 0;
   let trials = 0;
   for (let i = 2; i < rows.length - 1; i += 1) {
-    const past = rows.slice(0, i + 1).map((r) => r.point);
+    const cutoff = rows[i]!.point.period.end;
+    const trial = { ...query, facts: query.facts.filter(f => availableAt(f, cutoff)), window: { start: window.start, end: cutoff } };
+    const past = buildTrendSeries(trial, points[0]!.metric).filter(p => p.continuityContribution);
+    if (past.length < 3 || past.at(-1)?.period.end !== cutoff) continue;
+    const nextCutoff = rows[i + 1]!.point.period.end;
+    const nextSeries = buildTrendSeries({ ...query, facts: query.facts.filter(f => availableAt(f, nextCutoff)), window: { start: window.start, end: nextCutoff } }, points[0]!.metric);
+    const target = nextSeries.at(-1);
+    const baseline = past.at(-1);
+    if (!target?.continuityContribution || target.value == null || baseline?.value == null) continue;
     const { direction } = slopeOf(past);
-    const next = rows[i + 1]!;
-    const last = rows[i]!;
+    const next = { v: target.value };
+    const last = { v: baseline.value };
     const actual: MeasuredTrend["direction"] =
       Math.abs(next.v - last.v) / Math.max(Math.abs(last.v), 1) < 0.02 ? "flat" : next.v > last.v ? "up" : "down";
     if (direction === "unknown") continue;
@@ -202,6 +211,8 @@ function indicators(metric: TrendMetric, series: TrendPoint[], trend: MeasuredTr
 export function buildOutlook(query: IntelligenceQuery, metric: TrendMetric): OutlookDocument {
   if (!query.window) {
     const diagnostics = {
+      effectiveSampleSize: 0,
+      maxStaleShare: 0,
       observationCount: 0,
       continuity: 0,
       comparablePopulation: 0,
@@ -269,7 +280,7 @@ export function buildOutlook(query: IntelligenceQuery, metric: TrendMetric): Out
   const assessment = assess(metric, signal, eligibility.reason);
   const expiresAt = new Date(new Date(query.window.end).getTime() + FORECAST_HORIZON_MS).toISOString();
   const { supporting, contradicting } = indicators(metric, points, measuredTrend);
-  const backtest = backtestTrend(points);
+  const backtest = backtestTrend(points, query);
   const canForecast =
     eligibility.eligible && backtest.status === "pass" && backtest.sampleCount >= MIN_BACKTEST_TRIALS;
   const forecast = olsForecast(points, expiresAt, canForecast);
@@ -300,7 +311,8 @@ export function buildOutlook(query: IntelligenceQuery, metric: TrendMetric): Out
       "Pending, failed, and unverified receipts are excluded.",
       "Comparable-basket members must appear in the baseline period.",
       "Elapsed days alone never satisfy publication gates.",
-      "OLS is fit to all numeric period points; the interval is ±1.96 residual standard errors (n-2).",
+      "OLS uses fresh numeric periods only; the interval is ±1.96 residual standard errors (n-2).",
+      "Walk-forward training uses only receipts published and verified by each trial cutoff.",
       "A passing walk-forward backtest with at least two trials is required before a forecast exists.",
     ],
     confidence: {

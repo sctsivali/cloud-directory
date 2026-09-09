@@ -175,6 +175,7 @@ export function isAbsentChange(fact: VerifiedFact): boolean {
 }
 
 export function isStaleAt(fact: VerifiedFact, asOf: string): boolean {
+  if (fact.observationTimeKnown === false) return true;
   if (fact.stale) return true;
   const asOfMs = new Date(asOf).getTime();
   if (Number.isNaN(asOfMs)) return true;
@@ -363,6 +364,13 @@ function point(
     metric,
     period,
     value,
+    stockPopulation: observationCount,
+    freshObservationCount: 0,
+    carriedForwardCount: observationCount,
+    effectiveSampleSize: 0,
+    freshReceiptIds: [],
+    effectiveSampleIds: [],
+    staleShare: 0,
     countryCode: query.countryCode ?? null,
     providerId: query.providerId ?? null,
     observationCount,
@@ -528,7 +536,9 @@ export function diagnosticsFor(
   allFacts: VerifiedFact[],
   window: { start: string; end: string }
 ): SeriesDiagnostics {
-  const observationCount = points.reduce((n, p) => n + p.observationCount, 0);
+  const observationCount = unique(points.flatMap(p => p.freshReceiptIds)).length;
+  const effectiveSampleSize = unique(points.flatMap(p => p.effectiveSampleIds)).length;
+  const maxStaleShare = points.reduce((n, p) => Math.max(n, p.staleShare), 0);
   const periodCount = points.length;
   const continuity = periodCount === 0 ? 0 : points.filter((p) => p.continuityContribution).length / periodCount;
   const comparablePopulation = points.reduce((n, p) => Math.max(n, p.comparablePopulation), 0);
@@ -542,6 +552,8 @@ export function diagnosticsFor(
   return {
     observationCount,
     continuity,
+    effectiveSampleSize,
+    maxStaleShare,
     comparablePopulation,
     revisionQuality,
     missingness,
@@ -555,6 +567,8 @@ export function diagnosticsFor(
 
 function emptyDiagnostics(): SeriesDiagnostics {
   return {
+    effectiveSampleSize: 0,
+    maxStaleShare: 0,
     observationCount: 0,
     continuity: 0,
     comparablePopulation: 0,
@@ -593,6 +607,67 @@ function emptyTrendReport(query: IntelligenceQuery): TrendReport {
   };
 }
 
+export function availableAt(fact: VerifiedFact, cutoff: string): boolean {
+  const verified = fact.verifiedAt ? canonicalTimestamp(fact.verifiedAt) : null;
+  return isVerified(fact) && verified !== null && verified <= cutoff &&
+    canonicalTimestamp(fact.publishedAt) !== null && fact.publishedAt <= cutoff && verified >= fact.publishedAt;
+}
+
+function metricMatches(f: VerifiedFact, p: TrendPoint): boolean {
+  switch (p.metric) {
+    case 'provider_count_by_country': return f.fieldName === 'country_presence' || f.entityType === 'provider';
+    case 'offering_count_by_country': case 'concentration': return f.fieldName === 'offering' || f.entityType === 'offering';
+    case 'region_facility_expansion': return ['facility', 'region'].includes(f.fieldName) || ['facility', 'region'].includes(f.entityType);
+    case 'technology_adoption': return f.fieldName === 'technology' || f.entityType === 'technology';
+    case 'comparable_basket_price_index': return (f.fieldName === 'price' || f.entityType === 'price') && isComparablePrice(f) && (p.details.basketIds as string[]).includes(f.entityId);
+    case 'verified_additions': return f.changeType === 'create';
+    case 'verified_retractions': return isAbsentState(f);
+    case 'verified_conflicts': return f.knowledgeState === 'conflicting';
+    default: return f.fieldName === 'evidence' || f.entityType === 'evidence' || (INTELLIGENCE_RULESET.requiredEvidenceClaimTypes as readonly string[]).includes(f.fieldName);
+  }
+}
+
+/** Evidence reused by multiple receipts is one effective sample, not repeated evidence. */
+function sampleKeys(facts: VerifiedFact[]): Map<string, string> {
+  const parent = new Map<string, string>();
+  const root = (key: string): string => {
+    if (!parent.has(key)) parent.set(key, key);
+    let r = key;
+    while (parent.get(r) !== r) r = parent.get(r)!;
+    return r;
+  };
+  for (const f of facts) {
+    const keys = [`receipt:${f.receiptId}`, ...(f.evidenceSnapshotIds ?? []).map(id => `evidence:${id}`)];
+    for (const key of keys) {
+      const a = root(keys[0]!); const b = root(key);
+      parent.set(a < b ? b : a, a < b ? a : b);
+    }
+  }
+  return new Map(facts.map(f => [f.receiptId, root(`receipt:${f.receiptId}`)]));
+}
+
+function withFreshSampling(p: TrendPoint, facts: VerifiedFact[]): TrendPoint {
+  const relevant = facts.filter(f => metricMatches(f, p));
+  const fresh = [...new Map(relevant.filter(f =>
+    availableAt(f, p.period.end) && f.observedAt >= p.period.start && f.observedAt < p.period.end &&
+    f.verifiedAt! >= p.period.start && f.verifiedAt! < p.period.end &&
+    !isStaleAt(f, p.period.end)
+  ).map(f => [f.receiptId, f])).values()];
+  const keys = sampleKeys(relevant);
+  const effectiveSampleIds = unique(fresh.map(f => keys.get(f.receiptId)!)).sort();
+  const flow = p.metric === 'verified_additions' || p.metric === 'verified_retractions';
+  const stock = [...latestStateByEntity(relevant, p.period.end).values()].filter(f =>
+    p.metric === 'verified_conflicts' ? f.knowledgeState === 'conflicting' : f.knowledgeState === 'present' && !isAbsentState(f));
+  const stockUnit = (f: VerifiedFact) => p.metric === 'provider_count_by_country' ? f.providerId ?? f.entityId : entityKey(f);
+  const freshUnits = new Set(fresh.map(stockUnit));
+  const carried = unique(stock.filter(f => !freshUnits.has(stockUnit(f))).map(stockUnit)).length;
+  return { ...p, observationCount: fresh.length, freshObservationCount: fresh.length,
+    carriedForwardCount: flow ? 0 : Math.min(p.stockPopulation, carried),
+    freshReceiptIds: fresh.map(f => f.receiptId).sort(), effectiveSampleIds,
+    effectiveSampleSize: effectiveSampleIds.length, continuityContribution: effectiveSampleIds.length > 0,
+    staleShare: stock.length === 0 ? 0 : stock.filter(f => isStaleAt(f, p.period.end)).length / stock.length };
+}
+
 export function buildTrendSeries(query: IntelligenceQuery, metric: TrendMetric): TrendPoint[] {
   if (!query.window) return [];
   const checked = validateObservationWindow(query.window.start, query.window.end);
@@ -600,9 +675,21 @@ export function buildTrendSeries(query: IntelligenceQuery, metric: TrendMetric):
   if (query.facts.length > MAX_TREND_FACTS) return [];
   const providerScoped = query.facts.filter((fact) => matchesProvider(fact, query.providerId));
   const countryScoped = filterFacts(query);
-  const periods = enumerateMonths(checked.start, checked.end);
+  const periods = enumerateMonths(checked.start, checked.end).map(month => ({
+    ...month, start: month.start < checked.start ? checked.start : month.start,
+    end: month.end > checked.end ? checked.end : month.end,
+  }));
   const baselinePrices = baselinePriceBasket(providerScoped, periods, query.countryCode);
-  return periods.map((period) => metricValue(metric, period, providerScoped, countryScoped, query, baselinePrices));
+  const seenSamples = new Set<string>();
+  return periods.map((period) => {
+    const result = metricValue(metric, period, providerScoped, countryScoped, query, baselinePrices);
+    const sampled = withFreshSampling(result, countryScoped);
+    sampled.effectiveSampleIds = sampled.effectiveSampleIds.filter(id => !seenSamples.has(id));
+    sampled.effectiveSampleIds.forEach(id => seenSamples.add(id));
+    sampled.effectiveSampleSize = sampled.effectiveSampleIds.length;
+    sampled.continuityContribution = sampled.effectiveSampleSize > 0;
+    return sampled;
+  });
 }
 
 export function buildTrendReport(query: IntelligenceQuery): TrendReport {
