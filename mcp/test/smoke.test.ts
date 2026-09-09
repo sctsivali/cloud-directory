@@ -47,6 +47,15 @@ const reader: DirectoryReader = {
   async getQualityReport() {
     return { claimCount: 0, evidenceCount: 0, snapshotCount: 0 };
   },
+  async getTrends() {
+    return { methodologyId: "asean-trend-series-v1", series: {} };
+  },
+  async getTimeline() {
+    return { kind: "provider_timeline", events: [] };
+  },
+  async getOutlookEligibility() {
+    return { insufficientEvidence: true, forecastPublished: false };
+  },
 };
 
 async function connectedClient(capabilities: Parameters<typeof createDirectoryMcpServer>[0]["capabilities"]) {

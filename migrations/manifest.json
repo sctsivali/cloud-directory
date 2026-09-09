@@ -1,5 +1,5 @@
 {
-  "schema_version": 9,
+  "schema_version": 10,
   "migrations": [
     {
       "version": 1,
@@ -45,6 +45,11 @@
       "version": 9,
       "filename": "0009_publication_ledger.sql",
       "checksum": "e18d8df7cf6d3e07192d0a158b503cefa590e15a5a13974f111bded2dd93d7f8"
+    },
+    {
+      "version": 10,
+      "filename": "0010_trend_series_outlook.sql",
+      "checksum": "34c143c70de457dbfd8c6f60e4c7be5855e0a9ba958927eeb707b374be604ef7"
     }
   ]
 }

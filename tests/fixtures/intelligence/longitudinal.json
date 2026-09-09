@@ -1,0 +1,21 @@
+{
+  "name": "synthetic-longitudinal-asean",
+  "dataRevision": "drv-intel-2026-01",
+  "window": {
+    "start": "2025-01-01T00:00:00.000Z",
+    "end": "2026-01-01T00:00:00.000Z"
+  },
+  "notes": "Fictional 12-month ASEAN history. Canonical fact rows live in packages/domain/test/intelligence-fixtures.ts. Do not treat as production observations.",
+  "countries": ["ID", "SG", "BN"],
+  "providers": ["prov-a", "prov-b", "prov-c"],
+  "scenarios": [
+    "verified presence and offerings",
+    "superseded price revisions in the same month (no double count)",
+    "comparable basket vs promo exclusion",
+    "offering retraction",
+    "facility rollback",
+    "technology conflict then correction",
+    "stale evidence valid_to",
+    "pending unverified receipt excluded from series"
+  ]
+}

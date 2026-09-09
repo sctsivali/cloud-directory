@@ -102,6 +102,27 @@ export async function executeTool(
       const report = await reader.getQualityReport((input as { providerId?: string }).providerId);
       return jsonResult({ ok: true, report });
     }
+    case "directory.get_trends": {
+      const parsed = validateToolInput(name, input);
+      if (!parsed.ok) return errorResult(ERROR_CODE.malformedPayload, parsed.errors.join("; "));
+      const reader = await requireReader(ctx);
+      const result = await reader.getTrends(input as { metric?: string; country?: string; providerId?: string; dataRevision?: string; windowStart?: string; windowEnd?: string });
+      return jsonResult({ ok: !("error" in result), ...result });
+    }
+    case "directory.get_timeline": {
+      const parsed = validateToolInput(name, input);
+      if (!parsed.ok) return errorResult(ERROR_CODE.malformedPayload, parsed.errors.join("; "));
+      const reader = await requireReader(ctx);
+      const result = await reader.getTimeline(input as { country?: string; providerId?: string; dataRevision?: string; windowStart?: string; windowEnd?: string });
+      return jsonResult({ ok: !("error" in result), ...result });
+    }
+    case "directory.get_outlook_eligibility": {
+      const parsed = validateToolInput(name, input);
+      if (!parsed.ok) return errorResult(ERROR_CODE.malformedPayload, parsed.errors.join("; "));
+      const reader = await requireReader(ctx);
+      const result = await reader.getOutlookEligibility(input as { metric?: string; country?: string; providerId?: string; dataRevision?: string; windowStart?: string; windowEnd?: string });
+      return jsonResult({ ok: !("error" in result), ...result });
+    }
     case "directory.get_proposal": {
       const parsed = validateToolInput(name, input);
       if (!parsed.ok) return errorResult(ERROR_CODE.malformedPayload, parsed.errors.join("; "));

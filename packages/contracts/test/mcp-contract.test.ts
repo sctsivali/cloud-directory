@@ -28,10 +28,10 @@ describe("versioned MCP contract", () => {
     assert.equal(MCP_CONTRACT_NAME, "cloud-directory-mcp");
     assert.match(MCP_CONTRACT_VERSION, /^\d+\.\d+\.\d+$/);
     assert.equal(TOOL_CATALOG.contractVersion, MCP_CONTRACT_VERSION);
-    assert.equal(TOOL_CATALOG.schemaVersion, 9);
+    assert.equal(TOOL_CATALOG.schemaVersion, 10);
   });
 
-  it("lists the Phase 3 read tools", () => {
+  it("lists the Phase 3 and Phase 7 read tools", () => {
     assert.deepEqual([...READ_TOOLS], [
       "directory.get_provider",
       "directory.search_providers",
@@ -41,6 +41,9 @@ describe("versioned MCP contract", () => {
       "directory.get_source_snapshot",
       "directory.explain_score",
       "directory.get_quality_report",
+      "directory.get_trends",
+      "directory.get_timeline",
+      "directory.get_outlook_eligibility",
     ]);
   });
 
@@ -139,7 +142,7 @@ describe("versioned MCP contract", () => {
   it("is documented in docs/mcp-contract.md", () => {
     const doc = readFileSync(join(repoRoot, "docs", "mcp-contract.md"), "utf8");
     assert.match(doc, /cloud-directory-mcp/);
-    assert.match(doc, /1\.2\.0/);
+    assert.match(doc, /1\.3\.0/);
     for (const name of [...READ_TOOLS, ...PROPOSAL_TOOLS]) {
       assert.match(doc, new RegExp(name.replace(".", "\\.")));
     }
@@ -149,5 +152,24 @@ describe("versioned MCP contract", () => {
     assert.match(doc, /principalId/);
     assert.match(doc, /MCP_PRINCIPAL_ID/);
     assert.match(doc, /directory\.verify_publication/);
+    assert.match(doc, /directory\.get_trends/);
+    assert.match(doc, /directory\.get_timeline/);
+    assert.match(doc, /directory\.get_outlook_eligibility/);
+    assert.match(doc, /insufficient evidence/i);
+  });
+
+  it("does not expose forecast publication or AI outlook generation", () => {
+    const names = TOOL_CATALOG.tools.map((tool) => tool.name);
+    for (const banned of ["directory.publish_forecast", "directory.generate_outlook", "directory.publish_outlook"]) {
+      assert.equal(names.includes(banned), false, banned);
+      assert.equal(isAvailableTool(banned), false, banned);
+    }
+    const eligibility = validateToolInput("directory.get_outlook_eligibility", { metric: "provider_count_by_country" });
+    assert.equal(eligibility.ok, true);
+    const extraForecast = validateToolInput("directory.get_outlook_eligibility", {
+      metric: "provider_count_by_country",
+      forecast: true,
+    } as unknown as Record<string, unknown>);
+    assert.equal(extraForecast.ok, false);
   });
 });

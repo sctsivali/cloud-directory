@@ -22,6 +22,8 @@ export function ProviderView({ data }: { data: ProviderDetail }) {
     <>
       <p className="kicker">
         <a href="/arena">{t.provBack}</a>
+        {" · "}
+        <a href={`/provider/${data.id}/timeline`}>{t.navTimeline}</a>
       </p>
       <h1>{data.name}</h1>
       <p className="lede">

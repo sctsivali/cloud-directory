@@ -25,6 +25,7 @@ export function Header() {
   ];
   const more: LinkItem[] = [
     { href: "/updates", label: t.navUpdates, active: path.startsWith("/updates") },
+    { href: "/trends", label: t.navTrends, active: path.startsWith("/trends") || path.startsWith("/country") },
     { href: "/methodology", label: t.navMethod, active: path.startsWith("/methodology") },
     { href: "/about", label: t.navAbout, active: path.startsWith("/about") },
     { href: "/#patuh", label: t.navLaw, active: false },

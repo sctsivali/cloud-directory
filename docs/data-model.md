@@ -1,6 +1,6 @@
 # Data model
 
-Status: Phase 6. Public legacy tables from `migrations/0001_legacy_baseline.sql` remain the display grain when canonical offering/deployment subjects are missing. Migrations 0002–0007 add catalog, evidence, proposals, and collection tables. Migration 0008 adds methodology versions and scoring runs. Migration 0009 adds the append-only publication ledger and `change_events` used by `/updates`. No production ranking cutover is authorized by this document.
+Status: Phase 7. Public legacy tables from `migrations/0001_legacy_baseline.sql` remain the display grain when canonical offering/deployment subjects are missing. Migrations 0002–0007 add catalog, evidence, proposals, and collection tables. Migration 0008 adds methodology versions and scoring runs. Migration 0009 adds the append-only publication ledger and `change_events` used by `/updates`. Migration 0010 adds `country_registry`, `trend_series`, `outlook_assessments`, and `outlook_backtests`. No production ranking cutover is authorized by this document.
 
 ## Public legacy tables (unchanged grain)
 
@@ -99,7 +99,7 @@ Workers persist receipts. They submit MCP proposals with status `pending_review`
 - `scoring_runs` — one run per offering/deployment (or labeled fallback). Stores `data_revision`, `recommendation_group`, `composite` (nullable), `ranking_lower_bound` (nullable; unknown not zeroed on composite), `uncertainty`, `reason_codes`, `engine`.
 - `score_components` — per-dimension `knowledge_state` and nullable `value`. Unknown/conflicting are stored as NULL, not zero.
 
-Publication receipts, `change_events`, and `/updates` are generated in Phase 6. Trends and outlooks remain future work.
+Publication receipts, `change_events`, and `/updates` are generated in Phase 6. Phase 7 stores reproducible trend series and outlook contracts beside that ledger.
 
 ## Phase 6 publication ledger (`0009_publication_ledger.sql`)
 
@@ -109,6 +109,14 @@ Publication receipts, `change_events`, and `/updates` are generated in Phase 6. 
 - `change_events` — public transparency rows generated from receipts: safe old/new values, source/evidence, detected/observed/reviewed/published times, revision link, and correction provenance.
 - `proposal_reviews.bound_revision_id` / `bound_body_digest` — approval is valid only for that exact revision.
 - Rollback inserts a new receipt and event only when the original receipt/event subject equals the rollback target, the current canonical digest equals the original after-value digest, and the supersession chain is valid. It does not delete prior rows. The proposal author cannot publish their own proposal. The publisher cannot verify their own publication.
+
+## Phase 7 intelligence (`0010_trend_series_outlook.sql`)
+
+- `country_registry` — canonical ISO 3166-1 alpha-2 codes. Country pages (`/country/[code]`) accept these codes only.
+- `trend_series` — versioned points bound to metric, optional country/provider, period, methodology hash, and data revision. Derived from verified published revisions; superseded revisions are not double-counted. Uniqueness is `UNIQUE NULLS NOT DISTINCT` so global rows (NULL country/provider) cannot duplicate.
+- `outlook_assessments` — layered outlook contract (`observed_fact`, `measured_trend`, `signal`, `assessment`, optional `forecast`). JSON `layer` values must match exactly. Confidence bounds are both null when forecast is null, and `confidence_low <= confidence_high` when a forecast exists. A forecast row is forbidden unless eligibility gates pass. `publication_state` is `not_published` or `insufficient_evidence`; AI forecast publication is out of contract.
+- `outlook_backtests` — walk-forward directional backtests with hit rate and sample count.
+- `verified_trend_facts` — view of verified receipts joined to change events.
 
 ## Sanitized acceptance corpus
 

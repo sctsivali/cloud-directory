@@ -1,6 +1,6 @@
 # Architecture
 
-Status: Phase 5 (2026-09-09). One versioned offering/deployment scoring and recommendation engine now serves Arena, wizard, compare, provider, methodology, and MCP `directory.explain_score`. Public tables still supply display rows; when canonical offering/deployment subjects are missing, those surfaces use a clearly labeled legacy fallback. `/updates` is still the Phase 0/1 feed (Phase 6).
+Status: Phase 7 (2026-09-09). One versioned offering/deployment scoring and recommendation engine serves Arena, wizard, compare, provider, methodology, and MCP `directory.explain_score`. Verified publication history also feeds trend series, provider/country timelines, and outlook eligibility. Public tables still supply display rows; when canonical offering/deployment subjects are missing, those surfaces use a clearly labeled legacy fallback. `/updates` is generated from published `change_events` with a legacy table fallback.
 
 ## Purpose
 
@@ -10,7 +10,7 @@ Status: Phase 5 (2026-09-09). One versioned offering/deployment scoring and reco
 
 | Layer | Today |
 |---|---|
-| Canonical store | PostgreSQL 16 via versioned `migrations/` (schema version 8) |
+| Canonical store | PostgreSQL 16 via versioned `migrations/` (schema version 10) |
 | Web / API | Next.js 15 + TypeScript in `web/` |
 | Scoring | `packages/domain/src/scoring` (`asean-offering-deployment-v1`). SQL SOV/OSS/CONF remain the labeled legacy fallback. |
 | Wizard / shortlist | `recommendWizardRows` (no silent country relaxation). `shortlistProviders` kept as the Phase 0 captured defect. |
@@ -36,24 +36,24 @@ deterministic validators → review → versioned revision
 one scoring/recommendation engine → API, UI, MCP, wizard, compare, methodology
 ```
 
-Canonical domains now in schema: providers, legal entities, services, offerings, offering versions, locations, facilities, deployments, technologies, fetch snapshots, claims, evidence, proposals, proposal reviews, revisions, collection tasks, model runs, methodology versions, scoring runs, score components.
+Canonical domains now in schema: providers, legal entities, services, offerings, offering versions, locations, facilities, deployments, technologies, fetch snapshots, claims, evidence, proposals, proposal reviews, revisions, collection tasks, model runs, methodology versions, scoring runs, score components, publication receipts, change events, country registry, trend series, outlook assessments, outlook backtests.
 
 ## Current limitations
 
 1. Provider is still the public list grain. The engine scores offering/deployment subjects; without those rows, UI/MCP show a labeled legacy fallback.
 2. Unknown, confirmed absence, and conflicting stay distinct. Unknown is not scored as zero. Evidence-readiness can move a no-hard-fail subject to `needs_verification`; ranking uses `rankingLowerBound` before raw composite.
 3. Wizard production ranking (`recommendWizardRows`) never silently widens country/legal/facility/residency limits. `shortlistProviders` remains only as captured Phase 0 evidence.
-4. `/updates` rows are still inserted by scripts, not generated from approved diffs.
+4. `/updates` is generated from published `change_events` when present, else the legacy table.
 5. Conservative legacy copy labels migrated facts `legacy/unverified` and does not fabricate snapshots, legal entities, or exact-facility pins.
-6. MCP publication tools stay unavailable. `directory.explain_score` uses the shared engine or the labeled fallback.
+6. MCP publication tools require an explicit `publish` capability. Trend/timeline/outlook-eligibility tools are read-only. Forecasts are not published through MCP.
 
 ## Non-goals for this phase
 
 - Replacing public ranking without an editorial review of `scripts/compare_scoring_versions.ts` output.
-- Making publication tools reachable (Phase 6).
+- AI-generated forecast publication.
 - Migrating production data or activating live-network schedulers.
-- Treating captured legacy scores as the correct future engine.
+- Phase 8 operationalization or public cutover.
 
 ## Consumers that must stay aligned
 
-Arena, Start/wizard result, Compare, provider pages, methodology, and MCP `directory.explain_score` call the same versioned engine. When canonical offering/deployment data is unavailable, they share one labeled legacy fallback.
+Arena, Start/wizard result, Compare, provider pages, methodology, and MCP `directory.explain_score` call the same versioned scoring engine. `/trends`, `/provider/[id]/timeline`, `/country/[code]`, `/api/trends`, and MCP `directory.get_trends` / `directory.get_timeline` / `directory.get_outlook_eligibility` call the same intelligence engine. When canonical offering/deployment data is unavailable, scoring surfaces share one labeled legacy fallback. Existing provider, arena, updates, and methodology pages remain.

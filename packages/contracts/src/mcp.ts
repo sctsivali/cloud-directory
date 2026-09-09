@@ -1,6 +1,6 @@
 export const MCP_CONTRACT_NAME = "cloud-directory-mcp";
-export const MCP_CONTRACT_VERSION = "1.2.0";
-export const MCP_SCHEMA_VERSION = 9;
+export const MCP_CONTRACT_VERSION = "1.3.0";
+export const MCP_SCHEMA_VERSION = 10;
 
 export const CAPABILITIES = [
   "read",
@@ -23,6 +23,9 @@ export const READ_TOOLS = [
   "directory.get_source_snapshot",
   "directory.explain_score",
   "directory.get_quality_report",
+  "directory.get_trends",
+  "directory.get_timeline",
+  "directory.get_outlook_eligibility",
 ] as const;
 
 export const PROPOSAL_TOOLS = [
@@ -53,6 +56,9 @@ export const FORBIDDEN_TOOL_NAMES = [
   "directory.mutate",
   "directory.update_fields",
   "directory.arbitrary_mutation",
+  "directory.publish_forecast",
+  "directory.generate_outlook",
+  "directory.publish_outlook",
 ] as const;
 
 export type ReadToolName = (typeof READ_TOOLS)[number];
@@ -153,6 +159,20 @@ const idempotentProposal = {
   idempotencyKey: stringField,
 };
 
+const TREND_METRICS = [
+  "provider_count_by_country",
+  "offering_count_by_country",
+  "comparable_basket_price_index",
+  "region_facility_expansion",
+  "technology_adoption",
+  "evidence_coverage",
+  "evidence_freshness",
+  "concentration",
+  "verified_additions",
+  "verified_retractions",
+  "verified_conflicts",
+] as const;
+
 export const TOOL_DEFINITIONS: readonly ToolDefinition[] = [
   {
     name: "directory.get_provider",
@@ -224,6 +244,47 @@ export const TOOL_DEFINITIONS: readonly ToolDefinition[] = [
     description: "Read evidence-coverage quality counts. Does not change scores.",
     phase3Available: true,
     inputSchema: objectSchema([], { providerId: optionalString }),
+  },
+  {
+    name: "directory.get_trends",
+    capability: "read",
+    description: "Read reproducible trend series from verified published revisions. Does not publish forecasts.",
+    phase3Available: true,
+    inputSchema: objectSchema([], {
+      metric: { type: "string", enum: TREND_METRICS },
+      country: optionalString,
+      providerId: optionalString,
+      dataRevision: optionalString,
+      windowStart: optionalString,
+      windowEnd: optionalString,
+    }),
+  },
+  {
+    name: "directory.get_timeline",
+    capability: "read",
+    description: "Read a verified provider or country timeline with data-revision provenance.",
+    phase3Available: true,
+    inputSchema: objectSchema([], {
+      providerId: optionalString,
+      country: optionalString,
+      windowStart: optionalString,
+      windowEnd: optionalString,
+      dataRevision: optionalString,
+    }),
+  },
+  {
+    name: "directory.get_outlook_eligibility",
+    capability: "read",
+    description: "Read metric-specific outlook eligibility. Does not return or publish a forecast.",
+    phase3Available: true,
+    inputSchema: objectSchema(["metric"], {
+      metric: { type: "string", enum: TREND_METRICS },
+      country: optionalString,
+      providerId: optionalString,
+      windowStart: optionalString,
+      windowEnd: optionalString,
+      dataRevision: optionalString,
+    }),
   },
   {
     name: "directory.get_proposal",

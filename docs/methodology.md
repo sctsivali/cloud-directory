@@ -90,4 +90,4 @@ Evidence-readiness (versioned on the ruleset, part of the ruleset hash): a subje
 
 Shadow comparison: `scripts/compare_scoring_versions.ts` and `docs/reports/scoring-shadow-template.md`.
 
-Outlooks stay out of this document until there is longitudinal evidence.
+Trend series and outlooks are specified in `docs/outlook-methodology.md`. They are reconstructed from verified published revisions (`asean-trend-series-v1`). An outlook is not a fact. Forecasts stay unpublished when metric-specific evidence gates fail or the minimum-trial OLS backtest does not pass. Empty history does not invent an observation window.

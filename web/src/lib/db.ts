@@ -7,6 +7,20 @@ import {
 } from "../../../packages/domain/src/revisions/public-feed.ts";
 import type { ChangeEvent } from "../../../packages/domain/src/revisions/types.ts";
 import { LEGACY_CONF_SQL, LEGACY_OSS_SQL, LEGACY_SOV_SQL } from "./legacy-scoring";
+import {
+  buildCountryTimeline,
+  buildOutlook,
+  buildProviderTimeline,
+  buildTrendReport,
+  factsFromLedgerRows,
+  inferObservationWindow,
+  publicOutlookEligibilityView,
+  publicTrendView,
+  requireRegisteredIso2,
+  windowFromInferred,
+  type TrendMetric,
+  type VerifiedFact,
+} from "../../../packages/domain/src/intelligence/index.ts";
 
 const globalForPg = globalThis as unknown as { pool?: Pool };
 
@@ -571,4 +585,77 @@ export async function getDirectoryUpdates(): Promise<DirectoryUpdate[]> {
     LIMIT 80
   `);
   return selectPublicUpdates([], rows);
+}
+
+async function loadIntelligenceFacts(): Promise<VerifiedFact[]> {
+  try {
+    const { rows } = await pool.query(
+      `SELECT r.id AS receipt_id, r.revision_id, r.change_type, r.entity_type, r.entity_id, r.field_name,
+              r.before_value, r.after_value, r.verification_state, r.methodology_version, r.data_revision,
+              r.published_at::text AS published_at, r.supersedes_receipt_id,
+              e.observed_at::text AS observed_at, e.provider_id
+       FROM publication_receipts r
+       JOIN change_events e ON e.receipt_id = r.id`
+    );
+    return factsFromLedgerRows(
+      rows.map((row) => ({
+        receiptId: String(row.receipt_id),
+        revisionId: String(row.revision_id),
+        changeType: String(row.change_type),
+        entityType: String(row.entity_type),
+        entityId: String(row.entity_id),
+        fieldName: String(row.field_name),
+        providerId: row.provider_id ? String(row.provider_id) : null,
+        observedAt: row.observed_at ? String(row.observed_at) : null,
+        publishedAt: String(row.published_at),
+        verificationState: String(row.verification_state),
+        afterValue: row.after_value,
+        beforeValue: row.before_value,
+        methodologyVersion: row.methodology_version ? String(row.methodology_version) : null,
+        dataRevision: row.data_revision ? String(row.data_revision) : null,
+        supersedesReceiptId: row.supersedes_receipt_id ? String(row.supersedes_receipt_id) : null,
+      }))
+    );
+  } catch {
+    return [];
+  }
+}
+
+export async function getTrendReport(args?: {
+  countryCode?: string | null;
+  providerId?: string | null;
+  dataRevision?: string | null;
+}): Promise<ReturnType<typeof publicTrendView>> {
+  const facts = await loadIntelligenceFacts();
+  const window = windowFromInferred(inferObservationWindow(facts));
+  return publicTrendView(
+    buildTrendReport({
+      facts,
+      window,
+      countryCode: args?.countryCode ?? null,
+      providerId: args?.providerId ?? null,
+      dataRevision: args?.dataRevision ?? null,
+    })
+  );
+}
+
+export async function getProviderTimelineDoc(providerId: string) {
+  const facts = await loadIntelligenceFacts();
+  const window = windowFromInferred(inferObservationWindow(facts));
+  return buildProviderTimeline({ facts, window, providerId });
+}
+
+export async function getCountryPageData(code: string) {
+  const country = requireRegisteredIso2(code);
+  const facts = await loadIntelligenceFacts();
+  const window = windowFromInferred(inferObservationWindow(facts));
+  const timeline = buildCountryTimeline({ facts, window, countryCode: country.iso2 });
+  const trends = publicTrendView(buildTrendReport({ facts, window, countryCode: country.iso2 }));
+  return { country, timeline, trends };
+}
+
+export async function getOutlookEligibility(metric: TrendMetric, countryCode?: string | null) {
+  const facts = await loadIntelligenceFacts();
+  const window = windowFromInferred(inferObservationWindow(facts));
+  return publicOutlookEligibilityView(buildOutlook({ facts, window, countryCode: countryCode ?? null }, metric));
 }

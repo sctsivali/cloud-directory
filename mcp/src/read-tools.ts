@@ -5,6 +5,22 @@ import {
   toPublicScoreView,
   type OfferingDeploymentSubject,
 } from "../../packages/domain/src/scoring/index.ts";
+import {
+  TREND_METRICS,
+  buildCountryTimeline,
+  buildOutlook,
+  buildProviderTimeline,
+  buildTrendReport,
+  canonicalizeCountryCode,
+  factsFromLedgerRows,
+  inferObservationWindow,
+  publicOutlookEligibilityView,
+  publicTrendView,
+  resolveCountry,
+  windowFromInferred,
+  type TrendMetric,
+  type VerifiedFact,
+} from "../../packages/domain/src/intelligence/index.ts";
 import { Client } from "./pg.ts";
 
 export type JsonObject = Record<string, unknown>;
@@ -21,6 +37,18 @@ export type DirectoryReader = {
     args?: { offeringId?: string; deploymentId?: string }
   ): Promise<JsonObject | null>;
   getQualityReport(providerId?: string): Promise<JsonObject>;
+  getTrends(args: IntelligenceReadArgs): Promise<JsonObject>;
+  getTimeline(args: IntelligenceReadArgs): Promise<JsonObject>;
+  getOutlookEligibility(args: IntelligenceReadArgs): Promise<JsonObject>;
+};
+
+export type IntelligenceReadArgs = {
+  metric?: string;
+  country?: string;
+  providerId?: string;
+  dataRevision?: string;
+  windowStart?: string;
+  windowEnd?: string;
 };
 
 const LEGACY_METHODOLOGY = {
@@ -233,6 +261,113 @@ export class PostgresDirectoryReader implements DirectoryReader {
       providerId: providerId ?? null,
     };
   }
+
+  async getTrends(args: IntelligenceReadArgs): Promise<JsonObject> {
+    const built = await this.buildIntelligence(args);
+    if ("error" in built) return built;
+    const report = buildTrendReport(built.query);
+    const view = publicTrendView(report);
+    if (args.metric && isTrendMetric(args.metric)) {
+      return {
+        ok: true,
+        metric: args.metric,
+        series: view.series[args.metric],
+        diagnostics: view.diagnostics[args.metric],
+        eligibility: view.eligibility[args.metric],
+        methodologyId: view.methodologyId,
+        methodologyHash: view.methodologyHash,
+        dataRevision: view.dataRevision,
+        observationWindow: view.observationWindow,
+        windowAvailable: view.windowAvailable,
+        insufficientEvidence: view.insufficientEvidence,
+        countryCode: view.countryCode,
+        providerId: view.providerId,
+      };
+    }
+    return { ok: true, ...view };
+  }
+
+  async getTimeline(args: IntelligenceReadArgs): Promise<JsonObject> {
+    const built = await this.buildIntelligence(args);
+    if ("error" in built) return built;
+    if (args.providerId) {
+      return { ok: true, ...buildProviderTimeline({ ...built.query, providerId: args.providerId }) };
+    }
+    if (built.query.countryCode) {
+      return { ok: true, ...buildCountryTimeline({ ...built.query, countryCode: built.query.countryCode }) };
+    }
+    return { ok: false, error: "providerId or country is required" };
+  }
+
+  async getOutlookEligibility(args: IntelligenceReadArgs): Promise<JsonObject> {
+    const built = await this.buildIntelligence(args);
+    if ("error" in built) return built;
+    if (!args.metric || !isTrendMetric(args.metric)) {
+      return { ok: false, error: "metric is required" };
+    }
+    const outlook = buildOutlook(built.query, args.metric);
+    return { ok: true, ...publicOutlookEligibilityView(outlook) };
+  }
+
+  private async buildIntelligence(args: IntelligenceReadArgs): Promise<
+    | { query: { facts: VerifiedFact[]; window: { start: string; end: string } | null; countryCode: string | null; providerId: string | null; dataRevision: string | null } }
+    | { error: string; ok: false }
+  > {
+    let countryCode: string | null = null;
+    if (args.country) {
+      countryCode = canonicalizeCountryCode(args.country) ?? resolveCountry(args.country)?.iso2 ?? null;
+      if (!countryCode) return { ok: false, error: `unregistered country: ${args.country}` };
+    }
+    const facts = await this.loadLedgerFacts();
+    const window = windowFromInferred(inferObservationWindow(facts, { start: args.windowStart, end: args.windowEnd }));
+    return {
+      query: {
+        facts,
+        window,
+        countryCode,
+        providerId: args.providerId ?? null,
+        dataRevision: args.dataRevision ?? null,
+      },
+    };
+  }
+
+  private async loadLedgerFacts(): Promise<VerifiedFact[]> {
+    try {
+      const { rows } = await this.client.query(
+        `SELECT r.id AS receipt_id, r.revision_id, r.change_type, r.entity_type, r.entity_id, r.field_name,
+                r.before_value, r.after_value, r.verification_state, r.methodology_version, r.data_revision,
+                r.published_at::text AS published_at, r.supersedes_receipt_id,
+                e.observed_at::text AS observed_at, e.provider_id
+         FROM publication_receipts r
+         JOIN change_events e ON e.receipt_id = r.id`
+      );
+      return factsFromLedgerRows(
+        (rows as Array<Record<string, unknown>>).map((row) => ({
+          receiptId: String(row.receipt_id),
+          revisionId: String(row.revision_id),
+          changeType: String(row.change_type),
+          entityType: String(row.entity_type),
+          entityId: String(row.entity_id),
+          fieldName: String(row.field_name),
+          providerId: row.provider_id ? String(row.provider_id) : null,
+          observedAt: row.observed_at ? String(row.observed_at) : null,
+          publishedAt: String(row.published_at),
+          verificationState: String(row.verification_state),
+          afterValue: row.after_value,
+          beforeValue: row.before_value,
+          methodologyVersion: row.methodology_version ? String(row.methodology_version) : null,
+          dataRevision: row.data_revision ? String(row.data_revision) : null,
+          supersedesReceiptId: row.supersedes_receipt_id ? String(row.supersedes_receipt_id) : null,
+        }))
+      );
+    } catch {
+      return [];
+    }
+  }
+}
+
+function isTrendMetric(value: string): value is TrendMetric {
+  return (TREND_METRICS as readonly string[]).includes(value);
 }
 
 function claimValueCountry(value: unknown): string | null {

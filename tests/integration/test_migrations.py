@@ -61,9 +61,13 @@ EXPECTED_TABLES = (
     "publication_attempts",
     "publication_receipts",
     "change_events",
+    "country_registry",
+    "trend_series",
+    "outlook_assessments",
+    "outlook_backtests",
 )
 
-CURRENT_VERSIONS = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+CURRENT_VERSIONS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 
 BUILDING_PATCH_COLUMNS = (
     "facilities",
@@ -139,6 +143,7 @@ class TestMigrations(unittest.TestCase):
             ).fetchall()
         }
         self.assertIn("map_projections", views)
+        self.assertIn("verified_trend_facts", views)
         cols = _columns(self.conn, "buildings")
         for col in BUILDING_PATCH_COLUMNS:
             self.assertIn(col, cols, col)
@@ -304,6 +309,150 @@ class TestMigrations(unittest.TestCase):
         ).fetchall()
         self.assertEqual([r[0] for r in after], expected_versions)
         self.assertEqual(list(after), list(before))
+
+    def test_country_registry_and_outlook_forecast_gate(self):
+        migrate.apply_migrations(TEST_DATABASE_URL)
+        asean = self.conn.execute(
+            "SELECT count(*) FROM country_registry WHERE asean"
+        ).fetchone()[0]
+        self.assertEqual(asean, 10)
+        self.assertIn(
+            "verified_trend_facts",
+            {
+                r[0]
+                for r in self.conn.execute(
+                    "SELECT viewname FROM pg_views WHERE schemaname = 'public'"
+                ).fetchall()
+            },
+        )
+        with self.assertRaises(Exception):
+            self.conn.execute(
+                """
+                INSERT INTO outlook_assessments (
+                  id, metric, observation_window_start, observation_window_end,
+                  observed_fact, measured_trend, signal, assessment, forecast,
+                  confidence_label, model_version, ruleset_version, ruleset_hash,
+                  data_revision, expires_at, eligibility_passed, publication_state
+                ) VALUES (
+                  'ol-1', 'provider_count_by_country', now(), now(),
+                  '{"layer":"observed_fact"}'::jsonb,
+                  '{"layer":"measured_trend"}'::jsonb,
+                  '{"layer":"signal"}'::jsonb,
+                  '{"layer":"assessment"}'::jsonb,
+                  '{"layer":"forecast"}'::jsonb,
+                  'insufficient', '1.0.0', 'asean-trend-series-v1', %s,
+                  'drv', now(), false, 'insufficient_evidence'
+                )
+                """,
+                ("a" * 64,),
+            )
+        self.conn.rollback()
+        count = self.conn.execute("SELECT count(*) FROM outlook_assessments").fetchone()[0]
+        self.assertEqual(count, 0)
+
+    def test_trend_series_nulls_not_distinct_and_outlook_layer_values(self):
+        migrate.apply_migrations(TEST_DATABASE_URL)
+        digest = "a" * 64
+        self.conn.execute(
+            """
+            INSERT INTO trend_series (
+              id, metric, country_iso2, provider_id, period_start, period_end, value,
+              observation_count, comparable_population, missingness, continuity,
+              revision_quality, methodology_version, methodology_hash, data_revision
+            ) VALUES (
+              'ts-1', 'provider_count_by_country', NULL, NULL,
+              '2025-01-01T00:00:00Z', '2025-02-01T00:00:00Z', 1,
+              1, 1, 0, 1, 1, 'asean-trend-series-v1', %s, 'drv'
+            )
+            """,
+            (digest,),
+        )
+        self.conn.commit()
+        with self.assertRaises(Exception):
+            self.conn.execute(
+                """
+                INSERT INTO trend_series (
+                  id, metric, country_iso2, provider_id, period_start, period_end, value,
+                  observation_count, comparable_population, missingness, continuity,
+                  revision_quality, methodology_version, methodology_hash, data_revision
+                ) VALUES (
+                  'ts-2', 'provider_count_by_country', NULL, NULL,
+                  '2025-01-01T00:00:00Z', '2025-02-01T00:00:00Z', 2,
+                  1, 1, 0, 1, 1, 'asean-trend-series-v1', %s, 'drv'
+                )
+                """,
+                (digest,),
+            )
+        self.conn.rollback()
+        with self.assertRaises(Exception):
+            self.conn.execute(
+                """
+                INSERT INTO outlook_assessments (
+                  id, metric, observation_window_start, observation_window_end,
+                  observed_fact, measured_trend, signal, assessment,
+                  confidence_label, model_version, ruleset_version, ruleset_hash,
+                  data_revision, expires_at, eligibility_passed, publication_state
+                ) VALUES (
+                  'ol-bad-layer', 'provider_count_by_country', now(), now(),
+                  '{"layer":"forecast"}'::jsonb,
+                  '{"layer":"measured_trend"}'::jsonb,
+                  '{"layer":"signal"}'::jsonb,
+                  '{"layer":"assessment"}'::jsonb,
+                  'insufficient', '1.1.0', 'asean-trend-series-v1', %s,
+                  'drv', now(), false, 'insufficient_evidence'
+                )
+                """,
+                (digest,),
+            )
+        self.conn.rollback()
+        with self.assertRaises(Exception):
+            self.conn.execute(
+                """
+                INSERT INTO outlook_assessments (
+                  id, metric, observation_window_start, observation_window_end,
+                  observed_fact, measured_trend, signal, assessment, forecast,
+                  confidence_label, confidence_low, confidence_high,
+                  model_version, ruleset_version, ruleset_hash,
+                  data_revision, expires_at, eligibility_passed, publication_state
+                ) VALUES (
+                  'ol-bad-bounds', 'provider_count_by_country', now(), now(),
+                  '{"layer":"observed_fact"}'::jsonb,
+                  '{"layer":"measured_trend"}'::jsonb,
+                  '{"layer":"signal"}'::jsonb,
+                  '{"layer":"assessment"}'::jsonb,
+                  '{"layer":"forecast","pointEstimate":1}'::jsonb,
+                  'medium', 2, 1,
+                  '1.1.0', 'asean-trend-series-v1', %s,
+                  'drv', now(), true, 'not_published'
+                )
+                """,
+                (digest,),
+            )
+        self.conn.rollback()
+        self.conn.execute(
+            """
+            INSERT INTO outlook_assessments (
+              id, metric, observation_window_start, observation_window_end,
+              observed_fact, measured_trend, signal, assessment,
+              confidence_label, model_version, ruleset_version, ruleset_hash,
+              data_revision, expires_at, eligibility_passed, publication_state
+            ) VALUES (
+              'ol-ok', 'provider_count_by_country', now(), now(),
+              '{"layer":"observed_fact"}'::jsonb,
+              '{"layer":"measured_trend"}'::jsonb,
+              '{"layer":"signal"}'::jsonb,
+              '{"layer":"assessment"}'::jsonb,
+              'insufficient', '1.1.0', 'asean-trend-series-v1', %s,
+              'drv', now(), false, 'insufficient_evidence'
+            )
+            """,
+            (digest,),
+        )
+        self.conn.commit()
+        self.assertEqual(
+            self.conn.execute("SELECT count(*) FROM outlook_assessments WHERE id = 'ol-ok'").fetchone()[0],
+            1,
+        )
 
 
 class TestMigrationsSkipContract(unittest.TestCase):

@@ -1,14 +1,14 @@
-# MCP contract (Phase 3–6)
+# MCP contract (Phase 3–7)
 
-Status: Phase 4 workers submit through this same proposal-only contract. Phase 5 points `directory.explain_score` at the shared scoring engine (or a labeled legacy fallback). Phase 6 registers publication tools only for sessions that explicitly include the `publish` capability. Built-in Model Context Protocol server for `guide.cloudin.asia`. AI clients may read the directory and submit typed proposals. Default, read, and propose sessions cannot publish, execute SQL, or rewrite canonical facts.
+Status: Phase 4 workers submit through this same proposal-only contract. Phase 5 points `directory.explain_score` at the shared scoring engine (or a labeled legacy fallback). Phase 6 registers publication tools only for sessions that explicitly include the `publish` capability. Phase 7 adds read-only trend, timeline, and outlook-eligibility tools. Built-in Model Context Protocol server for `guide.cloudin.asia`. AI clients may read the directory and submit typed proposals. Default, read, and propose sessions cannot publish, execute SQL, rewrite canonical facts, or publish forecasts.
 
 ## Contract identity
 
 | Field | Value |
 |---|---|
 | Name | `cloud-directory-mcp` |
-| Contract version | `1.2.0` |
-| Backing schema version | `9` (`migrations/0009_publication_ledger.sql`) |
+| Contract version | `1.3.0` |
+| Backing schema version | `10` (`migrations/0010_trend_series_outlook.sql`) |
 | Transport | stdio (official MCP TypeScript SDK) or in-process for tests |
 
 This contract is separate from the public HTTP API and from any WordPress/editorial MCP.
@@ -39,9 +39,12 @@ Discovery lists only tools the session is authorized to use **and** that are ava
 - `directory.get_source_snapshot`
 - `directory.explain_score`
 - `directory.get_quality_report`
+- `directory.get_trends` (verified revision series; never a forecast)
+- `directory.get_timeline` (`providerId` or canonical ISO `country`)
+- `directory.get_outlook_eligibility` (gates only; no forecast payload)
 - `directory.get_proposal` (status of a durable proposal)
 
-Read tools do not write canonical facts or `/updates`. `explain_score` uses the same offering/deployment engine as Arena, wizard, compare, provider, and methodology. Optional `offeringId` / `deploymentId` select the subject. When no canonical subject exists, the tool returns a payload labeled `legacy-fallback`. Public `/updates` is generated from published `change_events`.
+Read tools do not write canonical facts or `/updates`. `explain_score` uses the same offering/deployment engine as Arena, wizard, compare, provider, and methodology. Optional `offeringId` / `deploymentId` select the subject. When no canonical subject exists, the tool returns a payload labeled `legacy-fallback`. Public `/updates` is generated from published `change_events`. Trend series reproduce from verified `publication_receipts` plus methodology/data revision. `directory.get_outlook_eligibility` does not publish forecasts. UI and MCP show **insufficient evidence** when metric gates fail, when the backtest does not pass, or when no observation window can be inferred (empty verified history without a caller window). There is no `directory.publish_forecast` tool.
 
 ## Proposal-only mutation tools
 
@@ -91,7 +94,7 @@ Clients must not retry an insert after `ambiguous`. They should read by idempote
 
 ## Non-goals
 
-- Collectors and extractors (Phase 4)
 - Replacing public ranking (Phase 5)
-- Trend products and outlooks (Phase 7)
+- AI-generated forecast publication
+- Phase 8 operationalization and production cutover
 - Granting any model generic SQL
