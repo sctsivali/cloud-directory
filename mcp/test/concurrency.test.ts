@@ -6,6 +6,7 @@ import { submitProposal } from "../src/proposal-tools.ts";
 import { approveProposal, reviewProposal, reviseProposal } from "../src/review-tools.ts";
 import { createDirectoryMcpServer } from "../src/server.ts";
 import { TEST_DATABASE_URL, withMigratedDatabase } from "./pg-harness.ts";
+import { claimRevisionBody } from "./claim-body.ts";
 
 const claim = {
   subjectType: "provider",
@@ -175,7 +176,7 @@ describe("PostgreSQL concurrent MCP requests stay isolated", { skip: !TEST_DATAB
         editor.invoke("directory.review_proposal", { proposalId: idB, decision: "reject" }),
         reviser.invoke("directory.revise_proposal", {
           proposalId: idA,
-          body: { subjectId: "local-packages", claimType: "storage" },
+          body: claimRevisionBody({ claimType: "storage" }),
         }),
       ]);
       const approvePayload = payloadOf(approved);
@@ -269,7 +270,7 @@ describe("PostgreSQL concurrent MCP requests stay isolated", { skip: !TEST_DATAB
           repo,
           {
             proposalId: created.proposal.id,
-            body: { subjectId: "local-packages", claimType: "storage" },
+            body: claimRevisionBody({ claimType: "storage" }),
           },
           "worker-a"
         ),
@@ -324,7 +325,7 @@ describe("PostgreSQL concurrent MCP requests stay isolated", { skip: !TEST_DATAB
         reviseRepo,
         {
           proposalId: created.proposal.id,
-          body: { subjectId: "local-packages", claimType: "storage" },
+          body: claimRevisionBody({ claimType: "storage" }),
         },
         "worker-a"
       );
@@ -387,7 +388,7 @@ describe("PostgreSQL concurrent MCP requests stay isolated", { skip: !TEST_DATAB
           repo,
           {
             proposalId: created.proposal.id,
-            body: { subjectId: "local-packages", claimType: "storage" },
+            body: claimRevisionBody({ claimType: "storage" }),
           },
           "worker-a"
         ).finally(() => {
@@ -439,7 +440,7 @@ describe("PostgreSQL concurrent MCP requests stay isolated", { skip: !TEST_DATAB
         new PostgresProposalRepository(hold.provider),
         {
           proposalId: created.proposal.id,
-          body: { subjectId: "local-packages", claimType: "storage" },
+          body: claimRevisionBody({ claimType: "storage" }),
         },
         "worker-a"
       );

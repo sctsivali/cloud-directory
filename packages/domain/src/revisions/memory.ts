@@ -1,4 +1,4 @@
-import { applyUncertainAttempt, attemptIdentityEqual, verificationStateAllowed } from "./attempts.ts";
+import { applyUncertainAttempt, attemptIdentityEqual, publicationReplayAllowed, verificationReplayAllowed, verificationStateAllowed } from "./attempts.ts";
 import { bodyDigestFromValue } from "./digest.ts";
 import { revalidateLockedPublication } from "./publish.ts";
 import { validateRollbackBindings } from "./rollback.ts";
@@ -189,9 +189,23 @@ export class MemoryPublicationStore implements PublicationStore {
         }
       }
       const existing = this.receipts.find((row) => row.idempotencyKey === plan.idempotencyKey);
+      const incomingIdentity = {
+        requestDigest: plan.requestDigest,
+        proposalId: plan.proposal.id,
+        revisionId: plan.revision.id,
+        publisherId: plan.publisherPrincipal,
+      };
       if (existing) {
         const event = this.events.find((row) => row.receiptId === existing.id);
-        if (event) return { write: "replayed", receipt: existing, event };
+        const existingAttempt = this.attempts.find((row) => row.idempotencyKey === plan.idempotencyKey) ?? null;
+        if (event && publicationReplayAllowed({ receipt: existing, attempt: existingAttempt, incoming: incomingIdentity })) {
+          return { write: "replayed", receipt: existing, event };
+        }
+        return {
+          write: "rejected",
+          code: PUBLICATION_ERROR.idempotencyConflict,
+          message: "same idempotency key with an altered publication request",
+        };
       }
       const now = plan.publishedAt;
       const existingAttempt = this.attempts.find((row) => row.idempotencyKey === plan.idempotencyKey);
@@ -310,11 +324,25 @@ export class MemoryPublicationStore implements PublicationStore {
         return { write: "rejected", code: PUBLICATION_ERROR.notFound, message: "publication receipt not found" };
       }
       if (plan.verifierPrincipal === receipt.publisherId) return { write: "self_verify" };
+      const proposal = this.proposals.get(receipt.proposalId);
+      const revision = this.revisions.find((row) => row.id === receipt.revisionId);
+      if (
+        plan.verifierPrincipal === proposal?.actorId ||
+        plan.verifierPrincipal === revision?.actorId
+      ) {
+        return { write: "self_verify" };
+      }
       const event = this.events.find((row) => row.receiptId === receipt.id) ?? null;
       const canonical = this.canonical.get(canonicalKey(receipt.entityType, receipt.entityId, receipt.fieldName)) ?? null;
       const judgment = judgeVerification({ receipt, event, canonical, plan });
       if (receipt.verificationState === "verified") {
-        if (judgment === "match") return { write: "replayed", receipt: { ...receipt } };
+        if (verificationReplayAllowed({
+          verifiedBy: receipt.verifiedBy,
+          verifierPrincipal: plan.verifierPrincipal,
+          judgment,
+        })) {
+          return { write: "replayed", receipt: { ...receipt } };
+        }
         return {
           write: "rejected",
           code: PUBLICATION_ERROR.verificationMismatch,

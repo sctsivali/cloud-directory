@@ -1,9 +1,5 @@
 import { validateToolInput } from "../../packages/contracts/src/mcp.ts";
-import { canAssignMapPrecision, validateFacility } from "../../packages/domain/src/geography.ts";
-import { validateOffering } from "../../packages/domain/src/entity-validation.ts";
-import { validateTechnologyDeployment } from "../../packages/domain/src/technology.ts";
-import { validateClaim } from "../../packages/domain/src/claim-validation.ts";
-import type { AssessmentState, KnowledgeState } from "../../packages/domain/src/knowledge-state.ts";
+import { validateProposalFields, validateReplacementBody } from "../../packages/domain/src/proposal-body.ts";
 import { bodyDigest, proposalBodyForDigest } from "./digest.ts";
 import { ERROR_CODE, OUTCOME } from "./errors.ts";
 import {
@@ -26,80 +22,6 @@ function asRecord(input: unknown): Record<string, unknown> | null {
   return input as Record<string, unknown>;
 }
 
-function extraDomainErrors(toolName: string, input: Record<string, unknown>): string[] {
-  const errors: string[] = [];
-  if (toolName === "directory.propose_claim") {
-    const result = validateClaim({
-      subjectType: input.subjectType as never,
-      subjectId: String(input.subjectId ?? ""),
-      claimType: String(input.claimType ?? ""),
-      value: input.value,
-      knowledgeState: input.knowledgeState as KnowledgeState,
-      assessmentState: input.assessmentState as AssessmentState,
-      observedAt: typeof input.observedAt === "string" ? input.observedAt : null,
-      recordedAt: nowIso(),
-      validFrom: null,
-      validTo: null,
-    });
-    if (!result.ok) errors.push(...result.errors);
-  }
-  if (toolName === "directory.propose_offering") {
-    const result = validateOffering({
-      id: "proposed",
-      providerId: String(input.providerId ?? ""),
-      serviceId: String(input.serviceId ?? ""),
-      name: String(input.name ?? ""),
-      status: typeof input.status === "string" ? input.status : null,
-    });
-    if (!result.ok) errors.push(...result.errors);
-  }
-  if (toolName === "directory.propose_location") {
-    const precision = typeof input.mapPrecision === "string" ? input.mapPrecision : "undisclosed";
-    const hasCoordinates = typeof input.lat === "number" && typeof input.lng === "number";
-    if (
-      precision === "facility_exact" &&
-      !canAssignMapPrecision({
-        requested: "facility_exact",
-        evidenceKind: "city_name_only",
-        hasCoordinates,
-      })
-    ) {
-      errors.push("city-only location cannot request facility_exact");
-    }
-  }
-  if (toolName === "directory.propose_facility") {
-    const precision = typeof input.mapPrecision === "string" ? input.mapPrecision : "undisclosed";
-    const result = validateFacility({
-      id: "proposed",
-      name: String(input.name ?? ""),
-      locationId: typeof input.locationId === "string" ? input.locationId : null,
-      address: typeof input.address === "string" ? input.address : null,
-      operator: typeof input.operator === "string" ? input.operator : null,
-      lat: typeof input.lat === "number" ? input.lat : null,
-      lng: typeof input.lng === "number" ? input.lng : null,
-      mapPrecision: precision as never,
-    });
-    if (!result.ok) errors.push(...result.errors);
-  }
-  if (toolName === "directory.propose_technology_deployment") {
-    const result = validateTechnologyDeployment({
-      id: "proposed",
-      technologyId: String(input.technologyId ?? ""),
-      technologyVersionId: typeof input.technologyVersionId === "string" ? input.technologyVersionId : null,
-      scope: input.scope as never,
-      scopeId: String(input.scopeId ?? ""),
-      hasUniversalScopeEvidence: input.hasUniversalScopeEvidence === true,
-    });
-    if (!result.ok) errors.push(...result.errors);
-  }
-  if (toolName === "directory.propose_price_observation") {
-    if (typeof input.amount === "number" && input.amount < 0) {
-      errors.push("amount must not be negative");
-    }
-  }
-  return errors;
-}
-
 export function isRejectedOutcome(value: unknown): value is RejectedOutcome {
   return (
     typeof value === "object" &&
@@ -110,19 +32,31 @@ export function isRejectedOutcome(value: unknown): value is RejectedOutcome {
 }
 
 export function validateProposalInput(toolName: string, input: unknown): RejectedOutcome | Record<string, unknown> {
-  const contract = validateToolInput(toolName, input);
-  if (!contract.ok) {
-    return rejected(ERROR_CODE.malformedPayload, "malformed proposal payload", contract.errors);
-  }
   const record = asRecord(input);
   if (!record) {
     return rejected(ERROR_CODE.malformedPayload, "malformed proposal payload");
   }
-  const domainErrors = extraDomainErrors(toolName, record);
-  if (domainErrors.length) {
-    return rejected(ERROR_CODE.malformedPayload, "malformed proposal payload", domainErrors);
+  const identity = rejectModelIdentity(record);
+  if (identity) return identity;
+  const validated = validateProposalFields(toolName, record);
+  if (!validated.ok) {
+    return rejected(ERROR_CODE.malformedPayload, "malformed proposal payload", validated.errors);
   }
   return record;
+}
+
+export function validateRevisionReplacement(
+  toolName: string,
+  body: unknown
+): RejectedOutcome | Record<string, unknown> {
+  const validated = validateReplacementBody(toolName, body);
+  if (!validated.ok) {
+    return rejected(ERROR_CODE.malformedPayload, "malformed revision payload", validated.errors);
+  }
+  if (!asRecord(body)) {
+    return rejected(ERROR_CODE.malformedPayload, "malformed revision payload");
+  }
+  return body as Record<string, unknown>;
 }
 
 export async function submitProposal(

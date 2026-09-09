@@ -1,6 +1,6 @@
 export const MCP_CONTRACT_NAME = "cloud-directory-mcp";
-export const MCP_CONTRACT_VERSION = "1.3.0";
-export const MCP_SCHEMA_VERSION = 10;
+export const MCP_CONTRACT_VERSION = "1.3.1";
+export const MCP_SCHEMA_VERSION = 11;
 
 export const CAPABILITIES = [
   "read",
@@ -257,6 +257,8 @@ export const TOOL_DEFINITIONS: readonly ToolDefinition[] = [
       dataRevision: optionalString,
       windowStart: optionalString,
       windowEnd: optionalString,
+      limit: { type: "integer" },
+      page: { type: "integer" },
     }),
   },
   {
@@ -270,6 +272,8 @@ export const TOOL_DEFINITIONS: readonly ToolDefinition[] = [
       windowStart: optionalString,
       windowEnd: optionalString,
       dataRevision: optionalString,
+      limit: { type: "integer" },
+      page: { type: "integer" },
     }),
   },
   {
@@ -284,6 +288,8 @@ export const TOOL_DEFINITIONS: readonly ToolDefinition[] = [
       windowStart: optionalString,
       windowEnd: optionalString,
       dataRevision: optionalString,
+      limit: { type: "integer" },
+      page: { type: "integer" },
     }),
   },
   {

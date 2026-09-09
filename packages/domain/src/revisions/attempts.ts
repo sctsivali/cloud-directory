@@ -20,6 +20,28 @@ export function attemptIdentityEqual(
   );
 }
 
+export function publicationReplayAllowed(args: {
+  receipt: Pick<PublicationAttempt, "proposalId" | "revisionId" | "publisherId">;
+  attempt: Pick<PublicationAttempt, "requestDigest" | "proposalId" | "revisionId" | "publisherId"> | null | undefined;
+  incoming: Pick<PublicationAttempt, "requestDigest" | "proposalId" | "revisionId" | "publisherId">;
+}): boolean {
+  if (!args.attempt) return false;
+  return (
+    attemptIdentityEqual(args.attempt, args.incoming) &&
+    args.receipt.proposalId === args.incoming.proposalId &&
+    args.receipt.revisionId === args.incoming.revisionId &&
+    args.receipt.publisherId === args.incoming.publisherId
+  );
+}
+
+export function verificationReplayAllowed(args: {
+  verifiedBy: string | null;
+  verifierPrincipal: string;
+  judgment: "match" | "failed" | "uncertain";
+}): boolean {
+  return args.judgment === "match" && args.verifiedBy === args.verifierPrincipal;
+}
+
 export function attemptStateAllowed(
   from: PublicationAttempt["state"],
   to: PublicationAttempt["state"]

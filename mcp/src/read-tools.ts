@@ -7,12 +7,14 @@ import {
 } from "../../packages/domain/src/scoring/index.ts";
 import {
   TREND_METRICS,
+  MAX_TREND_FACTS,
   buildCountryTimeline,
   buildOutlook,
   buildProviderTimeline,
   buildTrendReport,
   canonicalizeCountryCode,
   factsFromLedgerRows,
+  guardTrendQuery,
   inferObservationWindow,
   ledgerFactRowFromJoin,
   publicOutlookEligibilityView,
@@ -51,6 +53,8 @@ export type IntelligenceReadArgs = {
   dataRevision?: string;
   windowStart?: string;
   windowEnd?: string;
+  limit?: number;
+  page?: number;
 };
 
 const LEGACY_METHODOLOGY = {
@@ -328,11 +332,16 @@ export class PostgresDirectoryReader implements DirectoryReader {
   async getTimeline(args: IntelligenceReadArgs): Promise<JsonObject> {
     const built = await this.buildIntelligence(args);
     if ("error" in built) return built;
+    const page = built.page;
+    const limit = built.limit;
+    const offset = (page - 1) * limit;
     if (args.providerId) {
-      return { ok: true, ...projectPublicTimelineDocument(buildProviderTimeline({ ...built.query, providerId: args.providerId })) };
+      const doc = projectPublicTimelineDocument(buildProviderTimeline({ ...built.query, providerId: args.providerId }));
+      return { ok: true, ...doc, events: doc.events.slice(offset, offset + limit), page, limit };
     }
     if (built.query.countryCode) {
-      return { ok: true, ...projectPublicTimelineDocument(buildCountryTimeline({ ...built.query, countryCode: built.query.countryCode })) };
+      const doc = projectPublicTimelineDocument(buildCountryTimeline({ ...built.query, countryCode: built.query.countryCode }));
+      return { ok: true, ...doc, events: doc.events.slice(offset, offset + limit), page, limit };
     }
     return { ok: false, error: "providerId or country is required" };
   }
@@ -348,16 +357,38 @@ export class PostgresDirectoryReader implements DirectoryReader {
   }
 
   private async buildIntelligence(args: IntelligenceReadArgs): Promise<
-    | { query: { facts: VerifiedFact[]; window: { start: string; end: string } | null; countryCode: string | null; providerId: string | null; dataRevision: string | null } }
-    | { error: string; ok: false }
+    | {
+        query: {
+          facts: VerifiedFact[];
+          window: { start: string; end: string } | null;
+          countryCode: string | null;
+          providerId: string | null;
+          dataRevision: string | null;
+        };
+        limit: number;
+        page: number;
+      }
+    | { error: string; ok: false; code?: string }
   > {
+    const guarded = guardTrendQuery({
+      windowStart: args.windowStart,
+      windowEnd: args.windowEnd,
+      limit: args.limit,
+      page: args.page,
+    });
+    if (!guarded.ok) {
+      return { ok: false, error: guarded.message, code: guarded.code };
+    }
     let countryCode: string | null = null;
     if (args.country) {
       countryCode = canonicalizeCountryCode(args.country) ?? resolveCountry(args.country)?.iso2 ?? null;
       if (!countryCode) return { ok: false, error: `unregistered country: ${args.country}` };
     }
     const facts = await this.loadLedgerFacts();
-    const window = windowFromInferred(inferObservationWindow(facts, { start: args.windowStart, end: args.windowEnd }));
+    if (facts.length > MAX_TREND_FACTS) {
+      return { ok: false, error: "fact limit exceeded", code: "fact_limit_exceeded" };
+    }
+    const window = guarded.window ?? windowFromInferred(inferObservationWindow(facts));
     return {
       query: {
         facts,
@@ -366,6 +397,8 @@ export class PostgresDirectoryReader implements DirectoryReader {
         providerId: args.providerId ?? null,
         dataRevision: args.dataRevision ?? null,
       },
+      limit: guarded.limit,
+      page: guarded.page,
     };
   }
 
@@ -377,7 +410,10 @@ export class PostgresDirectoryReader implements DirectoryReader {
                 r.published_at::text AS published_at, r.supersedes_receipt_id,
                 e.observed_at::text AS observed_at, e.provider_id, e.value_sensitivity
          FROM publication_receipts r
-         JOIN change_events e ON e.receipt_id = r.id`
+         JOIN change_events e ON e.receipt_id = r.id
+         ORDER BY r.published_at DESC, r.id DESC
+         LIMIT $1`,
+        [MAX_TREND_FACTS]
       );
       return factsFromLedgerRows((rows as Array<Record<string, unknown>>).map(ledgerFactRowFromJoin));
     } catch {

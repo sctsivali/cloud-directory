@@ -19,6 +19,7 @@ import {
   publicTrendView,
   requireRegisteredIso2,
   windowFromInferred,
+  MAX_TREND_FACTS,
   type TrendMetric,
   type VerifiedFact,
 } from "../../../packages/domain/src/intelligence/index.ts";
@@ -597,7 +598,10 @@ async function loadIntelligenceFacts(): Promise<VerifiedFact[]> {
               r.published_at::text AS published_at, r.supersedes_receipt_id,
               e.observed_at::text AS observed_at, e.provider_id, e.value_sensitivity
        FROM publication_receipts r
-       JOIN change_events e ON e.receipt_id = r.id`
+       JOIN change_events e ON e.receipt_id = r.id
+       ORDER BY r.published_at DESC, r.id DESC
+       LIMIT $1`,
+      [MAX_TREND_FACTS]
     );
     return factsFromLedgerRows(rows.map((row) => ledgerFactRowFromJoin(row as Record<string, unknown>)));
   } catch {
@@ -609,9 +613,10 @@ export async function getTrendReport(args?: {
   countryCode?: string | null;
   providerId?: string | null;
   dataRevision?: string | null;
+  window?: { start: string; end: string } | null;
 }): Promise<ReturnType<typeof publicTrendView>> {
   const facts = await loadIntelligenceFacts();
-  const window = windowFromInferred(inferObservationWindow(facts));
+  const window = args?.window ?? windowFromInferred(inferObservationWindow(facts));
   return publicTrendView(
     buildTrendReport({
       facts,

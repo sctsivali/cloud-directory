@@ -1,5 +1,6 @@
 import { validateToolInput, type Capability } from "../../packages/contracts/src/mcp.ts";
 import type { PublicationStore } from "../../packages/domain/src/revisions/types.ts";
+import { guardTrendQuery } from "../../packages/domain/src/intelligence/trends.ts";
 import { ERROR_CODE, OUTCOME } from "./errors.ts";
 import { publishApprovedRevision, verifyPublishedReceipt } from "./publication-tools.ts";
 import { submitProposal } from "./proposal-tools.ts";
@@ -105,22 +106,28 @@ export async function executeTool(
     case "directory.get_trends": {
       const parsed = validateToolInput(name, input);
       if (!parsed.ok) return errorResult(ERROR_CODE.malformedPayload, parsed.errors.join("; "));
+      const windowed = guardTrendQuery(input as { windowStart?: string; windowEnd?: string; limit?: number; page?: number });
+      if (!windowed.ok) return errorResult(windowed.code, windowed.message);
       const reader = await requireReader(ctx);
-      const result = await reader.getTrends(input as { metric?: string; country?: string; providerId?: string; dataRevision?: string; windowStart?: string; windowEnd?: string });
+      const result = await reader.getTrends(input as { metric?: string; country?: string; providerId?: string; dataRevision?: string; windowStart?: string; windowEnd?: string; limit?: number; page?: number });
       return jsonResult({ ok: !("error" in result), ...result });
     }
     case "directory.get_timeline": {
       const parsed = validateToolInput(name, input);
       if (!parsed.ok) return errorResult(ERROR_CODE.malformedPayload, parsed.errors.join("; "));
+      const windowed = guardTrendQuery(input as { windowStart?: string; windowEnd?: string; limit?: number; page?: number });
+      if (!windowed.ok) return errorResult(windowed.code, windowed.message);
       const reader = await requireReader(ctx);
-      const result = await reader.getTimeline(input as { country?: string; providerId?: string; dataRevision?: string; windowStart?: string; windowEnd?: string });
+      const result = await reader.getTimeline(input as { country?: string; providerId?: string; dataRevision?: string; windowStart?: string; windowEnd?: string; limit?: number; page?: number });
       return jsonResult({ ok: !("error" in result), ...result });
     }
     case "directory.get_outlook_eligibility": {
       const parsed = validateToolInput(name, input);
       if (!parsed.ok) return errorResult(ERROR_CODE.malformedPayload, parsed.errors.join("; "));
+      const windowed = guardTrendQuery(input as { windowStart?: string; windowEnd?: string; limit?: number; page?: number });
+      if (!windowed.ok) return errorResult(windowed.code, windowed.message);
       const reader = await requireReader(ctx);
-      const result = await reader.getOutlookEligibility(input as { metric?: string; country?: string; providerId?: string; dataRevision?: string; windowStart?: string; windowEnd?: string });
+      const result = await reader.getOutlookEligibility(input as { metric?: string; country?: string; providerId?: string; dataRevision?: string; windowStart?: string; windowEnd?: string; limit?: number; page?: number });
       return jsonResult({ ok: !("error" in result), ...result });
     }
     case "directory.get_proposal": {

@@ -137,6 +137,17 @@ describe("PostgreSQL publication ledger", { skip: !TEST_DATABASE_URL }, () => {
         await publisher.invoke("directory.publish_revision", { ...args, dataRevision: "drv-other" })
       );
       assert.equal(altered.outcome, OUTCOME.rejected);
+      const otherPublisher = createDirectoryMcpServer({
+        capabilities: ["publish"],
+        context: {
+          reader: null,
+          repo: ready.repo,
+          publication: new PostgresPublicationStore(pool),
+          principalId: "publisher-2",
+        },
+      });
+      const stolen = payloadOf(await otherPublisher.invoke("directory.publish_revision", args));
+      assert.equal(stolen.outcome, OUTCOME.rejected);
     });
   });
 

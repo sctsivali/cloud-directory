@@ -108,7 +108,12 @@ Publication receipts, `change_events`, and `/updates` are generated in Phase 6. 
 - `publication_receipts` — append-only publication record bound to exact revision/body digest, approval digest, evidence snapshot IDs, methodology version, data revision, publisher principal, and idempotency key. Historical columns cannot be rewritten. `verification_state` starts at `pending` and is set to `verified` only after a separate post-public readback.
 - `change_events` — public transparency rows generated from receipts: safe old/new values, source/evidence, detected/observed/reviewed/published times, revision link, and correction provenance.
 - `proposal_reviews.bound_revision_id` / `bound_body_digest` — approval is valid only for that exact revision.
-- Rollback inserts a new receipt and event only when the original receipt/event subject equals the rollback target, the current canonical digest equals the original after-value digest, and the supersession chain is valid. It does not delete prior rows. The proposal author cannot publish their own proposal. The publisher cannot verify their own publication.
+- Rollback inserts a new receipt and event only when the original receipt/event subject equals the rollback target, the current canonical digest equals the original after-value digest, and the supersession chain is valid. It does not delete prior rows. The proposal author and current revision author cannot approve, publish, or verify their own revision. The publisher cannot verify their own publication.
+
+## Phase 8 duty and window controls (`0011_sod_state_replay.sql`)
+
+- `proposal_reviews` approval rows must bind `bound_revision_id` and `bound_body_digest`. Triggers reject approval/publish/verify when the actor is the proposal author or the latest/target revision author.
+- `proposals` status updates follow an explicit transition matrix. `published` and `rejected` cannot move to `approved`/`rejected` except `pending_review` via revision.
 
 ## Phase 7 intelligence (`0010_trend_series_outlook.sql`)
 

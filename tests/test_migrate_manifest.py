@@ -72,6 +72,10 @@ REQUIRED_PHASE2_MARKERS = (
     ("0010_trend_series_outlook.sql", "observed_fact->>'layer' = 'observed_fact'"),
     ("0010_trend_series_outlook.sql", "forecast->>'layer' = 'forecast'"),
     ("0010_trend_series_outlook.sql", "(forecast IS NULL) = (confidence_low IS NULL)"),
+    ("0011_sod_state_replay.sql", "proposal_reviews_approve_binding"),
+    ("0011_sod_state_replay.sql", "revision author cannot self-approve"),
+    ("0011_sod_state_replay.sql", "proposal_status_transition_allowed"),
+    ("0011_sod_state_replay.sql", "illegal proposal status transition"),
 )
 
 REQUIRED_BASELINE_MARKERS = (
@@ -147,10 +151,11 @@ class TestManifestLedger(unittest.TestCase):
             "0008_scoring_runs.sql",
             "0009_publication_ledger.sql",
             "0010_trend_series_outlook.sql",
+            "0011_sod_state_replay.sql",
         ]
         manifest = json.loads(self.manifest_path.read_text())
-        self.assertEqual(manifest["schema_version"], 10)
-        self.assertEqual(len(manifest["migrations"]), 10)
+        self.assertEqual(manifest["schema_version"], 11)
+        self.assertEqual(len(manifest["migrations"]), 11)
         for i, filename in enumerate(expected_files, start=1):
             row = manifest["migrations"][i - 1]
             self.assertEqual(row["version"], i)
@@ -160,7 +165,7 @@ class TestManifestLedger(unittest.TestCase):
             digest = hashlib.sha256(path.read_bytes()).hexdigest()
             self.assertEqual(row["checksum"], digest)
         loaded = migrate.load_manifest(self.migrations_dir)
-        self.assertEqual(loaded.schema_version, 10)
+        self.assertEqual(loaded.schema_version, 11)
         self.assertEqual([m.filename for m in loaded.migrations], expected_files)
         self.assertEqual(loaded.migrations[0].checksum, hashlib.sha256(self.baseline.read_bytes()).hexdigest())
 
@@ -218,6 +223,7 @@ class TestManifestLedger(unittest.TestCase):
         migrate.assert_supported_schema_version(applied_max=8, manifest_max=8)
         migrate.assert_supported_schema_version(applied_max=9, manifest_max=9)
         migrate.assert_supported_schema_version(applied_max=10, manifest_max=10)
+        migrate.assert_supported_schema_version(applied_max=11, manifest_max=11)
 
     def test_recorded_checksum_mismatch_fails_closed(self):
         with self.assertRaises(migrate.ChecksumMismatchError) as ctx:

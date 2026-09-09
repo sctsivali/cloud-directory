@@ -16,6 +16,7 @@ export {
   requireRegisteredIso2,
   resolveCountry,
   trendsForSurface,
+  guardTrendQuery,
   type CountryRecord,
   type OutlookDocument,
   type TimelineDocument,

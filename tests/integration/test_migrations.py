@@ -67,7 +67,7 @@ EXPECTED_TABLES = (
     "outlook_backtests",
 )
 
-CURRENT_VERSIONS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+CURRENT_VERSIONS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
 
 BUILDING_PATCH_COLUMNS = (
     "facilities",

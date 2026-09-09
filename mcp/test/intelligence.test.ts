@@ -97,6 +97,9 @@ describe("MCP intelligence read tools", () => {
   });
 
   it("returns trend series with provenance and no forecast", async () => {
+    const badWindow = parse(await executeTool(ctx, "directory.get_trends", { windowStart: "yesterday", windowEnd: "2026-01-01T00:00:00.000Z" }));
+    assert.equal(badWindow.ok, false);
+    assert.equal(badWindow.code, "invalid_window");
     const result = parse(await executeTool(ctx, "directory.get_trends", { country: "ID" }));
     assert.equal(result.ok, true);
     assert.ok(result.methodologyHash);

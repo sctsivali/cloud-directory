@@ -7,6 +7,7 @@ import { approveProposal, reviewProposal, reviseProposal } from "../src/review-t
 import type { Capability } from "../../packages/contracts/src/mcp.ts";
 import { createDirectoryMcpServer } from "../src/server.ts";
 import { MemoryProposalRepository } from "../src/store.ts";
+import { claimRevisionBody } from "./claim-body.ts";
 
 const claimBody = {
   idempotencyKey: "bind-claim-1",
@@ -113,7 +114,7 @@ describe("non-model-controlled principal binding", () => {
       repo,
       {
         proposalId: bound.proposal.id,
-        body: { subjectId: "local-packages", claimType: "hypervisor" },
+        body: claimRevisionBody(),
       },
       "worker-a"
     );

@@ -7,8 +7,8 @@ Status: Phase 4 workers submit through this same proposal-only contract. Phase 5
 | Field | Value |
 |---|---|
 | Name | `cloud-directory-mcp` |
-| Contract version | `1.3.0` |
-| Backing schema version | `10` (`migrations/0010_trend_series_outlook.sql`) |
+| Contract version | `1.3.1` |
+| Backing schema version | `11` (`migrations/0011_sod_state_replay.sql`) |
 | Transport | stdio (official MCP TypeScript SDK) or in-process for tests |
 
 This contract is separate from the public HTTP API and from any WordPress/editorial MCP.
@@ -57,16 +57,16 @@ Canonical writes are not exposed. These tools persist a proposal row:
 - `directory.propose_facility`
 - `directory.propose_technology_deployment`
 - `directory.propose_retraction`
-- `directory.revise_proposal` (body change; an approved proposal returns to review)
+- `directory.revise_proposal` (body change; replacement body must match the original tool schema; an approved or rejected proposal returns to review)
 
 There is no generic SQL tool and no arbitrary field-mutation tool. Phase 4 workers invoke these tools over an MCP transport. They do not `INSERT` into `proposals`, `revisions`, or `proposal_reviews`, and they do not send `actorId` / `actor_id` in the tool payload.
 
 ## Review tools
 
 - `directory.review_proposal` — `reject` or `request_changes`
-- `directory.approve_proposal` — forbidden when the bound `principalId` equals the proposer
+- `directory.approve_proposal` — forbidden when the bound `principalId` equals the proposer or the current revision author
 
-Approvals are invalidated when the proposal body changes. An approval is bound to the exact revision id and body digest.
+Approvals are invalidated when the proposal body changes. An approval is bound to the exact revision id and body digest under a proposal row lock. Published and rejected statuses are terminal except through an authorized revision (back to `pending_review`) or rollback publication. Optional `windowStart` / `windowEnd` on trend, timeline, and outlook tools must be canonical UTC timestamps with `start < end` and a bounded month span; `limit` and `page` are capped.
 
 ## Publication tools (explicit publish capability)
 
@@ -76,7 +76,7 @@ Registered only for sessions with `publish`. Direct invocation from read/propose
 - `directory.publish_change` — publish a specific approved revision, including rollback/correction
 - `directory.verify_publication` — post-public authoritative readback; requires `verify` and a different canonical principal than the publisher
 
-A publication is one serialized atomic transaction with row locks and canonical-state compare-and-set. After `SELECT proposal FOR UPDATE` it re-reads and verifies current proposal status/body digest, the exact revision, the latest valid approval bound to that revision/body, and publisher separation before any canonical/receipt/event write. It binds the exact approved revision and body digest, evidence snapshot IDs, reviewer/approval digest, methodology version, data revision, publisher principal, idempotency key, publication receipt, and verification state. New receipts start at `verification_state=pending`. `directory.verify_publication` atomically transitions `pending` to `verified` when receipt, event, canonical value digest, and data revision match; mismatches are recorded as `failed` or `uncertain` without rewriting published history. The proposal author cannot publish their own proposal. Ambiguous commit outcomes are durable and must be reconciled; they are never blind-retried. `publication_attempts` identities are immutable and states are monotonic: committed/reconciled rows never regress to uncertain. Rollback appends a new approved revision and change event only when the original receipt/event subject equals the rollback target, the current canonical digest equals the original after-value digest, and the supersession chain is valid; it never deletes history.
+A publication is one serialized atomic transaction with row locks and canonical-state compare-and-set. After `SELECT proposal FOR UPDATE` it re-reads and verifies current proposal status/body digest, the exact revision, the latest valid approval bound to that revision/body, and publisher separation before any canonical/receipt/event write. It binds the exact approved revision and body digest, evidence snapshot IDs, reviewer/approval digest, methodology version, data revision, publisher principal, idempotency key, publication receipt, and verification state. New receipts start at `verification_state=pending`. `directory.verify_publication` atomically transitions `pending` to `verified` when receipt, event, canonical value digest, and data revision match; mismatches are recorded as `failed` or `uncertain` without rewriting published history. The proposal or current revision author cannot publish their own revision. Ambiguous commit outcomes are durable and must be reconciled; they are never blind-retried. Replay, conflict, and uncertain resolvers require a matching request digest, proposal, revision, publisher, and principal before returning a receipt; an identity collision is a rejection, never someone else's replay. `publication_attempts` identities are immutable and states are monotonic: committed/reconciled rows never regress to uncertain. Rollback appends a new approved revision and change event only when the original receipt/event subject equals the rollback target, the current canonical digest equals the original after-value digest, and the supersession chain is valid; it never deletes history.
 
 ## Idempotency and outcomes
 

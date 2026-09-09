@@ -1,9 +1,15 @@
 import { getOutlookEligibility, getTrendReport } from "@/lib/db";
 import { apiJson, apiOptions } from "@/lib/api-json";
-import { TREND_METRICS, type TrendMetric, INTELLIGENCE_API_VERSION } from "@/lib/intelligence";
+import { TREND_METRICS, type TrendMetric, INTELLIGENCE_API_VERSION, guardTrendQuery } from "@/lib/intelligence";
 
 export function OPTIONS() {
   return apiOptions();
+}
+
+function optionalInt(raw: string | null): number | undefined {
+  if (raw == null || raw === "") return undefined;
+  if (!/^-?\d+$/.test(raw)) return Number.NaN;
+  return Number(raw);
 }
 
 export async function GET(req: Request) {
@@ -11,9 +17,18 @@ export async function GET(req: Request) {
   const metric = url.searchParams.get("metric");
   const country = url.searchParams.get("country");
   const providerId = url.searchParams.get("providerId");
+  const windowStart = url.searchParams.get("windowStart") ?? undefined;
+  const windowEnd = url.searchParams.get("windowEnd") ?? undefined;
+  const limit = optionalInt(url.searchParams.get("limit"));
+  const page = optionalInt(url.searchParams.get("page"));
+  const guarded = guardTrendQuery({ windowStart, windowEnd, limit, page });
+  if (!guarded.ok) {
+    return apiJson({ ok: false, code: guarded.code, error: guarded.message, apiVersion: INTELLIGENCE_API_VERSION }, 400);
+  }
   const report = await getTrendReport({
     countryCode: country,
     providerId,
+    ...(guarded.window ? { window: guarded.window } : {}),
   });
   if (metric && (TREND_METRICS as readonly string[]).includes(metric)) {
     const eligibility = await getOutlookEligibility(metric as TrendMetric, country);

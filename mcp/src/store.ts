@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { bodyDigest } from "./digest.ts";
-import type { ProposalRecord, ReviewRecord, RevisionRecord } from "./types.ts";
+import type { ProposalRecord, ProposalStatus, ReviewRecord, RevisionRecord } from "./types.ts";
 
 export type InsertResult = "inserted" | "conflict" | "uncertain";
 export type CompoundWriteResult = "ok" | "uncertain";
@@ -17,12 +17,40 @@ export type ReviewWriteResult =
   | { write: "ok"; proposal: ProposalRecord; review: ReviewRecord }
   | { write: "uncertain" }
   | { write: "not_found" }
-  | { write: "self_approval" };
+  | { write: "self_approval" }
+  | { write: "illegal_transition" };
 
 export type RevisionWriteResult =
   | { write: "ok"; proposal: ProposalRecord; revision: RevisionRecord }
   | { write: "uncertain" }
-  | { write: "not_found" };
+  | { write: "not_found" }
+  | { write: "illegal_transition" };
+
+export const PROPOSAL_STATUS_TRANSITIONS: Record<ProposalStatus, readonly ProposalStatus[]> = {
+  pending_review: ["pending_review", "approved", "rejected", "changes_requested"],
+  changes_requested: ["pending_review", "approved", "rejected", "changes_requested"],
+  approved: ["pending_review", "published"],
+  rejected: ["pending_review"],
+  published: ["pending_review"],
+};
+
+export function proposalStatusTransitionAllowed(from: string, to: string): boolean {
+  const allowed = PROPOSAL_STATUS_TRANSITIONS[from as ProposalStatus];
+  return Boolean(allowed?.includes(to as ProposalStatus));
+}
+
+export function latestRevisionOf(revisions: RevisionRecord[]): RevisionRecord | null {
+  if (!revisions.length) return null;
+  return revisions.reduce((latest, row) => (row.revisionOrdinal >= latest.revisionOrdinal ? row : latest));
+}
+
+export function dutiesConflict(
+  principalId: string,
+  proposalActorId: string,
+  revisionActorId?: string | null
+): boolean {
+  return principalId === proposalActorId || (Boolean(revisionActorId) && principalId === revisionActorId);
+}
 
 export type ProposalRepository = {
   findByIdempotencyKey(key: string): Promise<ProposalRecord | null>;
@@ -59,7 +87,10 @@ export function derivedRevision(
   maxOrdinal: number,
   intent: RevisionIntent
 ): { proposal: ProposalRecord; revision: RevisionRecord } {
-  const nextBody = { toolName: current.toolName, ...intent.body };
+  const { toolName: _toolName, idempotencyKey: _key, ...fields } = intent.body;
+  void _toolName;
+  void _key;
+  const nextBody = { toolName: current.toolName, ...fields };
   const digest = bodyDigest(nextBody);
   return {
     proposal: {
@@ -73,7 +104,7 @@ export function derivedRevision(
       id: intent.id,
       proposalId: current.id,
       revisionOrdinal: maxOrdinal + 1,
-      body: intent.body,
+      body: { ...fields },
       bodyDigest: digest,
       actorId: intent.actorId,
       createdAt: intent.createdAt,
@@ -147,16 +178,29 @@ export class MemoryProposalRepository implements ProposalRepository {
     return this.atomically<ReviewWriteResult>(() => {
       const current = this.proposals.get(review.proposalId);
       if (!current) return { write: "not_found" as const };
-      if (review.decision === "approve" && current.actorId === review.reviewerId) {
+      const latest = latestRevisionOf(this.revisions.filter((row) => row.proposalId === review.proposalId));
+      if (review.decision === "approve" && dutiesConflict(review.reviewerId, current.actorId, latest?.actorId)) {
         return { write: "self_approval" as const };
       }
-      const proposal = derivedReviewProposal(current, review);
-      this.reviews.push({ ...review });
+      const nextStatus = statusForReviewDecision(review.decision);
+      if (!proposalStatusTransitionAllowed(current.status, nextStatus)) {
+        return { write: "illegal_transition" as const };
+      }
+      if (review.decision === "approve" && (!latest || latest.bodyDigest !== current.bodyDigest)) {
+        return { write: "illegal_transition" as const };
+      }
+      const bound: ReviewRecord = {
+        ...review,
+        boundRevisionId: latest?.id ?? null,
+        boundBodyDigest: latest?.bodyDigest ?? current.bodyDigest,
+      };
+      const proposal = derivedReviewProposal(current, bound);
+      this.reviews.push({ ...bound });
       this.afterWrite();
       this.proposals.set(proposal.id, { ...proposal, body: { ...proposal.body } });
       this.byKey.set(proposal.idempotencyKey, proposal.id);
       this.afterWrite();
-      return { write: "ok" as const, proposal: this.cloneProposal(proposal)!, review: { ...review } };
+      return { write: "ok" as const, proposal: this.cloneProposal(proposal)!, review: { ...bound } };
     }, { write: "uncertain" as const });
   }
 
@@ -167,6 +211,9 @@ export class MemoryProposalRepository implements ProposalRepository {
     return this.atomically<RevisionWriteResult>(() => {
       const current = this.proposals.get(intent.proposalId);
       if (!current) return { write: "not_found" as const };
+      if (!proposalStatusTransitionAllowed(current.status, "pending_review")) {
+        return { write: "illegal_transition" as const };
+      }
       const maxOrdinal = this.revisions
         .filter((row) => row.proposalId === intent.proposalId)
         .reduce((max, row) => Math.max(max, row.revisionOrdinal), 0);

@@ -28,7 +28,7 @@ describe("versioned MCP contract", () => {
     assert.equal(MCP_CONTRACT_NAME, "cloud-directory-mcp");
     assert.match(MCP_CONTRACT_VERSION, /^\d+\.\d+\.\d+$/);
     assert.equal(TOOL_CATALOG.contractVersion, MCP_CONTRACT_VERSION);
-    assert.equal(TOOL_CATALOG.schemaVersion, 10);
+    assert.equal(TOOL_CATALOG.schemaVersion, 11);
   });
 
   it("lists the Phase 3 and Phase 7 read tools", () => {
@@ -142,7 +142,7 @@ describe("versioned MCP contract", () => {
   it("is documented in docs/mcp-contract.md", () => {
     const doc = readFileSync(join(repoRoot, "docs", "mcp-contract.md"), "utf8");
     assert.match(doc, /cloud-directory-mcp/);
-    assert.match(doc, /1\.3\.0/);
+    assert.match(doc, /1\.3\.1/);
     for (const name of [...READ_TOOLS, ...PROPOSAL_TOOLS]) {
       assert.match(doc, new RegExp(name.replace(".", "\\.")));
     }

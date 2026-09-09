@@ -2,6 +2,9 @@ import { Pool } from "./pg.ts";
 import {
   derivedReviewProposal,
   derivedRevision,
+  dutiesConflict,
+  proposalStatusTransitionAllowed,
+  statusForReviewDecision,
   type InsertResult,
   type ProposalRepository,
   type ReviewWriteResult,
@@ -56,6 +59,21 @@ function mapProposal(row: ProposalRow): ProposalRecord {
 
 function pgCode(err: unknown): string | undefined {
   return (err as { code?: string }).code;
+}
+
+function pgMessage(err: unknown): string {
+  return String((err as { message?: string }).message ?? err);
+}
+
+function mapLockedWriteError(err: unknown): { write: "self_approval" } | { write: "illegal_transition" } | null {
+  const msg = pgMessage(err);
+  if (/self-approve|cannot approve own|revision author cannot self-approve/i.test(msg)) {
+    return { write: "self_approval" };
+  }
+  if (/status transition|illegal proposal status/i.test(msg)) {
+    return { write: "illegal_transition" };
+  }
+  return null;
 }
 
 function asConnectionProvider(provider: ConnectionProvider | InstanceType<typeof Pool>): ConnectionProvider {
@@ -178,14 +196,27 @@ export class PostgresProposalRepository implements ProposalRepository {
     const result = await this.transact(async (client) => {
       const current = await this.lockProposal(client, review.proposalId);
       if (!current) return { write: "not_found" as const };
-      if (review.decision === "approve" && current.actorId === review.reviewerId) {
+      const latest = await this.lockLatestRevision(client, review.proposalId);
+      if (review.decision === "approve" && dutiesConflict(review.reviewerId, current.actorId, latest?.actorId)) {
         return { write: "self_approval" as const };
       }
-      const proposal = derivedReviewProposal(current, review);
-      await this.insertReviewRow(client, review);
+      const nextStatus = statusForReviewDecision(review.decision);
+      if (!proposalStatusTransitionAllowed(current.status, nextStatus)) {
+        return { write: "illegal_transition" as const };
+      }
+      if (review.decision === "approve" && (!latest || latest.bodyDigest !== current.bodyDigest)) {
+        return { write: "illegal_transition" as const };
+      }
+      const bound = {
+        ...review,
+        boundRevisionId: latest?.id ?? null,
+        boundBodyDigest: latest?.bodyDigest ?? current.bodyDigest,
+      };
+      const proposal = derivedReviewProposal(current, bound);
+      await this.insertReviewRow(client, bound);
       await this.updateProposalRow(client, proposal);
-      return { write: "ok" as const, proposal, review };
-    });
+      return { write: "ok" as const, proposal, review: bound };
+    }, (err) => mapLockedWriteError(err));
     return result.status === "ok" ? result.value : { write: "uncertain" };
   }
 
@@ -196,6 +227,9 @@ export class PostgresProposalRepository implements ProposalRepository {
     const result = await this.transact(async (client) => {
       const current = await this.lockProposal(client, intent.proposalId);
       if (!current) return { write: "not_found" as const };
+      if (!proposalStatusTransitionAllowed(current.status, "pending_review")) {
+        return { write: "illegal_transition" as const };
+      }
       const { rows } = await client.query<{ n: number }>(
         "SELECT COALESCE(MAX(revision_ordinal), 0)::int AS n FROM revisions WHERE proposal_id = $1",
         [intent.proposalId]
@@ -223,6 +257,10 @@ export class PostgresProposalRepository implements ProposalRepository {
       );
       await this.updateProposalRow(client, proposal);
       return { write: "ok" as const, proposal, revision };
+    }, (err) => {
+      const mapped = mapLockedWriteError(err);
+      if (mapped?.write === "illegal_transition") return mapped;
+      return null;
     });
     return result.status === "ok" ? result.value : { write: "uncertain" };
   }
@@ -233,6 +271,34 @@ export class PostgresProposalRepository implements ProposalRepository {
       [id]
     );
     return rows[0] ? mapProposal(rows[0]) : null;
+  }
+
+  private async lockLatestRevision(client: QueryExecutor, proposalId: string): Promise<RevisionRecord | null> {
+    const { rows } = await client.query<{
+      id: string;
+      proposal_id: string;
+      revision_ordinal: number;
+      body: Record<string, unknown>;
+      body_digest: string;
+      actor_id: string;
+      created_at: Date | string;
+    }>(
+      `SELECT * FROM revisions WHERE id = (
+         SELECT id FROM revisions WHERE proposal_id = $1 ORDER BY revision_ordinal DESC LIMIT 1
+       ) FOR UPDATE`,
+      [proposalId]
+    );
+    if (!rows[0]) return null;
+    const row = rows[0];
+    return {
+      id: row.id,
+      proposalId: row.proposal_id,
+      revisionOrdinal: row.revision_ordinal,
+      body: row.body,
+      bodyDigest: row.body_digest,
+      actorId: row.actor_id,
+      createdAt: iso(row.created_at),
+    };
   }
 
   private async insertReviewRow(client: QueryExecutor, row: ReviewRecord): Promise<void> {
@@ -275,7 +341,8 @@ export class PostgresProposalRepository implements ProposalRepository {
   }
 
   private async transact<T>(
-    fn: (client: QueryExecutor) => Promise<T>
+    fn: (client: QueryExecutor) => Promise<T>,
+    mapError?: (err: unknown) => T | null
   ): Promise<{ status: "ok"; value: T } | { status: "conflict" } | { status: "uncertain" }> {
     let client: DedicatedClient | undefined;
     try {
@@ -299,6 +366,8 @@ export class PostgresProposalRepository implements ProposalRepository {
         } catch {
           return { status: "uncertain" };
         }
+        const mapped = mapError?.(err);
+        if (mapped) return { status: "ok", value: mapped };
         if (pgCode(err) === "23505") return { status: "conflict" };
         return { status: "uncertain" };
       }

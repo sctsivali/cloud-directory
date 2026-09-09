@@ -199,9 +199,22 @@ class TestPhase3ProposalSchema(unittest.TestCase):
         self.assertEqual(reviews, 0)
         self.conn.execute(
             """
-            INSERT INTO proposal_reviews (id, proposal_id, reviewer_id, decision)
-            VALUES ('r-ok', 'p-self-var', 'editor-1', 'approve')
+            INSERT INTO revisions (
+              id, proposal_id, revision_ordinal, body, body_digest, actor_id
+            ) VALUES (
+              'rev-ok', 'p-self-var', 1, '{"claimType":"hypervisor"}'::jsonb, %s, 'worker-a'
+            )
+            """,
+            ("d" * 64,),
+        )
+        self.conn.execute(
             """
+            INSERT INTO proposal_reviews (
+              id, proposal_id, reviewer_id, decision, bound_revision_id, bound_body_digest
+            )
+            VALUES ('r-ok', 'p-self-var', 'editor-1', 'approve', 'rev-ok', %s)
+            """,
+            ("d" * 64,),
         )
         self.conn.commit()
         stored = self.conn.execute(

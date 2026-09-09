@@ -2,7 +2,7 @@ import { validateToolInput } from "../../packages/contracts/src/mcp.ts";
 import { bodyDigest } from "./digest.ts";
 import { ERROR_CODE, OUTCOME } from "./errors.ts";
 import { bindPrincipal, rejectModelIdentity } from "./principal.ts";
-import { isRejectedOutcome } from "./proposal-tools.ts";
+import { isRejectedOutcome, validateRevisionReplacement } from "./proposal-tools.ts";
 import { newProposalId, nowIso, statusForReviewDecision, type ProposalRepository } from "./store.ts";
 import type { MutationResult, RejectedOutcome, ReviewRecord } from "./types.ts";
 
@@ -33,6 +33,17 @@ function ambiguous(message: string, idempotencyKey: string): MutationResult {
   };
 }
 
+function writeRejection(write: string): RejectedOutcome | null {
+  if (write === "not_found") return rejected(ERROR_CODE.notFound, "proposal not found");
+  if (write === "self_approval") {
+    return rejected(ERROR_CODE.selfApprovalForbidden, "proposal or revision author cannot self-approve");
+  }
+  if (write === "illegal_transition") {
+    return rejected(ERROR_CODE.illegalStateTransition, "illegal proposal status transition");
+  }
+  return null;
+}
+
 export async function reviewProposal(
   repo: ProposalRepository,
   input: unknown,
@@ -60,12 +71,8 @@ export async function reviewProposal(
     invalidatedAt: null,
   };
   const wrote = await repo.recordReviewAndStatus(review);
-  if (wrote.write === "not_found") {
-    return rejected(ERROR_CODE.notFound, "proposal not found");
-  }
-  if (wrote.write === "self_approval") {
-    return rejected(ERROR_CODE.selfApprovalForbidden, "proposal cannot self-approve");
-  }
+  const denial = writeRejection(wrote.write);
+  if (denial) return denial;
   if (wrote.write === "uncertain") {
     const current = await repo.findById(proposalId);
     const reviews = await repo.listReviews(proposalId);
@@ -73,6 +80,12 @@ export async function reviewProposal(
     if (found && current?.status === statusForReviewDecision(review.decision)) {
       return { outcome: OUTCOME.created, proposal: current, review: found };
     }
+    return ambiguous(
+      "review write was not confirmed; refusing a duplicate mutation",
+      existing.idempotencyKey
+    );
+  }
+  if (wrote.write !== "ok") {
     return ambiguous(
       "review write was not confirmed; refusing a duplicate mutation",
       existing.idempotencyKey
@@ -101,8 +114,6 @@ export async function approveProposal(
     return rejected(ERROR_CODE.selfApprovalForbidden, "proposal cannot self-approve");
   }
   const now = nowIso();
-  const revisions = await repo.listRevisions(proposalId);
-  const latest = revisions[revisions.length - 1];
   const review: ReviewRecord = {
     id: newProposalId(),
     proposalId,
@@ -111,16 +122,12 @@ export async function approveProposal(
     comment: typeof bound.record.comment === "string" ? bound.record.comment : null,
     createdAt: now,
     invalidatedAt: null,
-    boundRevisionId: latest?.id ?? null,
-    boundBodyDigest: existing.bodyDigest,
+    boundRevisionId: null,
+    boundBodyDigest: null,
   };
   const wrote = await repo.recordReviewAndStatus(review);
-  if (wrote.write === "not_found") {
-    return rejected(ERROR_CODE.notFound, "proposal not found");
-  }
-  if (wrote.write === "self_approval") {
-    return rejected(ERROR_CODE.selfApprovalForbidden, "proposal cannot self-approve");
-  }
+  const denial = writeRejection(wrote.write);
+  if (denial) return denial;
   if (wrote.write === "uncertain") {
     const current = await repo.findById(proposalId);
     const reviews = await repo.listReviews(proposalId);
@@ -128,6 +135,12 @@ export async function approveProposal(
     if (found && current?.status === "approved") {
       return { outcome: OUTCOME.created, proposal: current, review: found };
     }
+    return ambiguous(
+      "approval write was not confirmed; refusing a duplicate mutation",
+      existing.idempotencyKey
+    );
+  }
+  if (wrote.write !== "ok") {
     return ambiguous(
       "approval write was not confirmed; refusing a duplicate mutation",
       existing.idempotencyKey
@@ -152,30 +165,36 @@ export async function reviseProposal(
   if (!existing) {
     return rejected(ERROR_CODE.notFound, "proposal not found");
   }
-  const body = bound.record.body as Record<string, unknown>;
+  const replacement = validateRevisionReplacement(existing.toolName, bound.record.body);
+  if (isRejectedOutcome(replacement)) return replacement;
   const now = nowIso();
   const revisionId = newProposalId();
   const wrote = await repo.reviseInvalidateAndUpdate(
     {
       id: revisionId,
       proposalId,
-      body,
+      body: replacement,
       actorId: bound.principal,
       createdAt: now,
     },
     now
   );
-  if (wrote.write === "not_found") {
-    return rejected(ERROR_CODE.notFound, "proposal not found");
-  }
+  const denial = writeRejection(wrote.write);
+  if (denial) return denial;
   if (wrote.write === "uncertain") {
     const current = await repo.findById(proposalId);
     const after = await repo.listRevisions(proposalId);
     const found = after.some((row) => row.id === revisionId);
-    const digest = bodyDigest({ toolName: (current ?? existing).toolName, ...body });
+    const digest = bodyDigest({ toolName: (current ?? existing).toolName, ...replacement });
     if (found && current?.status === "pending_review" && current.bodyDigest === digest) {
       return { outcome: OUTCOME.created, proposal: current };
     }
+    return ambiguous(
+      "revision write was not confirmed; refusing a duplicate mutation",
+      existing.idempotencyKey
+    );
+  }
+  if (wrote.write !== "ok") {
     return ambiguous(
       "revision write was not confirmed; refusing a duplicate mutation",
       existing.idempotencyKey

@@ -1,4 +1,5 @@
 import { bodyDigestFromValue } from "./digest.ts";
+import { verificationReplayAllowed } from "./attempts.ts";
 import {
   PUBLICATION_ERROR,
   type CanonicalState,
@@ -54,10 +55,16 @@ export async function verifyPublication(
 
   const existing = await store.findReceiptById(request.receiptId);
   if (!existing) return rejected(PUBLICATION_ERROR.notFound, "publication receipt not found");
-  if (request.verifierPrincipal === existing.publisherId) {
+  const proposal = await store.findProposal(existing.proposalId);
+  const revision = await store.findRevision(existing.revisionId);
+  if (
+    request.verifierPrincipal === existing.publisherId ||
+    request.verifierPrincipal === proposal?.actorId ||
+    request.verifierPrincipal === revision?.actorId
+  ) {
     return rejected(
       PUBLICATION_ERROR.selfVerifyForbidden,
-      "publisher cannot verify their own publication"
+      "publisher, proposal author, or revision author cannot verify their own publication"
     );
   }
 
@@ -84,13 +91,20 @@ export async function verifyPublication(
   if (wrote.write === "self_verify") {
     return rejected(
       PUBLICATION_ERROR.selfVerifyForbidden,
-      "publisher cannot verify their own publication"
+      "publisher, proposal author, or revision author cannot verify their own publication"
     );
   }
 
   const after = await store.findReceiptById(request.receiptId);
   if (after && after.verificationState === "verified") {
-    return { outcome: "replayed", receipt: after };
+    if (verificationReplayAllowed({
+      verifiedBy: after.verifiedBy,
+      verifierPrincipal: request.verifierPrincipal,
+      judgment: "match",
+    })) {
+      return { outcome: "replayed", receipt: after };
+    }
+    return rejected(PUBLICATION_ERROR.idempotencyConflict, "verification already belongs to a different principal");
   }
   if (after && (after.verificationState === "failed" || after.verificationState === "uncertain")) {
     return {

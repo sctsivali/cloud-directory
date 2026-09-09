@@ -1,6 +1,8 @@
 import { approvalDigest, newLedgerId, publicationRequestDigest } from "./digest.ts";
 import { collectSupersessionAncestors, validateRollbackBindings } from "./rollback.ts";
 import { deriveSubject } from "./subject.ts";
+import { attemptIdentityEqual, publicationReplayAllowed } from "./attempts.ts";
+import { validateStoredProposalBody } from "../proposal-body.ts";
 import {
   PUBLICATION_ERROR,
   type PreparedPublication,
@@ -38,12 +40,21 @@ export function validApproval(reviews: ReviewSnapshot[]): ReviewSnapshot | null 
 
 export function validatePublishBindings(args: {
   request: PublishRequest;
-  proposal: { id: string; actorId: string; bodyDigest: string; status: string };
-  revision: { id: string; proposalId: string; bodyDigest: string };
+  proposal: { id: string; actorId: string; bodyDigest: string; status: string; toolName?: string; body?: Record<string, unknown> };
+  revision: { id: string; proposalId: string; bodyDigest: string; actorId?: string };
   approval: ReviewSnapshot | null;
 }): PublicationOutcome | null {
-  if (args.request.publisherPrincipal === args.proposal.actorId) {
-    return rejectedOutcome(PUBLICATION_ERROR.selfPublishForbidden, "proposal author cannot publish own proposal");
+  if (
+    args.request.publisherPrincipal === args.proposal.actorId ||
+    args.request.publisherPrincipal === args.revision.actorId
+  ) {
+    return rejectedOutcome(PUBLICATION_ERROR.selfPublishForbidden, "proposal or revision author cannot publish own revision");
+  }
+  if (args.proposal.toolName && args.proposal.body) {
+    const bodyCheck = validateStoredProposalBody(args.proposal.toolName, args.proposal.body);
+    if (!bodyCheck.ok) {
+      return rejectedOutcome(PUBLICATION_ERROR.malformedPayload, "published body failed original tool validation");
+    }
   }
   if (args.proposal.status !== "approved" && args.proposal.status !== "published") {
     return rejectedOutcome(PUBLICATION_ERROR.approvalInvalid, "proposal is not approved");
@@ -81,15 +92,15 @@ export function revalidateLockedPublication(args: {
   if (!args.proposal) {
     return { write: "rejected", code: PUBLICATION_ERROR.notFound, message: "proposal not found" };
   }
-  if (args.plan.publisherPrincipal === args.proposal.actorId) {
-    return { write: "self_publish" };
-  }
   if (!args.revision) {
     return {
       write: "rejected",
       code: PUBLICATION_ERROR.revisionMismatch,
       message: "revision not found",
     };
+  }
+  if (args.plan.publisherPrincipal === args.proposal.actorId || args.plan.publisherPrincipal === args.revision.actorId) {
+    return { write: "self_publish" };
   }
   const approval = validApproval(args.reviews);
   const request: PublishRequest = {
@@ -135,34 +146,40 @@ export async function publishRevision(
     return rejectedOutcome(PUBLICATION_ERROR.malformedPayload, "publication request is incomplete");
   }
   const requestDigest = publicationRequestDigest(request);
+  const incomingIdentity = {
+    requestDigest,
+    proposalId: request.proposalId,
+    revisionId: request.expectedRevisionId,
+    publisherId: request.publisherPrincipal,
+  };
   const existingReceipt = await store.findReceiptByIdempotencyKey(request.idempotencyKey);
   if (existingReceipt) {
     const existingAttempt = await store.findAttemptByIdempotencyKey(request.idempotencyKey);
-    if (existingAttempt && existingAttempt.requestDigest !== requestDigest) {
+    if (!publicationReplayAllowed({ receipt: existingReceipt, attempt: existingAttempt, incoming: incomingIdentity })) {
       return rejectedOutcome(PUBLICATION_ERROR.idempotencyConflict, "same idempotency key with an altered publication request");
     }
     const event = await store.findEventByReceiptId(existingReceipt.id);
     if (!event) {
       return ambiguous(request.idempotencyKey, existingAttempt?.id);
     }
-    if (existingAttempt && existingAttempt.requestDigest === requestDigest) {
-      return { outcome: "replayed", receipt: existingReceipt, event };
-    }
-    return rejectedOutcome(PUBLICATION_ERROR.idempotencyConflict, "same idempotency key with an altered publication request");
+    return { outcome: "replayed", receipt: existingReceipt, event };
   }
   const existingAttempt = await store.findAttemptByIdempotencyKey(request.idempotencyKey);
+  if (existingAttempt && !attemptIdentityEqual(existingAttempt, incomingIdentity)) {
+    return rejectedOutcome(PUBLICATION_ERROR.idempotencyConflict, "same idempotency key with an altered publication request");
+  }
   if (existingAttempt && (existingAttempt.state === "uncertain" || existingAttempt.state === "pending")) {
     const laterReceipt = await store.findReceiptByIdempotencyKey(request.idempotencyKey);
     if (laterReceipt) {
       const event = await store.findEventByReceiptId(laterReceipt.id);
-      if (event && existingAttempt.requestDigest === requestDigest) {
+      if (event && publicationReplayAllowed({ receipt: laterReceipt, attempt: existingAttempt, incoming: incomingIdentity })) {
         return { outcome: "replayed", receipt: laterReceipt, event };
+      }
+      if (laterReceipt && !publicationReplayAllowed({ receipt: laterReceipt, attempt: existingAttempt, incoming: incomingIdentity })) {
+        return rejectedOutcome(PUBLICATION_ERROR.idempotencyConflict, "same idempotency key with an altered publication request");
       }
     }
     return ambiguous(request.idempotencyKey, existingAttempt.id);
-  }
-  if (existingAttempt && existingAttempt.requestDigest !== requestDigest) {
-    return rejectedOutcome(PUBLICATION_ERROR.idempotencyConflict, "same idempotency key with an altered publication request");
   }
 
   const proposal = await store.findProposal(request.proposalId);
@@ -261,13 +278,26 @@ export async function publishRevision(
     return rejectedOutcome(PUBLICATION_ERROR.casConflict, "canonical state changed during publish");
   }
   if (wrote.write === "self_publish") {
-    return rejectedOutcome(PUBLICATION_ERROR.selfPublishForbidden, "proposal author cannot publish own proposal");
+    return rejectedOutcome(PUBLICATION_ERROR.selfPublishForbidden, "proposal or revision author cannot publish own revision");
   }
 
   const afterReceipt = await store.findReceiptByIdempotencyKey(request.idempotencyKey);
   if (afterReceipt) {
     const event = await store.findEventByReceiptId(afterReceipt.id);
-    if (event) return { outcome: "replayed", receipt: afterReceipt, event };
+    const afterAttempt = await store.findAttemptByIdempotencyKey(request.idempotencyKey);
+    if (
+      event &&
+      publicationReplayAllowed({
+        receipt: afterReceipt,
+        attempt: afterAttempt,
+        incoming: incomingIdentity,
+      })
+    ) {
+      return { outcome: "replayed", receipt: afterReceipt, event };
+    }
+    if (event) {
+      return rejectedOutcome(PUBLICATION_ERROR.idempotencyConflict, "same idempotency key with an altered publication request");
+    }
   }
   const attempt: PublicationAttempt = {
     id: attemptId,

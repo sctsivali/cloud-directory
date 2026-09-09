@@ -7,6 +7,7 @@ import { approveProposal, reviewProposal, reviseProposal } from "../src/review-t
 import { MemoryProposalRepository, nowIso } from "../src/store.ts";
 import type { ConnectionProvider, QueryExecutor } from "../src/pg-store.ts";
 import { TEST_DATABASE_URL, withMigratedDatabase } from "./pg-harness.ts";
+import { claimRevisionBody } from "./claim-body.ts";
 
 const claim = {
   idempotencyKey: "tx-claim-1",
@@ -110,7 +111,7 @@ describe("in-memory compound transitions stay atomic", () => {
       repo,
       {
         proposalId: created.proposal.id,
-        body: { subjectId: "local-packages", claimType: "storage" },
+        body: claimRevisionBody({ claimType: "storage" }),
       },
       "worker-a"
     );
@@ -144,7 +145,7 @@ describe("in-memory compound transitions stay atomic", () => {
       repo,
       {
         proposalId: created.proposal.id,
-        body: { subjectId: "local-packages", claimType: "storage" },
+        body: claimRevisionBody({ claimType: "storage" }),
       },
       "worker-a"
     );
@@ -255,8 +256,24 @@ describe("PostgreSQL repository acquires a dedicated transaction client", () => 
         return {
           query: async (queryText: string) => {
             queries.push(String(queryText));
-            if (/FOR UPDATE/i.test(String(queryText))) return { rows: [proposalRow] };
-            if (/MAX\(revision_ordinal\)/i.test(String(queryText))) return { rows: [{ n: 1 }] };
+            const text = String(queryText);
+            if (/FROM revisions/i.test(text) && /FOR UPDATE/i.test(text)) {
+              return {
+                rows: [
+                  {
+                    id: "r-lock-1",
+                    proposal_id: proposalRow.id,
+                    revision_ordinal: 1,
+                    body: proposalRow.body,
+                    body_digest: proposalRow.body_digest,
+                    actor_id: "worker-a",
+                    created_at: now,
+                  },
+                ],
+              };
+            }
+            if (/FOR UPDATE/i.test(text)) return { rows: [proposalRow] };
+            if (/MAX\(revision_ordinal\)/i.test(text)) return { rows: [{ n: 1 }] };
             return { rows: [] };
           },
           release() {},
@@ -280,7 +297,7 @@ describe("PostgreSQL repository acquires a dedicated transaction client", () => 
       {
         id: "rev-lock-1",
         proposalId: proposalRow.id,
-        body: { subjectId: "local-packages", claimType: "storage" },
+        body: claimRevisionBody({ claimType: "storage" }),
         actorId: "worker-a",
         createdAt: now,
       },
@@ -369,7 +386,7 @@ describe("PostgreSQL compound transitions stay atomic", { skip: !TEST_DATABASE_U
         repo,
         {
           proposalId: created.proposal.id,
-          body: { subjectId: "local-packages", claimType: "storage" },
+          body: claimRevisionBody({ claimType: "storage" }),
         },
         "worker-a"
       );

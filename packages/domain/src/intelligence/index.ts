@@ -29,12 +29,16 @@ export { factFromLedgerRow, factsFromLedgerRows, ledgerFactRowFromJoin, type Led
 export { buildCountryTimeline, buildProviderTimeline } from "./timeline.ts";
 export {
   INTELLIGENCE_SURFACES,
+  MAX_TREND_FACTS,
+  MAX_TREND_PAGE_SIZE,
+  MAX_TREND_WINDOW_MONTHS,
   buildTrendReport,
   buildTrendSeries,
   diagnosticsFor,
   entityKey,
   enumerateMonths,
   filterFacts,
+  guardTrendQuery,
   isAbsentState,
   isStaleAt,
   isVerified,
@@ -43,6 +47,7 @@ export {
   publicTrendView,
   resolveFactCountry,
   inferObservationWindow,
+  validateObservationWindow,
   windowFromInferred,
   trendsForSurface,
 } from "./trends.ts";

@@ -1,5 +1,5 @@
 import { bodyDigestFromValue } from "../../packages/domain/src/revisions/digest.ts";
-import { applyUncertainAttempt, attemptIdentityEqual, verificationStateAllowed } from "../../packages/domain/src/revisions/attempts.ts";
+import { applyUncertainAttempt, attemptIdentityEqual, publicationReplayAllowed, verificationReplayAllowed, verificationStateAllowed } from "../../packages/domain/src/revisions/attempts.ts";
 import { revalidateLockedPublication } from "../../packages/domain/src/revisions/publish.ts";
 import { validateRollbackBindings } from "../../packages/domain/src/revisions/rollback.ts";
 import { judgeVerification } from "../../packages/domain/src/revisions/verify.ts";
@@ -38,6 +38,21 @@ function pgMessage(err: unknown): string {
   return String((err as { message?: string }).message ?? err);
 }
 
+function pgConstraint(err: unknown): string {
+  return String((err as { constraint?: string }).constraint ?? "");
+}
+
+function pgTable(err: unknown): string {
+  return String((err as { table?: string }).table ?? "");
+}
+
+function isCanonicalUniqueViolation(err: unknown): boolean {
+  return (
+    pgCode(err) === "23505" &&
+    (pgConstraint(err) === "canonical_states_pkey" || pgTable(err) === "canonical_states")
+  );
+}
+
 function asConnectionProvider(provider: ConnectionProvider | InstanceType<typeof Pool>): ConnectionProvider {
   if (typeof provider.connect !== "function" || typeof provider.query !== "function") {
     throw new Error("PostgresPublicationStore requires a Pool or connection provider");
@@ -56,7 +71,7 @@ async function lockCanonicalKey(
   entityId: string,
   fieldName: string
 ): Promise<void> {
-  await client.query("SELECT pg_advisory_xact_lock(('x' || substr(md5($1), 1, 16))::bit(64)::bigint)", [
+  await client.query("SELECT pg_advisory_xact_lock(hashtextextended($1, 0))", [
     `canonical\u001f${entityType}\u001f${entityId}\u001f${fieldName}`,
   ]);
 }
@@ -320,7 +335,24 @@ export class PostgresPublicationStore implements PublicationStore {
       if (existing.rows[0]) {
         const receipt = mapReceipt(existing.rows[0]);
         const eventRows = await client.query("SELECT * FROM change_events WHERE receipt_id = $1", [receipt.id]);
-        if (eventRows.rows[0]) return { write: "replayed" as const, receipt, event: mapEvent(eventRows.rows[0]) };
+        const attemptRows = await client.query("SELECT * FROM publication_attempts WHERE idempotency_key = $1 FOR UPDATE", [
+          plan.idempotencyKey,
+        ]);
+        const attempt = attemptRows.rows[0] ? mapAttempt(attemptRows.rows[0]) : null;
+        const incoming = {
+          requestDigest: plan.requestDigest,
+          proposalId: plan.proposal.id,
+          revisionId: plan.revision.id,
+          publisherId: plan.publisherPrincipal,
+        };
+        if (eventRows.rows[0] && publicationReplayAllowed({ receipt, attempt, incoming })) {
+          return { write: "replayed" as const, receipt, event: mapEvent(eventRows.rows[0]) };
+        }
+        return {
+          write: "rejected" as const,
+          code: PUBLICATION_ERROR.idempotencyConflict,
+          message: "same idempotency key with an altered publication request",
+        };
       }
 
       const sameRevision = await client.query(
@@ -333,7 +365,9 @@ export class PostgresPublicationStore implements PublicationStore {
 
       await lockCanonicalKey(client, plan.entityType, plan.entityId, plan.fieldName);
       const current = await client.query(
-        "SELECT value_digest FROM canonical_states WHERE entity_type = $1 AND entity_id = $2 AND field_name = $3",
+        `SELECT value_digest FROM canonical_states
+         WHERE entity_type = $1 AND entity_id = $2 AND field_name = $3
+         FOR UPDATE`,
         [plan.entityType, plan.entityId, plan.fieldName]
       );
       const currentDigest = current.rows[0] ? String(current.rows[0].value_digest) : null;
@@ -388,6 +422,53 @@ export class PostgresPublicationStore implements PublicationStore {
         }
       }
 
+      const afterDigest = bodyDigestFromValue(plan.afterValue);
+      if (!current.rows[0]) {
+        const inserted = await client.query(
+          `INSERT INTO canonical_states (
+             entity_type, entity_id, field_name, value, value_digest, data_revision, updated_at
+           ) VALUES ($1,$2,$3,$4::jsonb,$5,$6,$7)
+           ON CONFLICT (entity_type, entity_id, field_name) DO NOTHING
+           RETURNING entity_type`,
+          [
+            plan.entityType,
+            plan.entityId,
+            plan.fieldName,
+            JSON.stringify(plan.afterValue),
+            afterDigest,
+            plan.dataRevision,
+            plan.publishedAt,
+          ]
+        );
+        if (!inserted.rows[0]) {
+          return { write: "cas_conflict" as const };
+        }
+      } else {
+        const updated = await client.query(
+          `UPDATE canonical_states SET
+             value = $4::jsonb,
+             value_digest = $5,
+             data_revision = $6,
+             updated_at = $7
+           WHERE entity_type = $1 AND entity_id = $2 AND field_name = $3
+             AND value_digest IS NOT DISTINCT FROM $8
+           RETURNING entity_type`,
+          [
+            plan.entityType,
+            plan.entityId,
+            plan.fieldName,
+            JSON.stringify(plan.afterValue),
+            afterDigest,
+            plan.dataRevision,
+            plan.publishedAt,
+            plan.expectedCanonicalDigest,
+          ]
+        );
+        if (!updated.rows[0]) {
+          return { write: "cas_conflict" as const };
+        }
+      }
+
       await client.query(
         `INSERT INTO publication_attempts (
            id, idempotency_key, request_digest, proposal_id, revision_id, publisher_id, state, created_at, updated_at
@@ -431,48 +512,6 @@ export class PostgresPublicationStore implements PublicationStore {
         };
       }
       const attemptId = existingAttempt.id;
-
-      const afterDigest = bodyDigestFromValue(plan.afterValue);
-      if (!current.rows[0]) {
-        await client.query(
-          `INSERT INTO canonical_states (
-             entity_type, entity_id, field_name, value, value_digest, data_revision, updated_at
-           ) VALUES ($1,$2,$3,$4::jsonb,$5,$6,$7)`,
-          [
-            plan.entityType,
-            plan.entityId,
-            plan.fieldName,
-            JSON.stringify(plan.afterValue),
-            afterDigest,
-            plan.dataRevision,
-            plan.publishedAt,
-          ]
-        );
-      } else {
-        const updated = await client.query(
-          `UPDATE canonical_states SET
-             value = $4::jsonb,
-             value_digest = $5,
-             data_revision = $6,
-             updated_at = $7
-           WHERE entity_type = $1 AND entity_id = $2 AND field_name = $3
-             AND value_digest IS NOT DISTINCT FROM $8
-           RETURNING entity_type`,
-          [
-            plan.entityType,
-            plan.entityId,
-            plan.fieldName,
-            JSON.stringify(plan.afterValue),
-            afterDigest,
-            plan.dataRevision,
-            plan.publishedAt,
-            plan.expectedCanonicalDigest,
-          ]
-        );
-        if (!updated.rows[0]) {
-          return { write: "cas_conflict" as const };
-        }
-      }
 
       await client.query(
         `INSERT INTO publication_receipts (
@@ -568,7 +607,25 @@ export class PostgresPublicationStore implements PublicationStore {
     if (result.status === "conflict") {
       const receipt = await this.findReceiptByIdempotencyKey(plan.idempotencyKey);
       const event = receipt ? await this.findEventByReceiptId(receipt.id) : null;
-      if (receipt && event) return { write: "replayed", receipt, event };
+      const attempt = await this.findAttemptByIdempotencyKey(plan.idempotencyKey);
+      const incoming = {
+        requestDigest: plan.requestDigest,
+        proposalId: plan.proposal.id,
+        revisionId: plan.revision.id,
+        publisherId: plan.publisherPrincipal,
+      };
+      if (receipt && event && publicationReplayAllowed({ receipt, attempt, incoming })) {
+        return { write: "replayed", receipt, event };
+      }
+      if (receipt) {
+        return {
+          write: "rejected",
+          code: PUBLICATION_ERROR.idempotencyConflict,
+          message: "same idempotency key with an altered publication request",
+        };
+      }
+      const taken = await this.getCanonicalState(plan.entityType, plan.entityId, plan.fieldName);
+      if (taken) return { write: "cas_conflict" };
     }
     return { write: "uncertain" };
   }
@@ -583,6 +640,13 @@ export class PostgresPublicationStore implements PublicationStore {
       }
       const receipt = mapReceipt(receiptRows.rows[0]);
       if (plan.verifierPrincipal === receipt.publisherId) return { write: "self_verify" as const };
+      const proposalRows = await client.query("SELECT actor_id FROM proposals WHERE id = $1", [receipt.proposalId]);
+      const revisionRows = await client.query("SELECT actor_id FROM revisions WHERE id = $1", [receipt.revisionId]);
+      const proposalActor = proposalRows.rows[0] ? String(proposalRows.rows[0].actor_id) : null;
+      const revisionActor = revisionRows.rows[0] ? String(revisionRows.rows[0].actor_id) : null;
+      if (plan.verifierPrincipal === proposalActor || plan.verifierPrincipal === revisionActor) {
+        return { write: "self_verify" as const };
+      }
       const eventRows = await client.query("SELECT * FROM change_events WHERE receipt_id = $1 FOR UPDATE", [receipt.id]);
       const event = eventRows.rows[0] ? mapEvent(eventRows.rows[0]) : null;
       await lockCanonicalKey(client, receipt.entityType, receipt.entityId, receipt.fieldName);
@@ -604,7 +668,13 @@ export class PostgresPublicationStore implements PublicationStore {
         : null;
       const judgment = judgeVerification({ receipt, event, canonical, plan });
       if (receipt.verificationState === "verified") {
-        if (judgment === "match") return { write: "replayed" as const, receipt };
+        if (verificationReplayAllowed({
+          verifiedBy: receipt.verifiedBy,
+          verifierPrincipal: plan.verifierPrincipal,
+          judgment,
+        })) {
+          return { write: "replayed" as const, receipt };
+        }
         return {
           write: "rejected" as const,
           code: PUBLICATION_ERROR.verificationMismatch,
@@ -643,7 +713,23 @@ export class PostgresPublicationStore implements PublicationStore {
     if (result.status === "ok") return result.value;
     if (result.status === "conflict") {
       const receipt = await this.findReceiptById(plan.receiptId);
-      if (receipt?.verificationState === "verified") return { write: "replayed", receipt };
+      if (
+        receipt?.verificationState === "verified" &&
+        verificationReplayAllowed({
+          verifiedBy: receipt.verifiedBy,
+          verifierPrincipal: plan.verifierPrincipal,
+          judgment: "match",
+        })
+      ) {
+        return { write: "replayed", receipt };
+      }
+      if (receipt?.verificationState === "verified") {
+        return {
+          write: "rejected",
+          code: PUBLICATION_ERROR.verificationMismatch,
+          message: "publication is already verified; refusing to rewrite history",
+        };
+      }
       if (receipt && (receipt.verificationState === "failed" || receipt.verificationState === "uncertain")) {
         return { write: "mismatch", receipt, state: receipt.verificationState };
       }
@@ -668,6 +754,14 @@ export class PostgresPublicationStore implements PublicationStore {
       }
       try {
         const value = await fn(client);
+        const write =
+          typeof value === "object" && value !== null && "write" in value
+            ? String((value as { write?: unknown }).write)
+            : "";
+        if (write === "cas_conflict" || write === "rejected" || write === "self_publish" || write === "self_verify") {
+          await client.query("ROLLBACK");
+          return { status: "ok", value };
+        }
         await client.query("COMMIT");
         return { status: "ok", value };
       } catch (err) {
@@ -676,8 +770,14 @@ export class PostgresPublicationStore implements PublicationStore {
         } catch {
           return { status: "uncertain" };
         }
-        if (pgMessage(err).includes("proposal author cannot publish own proposal")) {
+        if (
+          pgMessage(err).includes("cannot publish own") ||
+          pgMessage(err).includes("revision author cannot publish")
+        ) {
           return { status: "ok", value: { write: "self_publish" } as T };
+        }
+        if (isCanonicalUniqueViolation(err)) {
+          return { status: "ok", value: { write: "cas_conflict" } as T };
         }
         if (pgCode(err) === "23505") return { status: "conflict" };
         return { status: "uncertain" };

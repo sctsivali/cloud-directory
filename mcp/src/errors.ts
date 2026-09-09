@@ -19,6 +19,7 @@ export const ERROR_CODE = {
   casConflict: "canonical_state_conflict",
   selfVerifyForbidden: "self_verify_forbidden",
   verificationMismatch: "verification_mismatch",
+  illegalStateTransition: "illegal_state_transition",
 } as const;
 
 export class CommitUncertainError extends Error {

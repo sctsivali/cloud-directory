@@ -10,7 +10,7 @@ Status: Phase 7 (2026-09-09). One versioned offering/deployment scoring and reco
 
 | Layer | Today |
 |---|---|
-| Canonical store | PostgreSQL 16 via versioned `migrations/` (schema version 10) |
+| Canonical store | PostgreSQL 16 via versioned `migrations/` (schema version 11) |
 | Web / API | Next.js 15 + TypeScript in `web/` |
 | Scoring | `packages/domain/src/scoring` (`asean-offering-deployment-v1`). SQL SOV/OSS/CONF remain the labeled legacy fallback. |
 | Wizard / shortlist | `recommendWizardRows` (no silent country relaxation). `shortlistProviders` kept as the Phase 0 captured defect. |

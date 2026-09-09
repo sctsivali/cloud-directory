@@ -6,6 +6,7 @@ import { PostgresProposalRepository } from "../src/pg-store.ts";
 import { submitProposal, validateProposalInput } from "../src/proposal-tools.ts";
 import { approveProposal, reviseProposal } from "../src/review-tools.ts";
 import { MemoryProposalRepository } from "../src/store.ts";
+import { claimRevisionBody } from "./claim-body.ts";
 import { TEST_DATABASE_URL, withMigratedDatabase } from "./pg-harness.ts";
 
 const validClaim = {
@@ -100,7 +101,7 @@ describe("in-memory proposal workflow", () => {
     }
     const revised = await reviseProposal(repo, {
       proposalId: created.proposal.id,
-      body: { ...created.proposal.body, value: { text: "KVM-updated" } },
+      body: claimRevisionBody({ value: { text: "KVM-updated" } }),
     }, "worker-a");
     assert.equal(revised.outcome, OUTCOME.created);
     if (revised.outcome === "created") {
@@ -163,7 +164,7 @@ describe("PostgreSQL durable proposals", { skip: !TEST_DATABASE_URL }, () => {
       assert.equal(approved.outcome, OUTCOME.created);
       const revised = await reviseProposal(repo, {
         proposalId: first.proposal.id,
-        body: { subjectId: "local-packages", claimType: "hypervisor" },
+        body: claimRevisionBody({ claimType: "hypervisor" }),
       }, "worker-a");
       assert.equal(revised.outcome, OUTCOME.created);
       if (revised.outcome === "created") {

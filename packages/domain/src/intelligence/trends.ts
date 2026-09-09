@@ -21,6 +21,97 @@ import {
 export { INTELLIGENCE_SURFACES, type IntelligenceSurface };
 
 const MS_DAY = 86_400_000;
+export const MAX_TREND_WINDOW_MONTHS = 120;
+export const MAX_TREND_FACTS = 10_000;
+export const MAX_TREND_PAGE_SIZE = 100;
+const CANONICAL_TIMESTAMP = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
+
+export type TrendWindowValidation =
+  | { ok: true; start: string; end: string; months: number }
+  | { ok: false; code: "invalid_window" | "window_too_large"; message: string };
+
+export type TrendQueryGuard =
+  | { ok: true; window: ObservationWindow | null; limit: number; page: number }
+  | { ok: false; code: string; message: string };
+
+export function canonicalTimestamp(value: string): string | null {
+  if (!CANONICAL_TIMESTAMP.test(value)) return null;
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return null;
+  if (parsed.toISOString() !== value) return null;
+  return value;
+}
+
+export function countEnumeratedMonths(windowStart: string, windowEnd: string): number {
+  const start = new Date(windowStart);
+  const end = new Date(windowEnd);
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return Number.POSITIVE_INFINITY;
+  let year = start.getUTCFullYear();
+  let month = start.getUTCMonth();
+  let n = 0;
+  while (Date.UTC(year, month, 1) < end.getTime()) {
+    n += 1;
+    if (n > MAX_TREND_WINDOW_MONTHS + 1) return n;
+    month += 1;
+    if (month === 12) {
+      month = 0;
+      year += 1;
+    }
+  }
+  return n;
+}
+
+export function validateObservationWindow(start: string, end: string): TrendWindowValidation {
+  const canonicalStart = canonicalTimestamp(start);
+  const canonicalEnd = canonicalTimestamp(end);
+  if (!canonicalStart || !canonicalEnd) {
+    return {
+      ok: false,
+      code: "invalid_window",
+      message: "window timestamps must be canonical UTC ISO-8601",
+    };
+  }
+  if (!(canonicalStart < canonicalEnd)) {
+    return { ok: false, code: "invalid_window", message: "window start must be before end" };
+  }
+  const months = countEnumeratedMonths(canonicalStart, canonicalEnd);
+  if (months < 1) {
+    return { ok: false, code: "invalid_window", message: "window start must be before end" };
+  }
+  if (months > MAX_TREND_WINDOW_MONTHS) {
+    return {
+      ok: false,
+      code: "window_too_large",
+      message: `observation window cannot exceed ${MAX_TREND_WINDOW_MONTHS} months`,
+    };
+  }
+  return { ok: true, start: canonicalStart, end: canonicalEnd, months };
+}
+
+export function guardTrendQuery(args: {
+  windowStart?: string;
+  windowEnd?: string;
+  limit?: number;
+  page?: number;
+}): TrendQueryGuard {
+  const limit = args.limit ?? 50;
+  const page = args.page ?? 1;
+  if (!Number.isInteger(limit) || limit < 1 || limit > MAX_TREND_PAGE_SIZE) {
+    return { ok: false, code: "invalid_limit", message: `limit must be an integer from 1 to ${MAX_TREND_PAGE_SIZE}` };
+  }
+  if (!Number.isInteger(page) || page < 1 || page > 1000) {
+    return { ok: false, code: "invalid_page", message: "page must be an integer from 1 to 1000" };
+  }
+  if (args.windowStart != null || args.windowEnd != null) {
+    if (args.windowStart == null || args.windowEnd == null) {
+      return { ok: false, code: "invalid_window", message: "windowStart and windowEnd are both required" };
+    }
+    const window = validateObservationWindow(args.windowStart, args.windowEnd);
+    if (!window.ok) return window;
+    return { ok: true, window: { start: window.start, end: window.end }, limit, page };
+  }
+  return { ok: true, window: null, limit, page };
+}
 
 export function immutableScopeId(fact: VerifiedFact): string | null {
   if (fact.scopeId) return fact.scopeId;
@@ -49,15 +140,19 @@ export function monthPeriod(iso: string): Period {
 }
 
 export function enumerateMonths(windowStart: string, windowEnd: string): Period[] {
-  const start = monthPeriod(windowStart);
-  const endExclusive = new Date(windowEnd);
-  if (Number.isNaN(endExclusive.getTime())) {
-    throw new Error(`invalid window end: ${windowEnd}`);
+  const checked = validateObservationWindow(windowStart, windowEnd);
+  if (!checked.ok) {
+    throw new Error(checked.message);
   }
+  const start = monthPeriod(checked.start);
+  const endExclusive = new Date(checked.end);
   const periods: Period[] = [];
   let cursor = new Date(start.start);
   while (cursor.getTime() < endExclusive.getTime()) {
     periods.push(monthPeriod(cursor.toISOString()));
+    if (periods.length > MAX_TREND_WINDOW_MONTHS) {
+      throw new Error(`observation window cannot exceed ${MAX_TREND_WINDOW_MONTHS} months`);
+    }
     cursor = new Date(Date.UTC(cursor.getUTCFullYear(), cursor.getUTCMonth() + 1, 1));
   }
   return periods;
@@ -200,8 +295,13 @@ export function inferObservationWindow(
   facts: VerifiedFact[],
   override?: { start?: string; end?: string }
 ): InferredObservationWindow {
-  if (override?.start && override?.end) {
-    return { available: true, start: override.start, end: override.end };
+  if (override?.start || override?.end) {
+    if (!override.start || !override.end) {
+      return { available: false, reason: "insufficient_evidence" };
+    }
+    const checked = validateObservationWindow(override.start, override.end);
+    if (!checked.ok) return { available: false, reason: "insufficient_evidence" };
+    return { available: true, start: checked.start, end: checked.end };
   }
   const verified = facts.filter(isVerified);
   if (verified.length === 0) {
@@ -213,7 +313,15 @@ export function inferObservationWindow(
     if (fact.observedAt < min) min = fact.observedAt;
     if (fact.observedAt > max) max = fact.observedAt;
   }
-  return { available: true, start: monthPeriod(min).start, end: monthPeriod(max).end };
+  let inferred: { start: string; end: string };
+  try {
+    inferred = { start: monthPeriod(min).start, end: monthPeriod(max).end };
+  } catch {
+    return { available: false, reason: "insufficient_evidence" };
+  }
+  const checked = validateObservationWindow(inferred.start, inferred.end);
+  if (!checked.ok) return { available: false, reason: "insufficient_evidence" };
+  return { available: true, start: checked.start, end: checked.end };
 }
 
 export function windowFromInferred(inferred: InferredObservationWindow): ObservationWindow | null {
@@ -487,15 +595,20 @@ function emptyTrendReport(query: IntelligenceQuery): TrendReport {
 
 export function buildTrendSeries(query: IntelligenceQuery, metric: TrendMetric): TrendPoint[] {
   if (!query.window) return [];
+  const checked = validateObservationWindow(query.window.start, query.window.end);
+  if (!checked.ok) return [];
+  if (query.facts.length > MAX_TREND_FACTS) return [];
   const providerScoped = query.facts.filter((fact) => matchesProvider(fact, query.providerId));
   const countryScoped = filterFacts(query);
-  const periods = enumerateMonths(query.window.start, query.window.end);
+  const periods = enumerateMonths(checked.start, checked.end);
   const baselinePrices = baselinePriceBasket(providerScoped, periods, query.countryCode);
   return periods.map((period) => metricValue(metric, period, providerScoped, countryScoped, query, baselinePrices));
 }
 
 export function buildTrendReport(query: IntelligenceQuery): TrendReport {
   if (!query.window) return emptyTrendReport(query);
+  const checked = validateObservationWindow(query.window.start, query.window.end);
+  if (!checked.ok || query.facts.length > MAX_TREND_FACTS) return emptyTrendReport(query);
   const scoped = filterFacts(query);
   const series = {} as Record<TrendMetric, TrendPoint[]>;
   const diagnostics = {} as Record<TrendMetric, SeriesDiagnostics>;
