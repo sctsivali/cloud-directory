@@ -23,6 +23,27 @@ export {
   type ScoreInput,
 } from "./engine.ts";
 export { scoreWithFallback, isLegacyFallback, LEGACY_FALLBACK_LABEL } from "./fallback.ts";
+export {
+  bindDisplayedScore,
+  componentsForRun,
+  displayedScoreFromCanonicalRun,
+  legacySqlDisplayedScore,
+  scoringRunIdentity,
+  selectLatestMatchingScoringRun,
+  selectLatestScoringRun,
+  LEGACY_ALGORITHM_VERSION,
+  LEGACY_DATA_REVISION,
+  LEGACY_METHODOLOGY_ID,
+  LEGACY_RULESET_HASH,
+  LATEST_SCORING_RUN_BY_PROVIDER_SQL,
+  LATEST_SCORING_RUN_FOR_IDENTITY_SQL,
+  SCORE_COMPONENTS_FOR_RUNS_SQL,
+  type DisplayedScore,
+  type LegacySqlScores,
+  type ScoreComponentRow,
+  type ScoringRunIdentity,
+  type ScoringRunRow,
+} from "./provenance.ts";
 export { SURFACES, explainForSurface, toPublicScoreView } from "./surfaces.ts";
 export {
   CANONICAL_METRIC_DESCRIPTORS,

@@ -1,4 +1,4 @@
-import { getArena } from "@/lib/db";
+import { getArena, publicScoreFields } from "@/lib/db";
 import { apiJson, apiOptions } from "@/lib/api-json";
 
 export function OPTIONS() {
@@ -24,9 +24,7 @@ export async function GET() {
       control_plane: p.control_plane,
       tier_count: p.tier_count,
       min_price_usd_month: p.min_price,
-      sov_score: p.sov_score,
-      conf_score: p.conf_score,
-      oss_score: p.oss_score,
+      ...publicScoreFields(p),
     })),
   });
 }

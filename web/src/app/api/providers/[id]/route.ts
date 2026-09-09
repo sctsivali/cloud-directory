@@ -1,4 +1,4 @@
-import { getProvider } from "@/lib/db";
+import { getProvider, publicScoreFields } from "@/lib/db";
 import { apiJson, apiOptions } from "@/lib/api-json";
 
 export function OPTIONS() {
@@ -29,9 +29,7 @@ export async function GET(
       control_plane: p.control_plane,
       container_runtime: p.container_runtime,
     },
-    sov_score: p.sov_score,
-    conf_score: p.conf_score,
-    oss_score: p.oss_score,
+    ...publicScoreFields(p),
     cities: p.cities,
     tiers: p.tiers,
     sources: p.sources,

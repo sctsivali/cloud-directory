@@ -1,6 +1,16 @@
 import { Pool } from "pg";
 import { loadDataRevision } from '../../../packages/domain/src/intelligence/data-revisions.ts';
-import { CURRENT_METHODOLOGY, LEGACY_FALLBACK_LABEL } from "../../../packages/domain/src/scoring/index.ts";
+import {
+  bindDisplayedScore,
+  CURRENT_METHODOLOGY,
+  LATEST_SCORING_RUN_BY_PROVIDER_SQL,
+  SCORE_COMPONENTS_FOR_RUNS_SQL,
+  scoringRunIdentity,
+  selectLatestScoringRun,
+  type DisplayedScore,
+  type ScoreComponentRow,
+  type ScoringRunRow,
+} from "../../../packages/domain/src/scoring/index.ts";
 import {
   selectPublicUpdates,
   PUBLIC_UPDATES_QUERY,
@@ -130,17 +140,152 @@ export type ScoreEngineMeta = {
   data_revision: string;
   uncertainty: number | null;
   fallback_label: string | null;
+  scoring_run_id: string | null;
+  methodology_id: string;
+  offering_id: string | null;
+  deployment_id: string | null;
+  composite: number | null;
+  ranking_lower_bound: number | null;
 };
 
-export function legacyScoreMeta(): ScoreEngineMeta {
+function metaFromDisplayed(displayed: DisplayedScore): ScoreEngineMeta {
   return {
-    score_engine: "legacy-fallback",
-    algorithm_version: CURRENT_METHODOLOGY.algorithmVersion,
-    ruleset_hash: CURRENT_METHODOLOGY.rulesetHash,
-    data_revision: "legacy-public-tables",
-    uncertainty: 1,
-    fallback_label: LEGACY_FALLBACK_LABEL,
+    score_engine: displayed.engine,
+    algorithm_version: displayed.algorithmVersion,
+    ruleset_hash: displayed.rulesetHash,
+    data_revision: displayed.dataRevision,
+    uncertainty: displayed.uncertainty,
+    fallback_label: displayed.fallbackLabel,
+    scoring_run_id: displayed.scoringRunId,
+    methodology_id: displayed.methodologyId,
+    offering_id: displayed.offeringId,
+    deployment_id: displayed.deploymentId,
+    composite: displayed.composite,
+    ranking_lower_bound: displayed.rankingLowerBound,
   };
+}
+
+export function legacyScoreMeta(): ScoreEngineMeta {
+  return metaFromDisplayed(
+    bindDisplayedScore({
+      legacySql: { sov: 0, oss: 0, conf: 0 },
+      runs: [],
+      components: [],
+      identity: null,
+    })
+  );
+}
+
+function applyDisplayedScore<T extends { sov_score: number; oss_score: number; conf_score: number }>(
+  row: T,
+  displayed: DisplayedScore
+): T & ScoreEngineMeta {
+  return {
+    ...row,
+    sov_score: displayed.sov_score,
+    oss_score: displayed.oss_score,
+    conf_score: displayed.conf_score,
+    ...metaFromDisplayed(displayed),
+  };
+}
+
+export function publicScoreFields(row: ScoreEngineMeta & { sov_score: number; oss_score: number; conf_score: number }) {
+  return {
+    sov_score: row.sov_score,
+    oss_score: row.oss_score,
+    conf_score: row.conf_score,
+    score_engine: row.score_engine,
+    algorithm_version: row.algorithm_version,
+    ruleset_hash: row.ruleset_hash,
+    data_revision: row.data_revision,
+    methodology_id: row.methodology_id,
+    scoring_run_id: row.scoring_run_id,
+    offering_id: row.offering_id,
+    deployment_id: row.deployment_id,
+    fallback_label: row.fallback_label,
+    composite: row.composite,
+    ranking_lower_bound: row.ranking_lower_bound,
+    uncertainty: row.uncertainty,
+  };
+}
+
+function asIso(value: unknown): string {
+  return value instanceof Date ? value.toISOString() : String(value);
+}
+
+function mapScoringRun(row: Record<string, unknown>): ScoringRunRow {
+  return {
+    id: String(row.id),
+    offeringId: row.offering_id == null ? null : String(row.offering_id),
+    deploymentId: row.deployment_id == null ? null : String(row.deployment_id),
+    providerId: row.provider_id == null ? null : String(row.provider_id),
+    methodologyId: String(row.methodology_id),
+    algorithmVersion: String(row.algorithm_version),
+    rulesetHash: String(row.ruleset_hash),
+    dataRevision: String(row.data_revision),
+    engine: row.engine === "legacy-fallback" ? "legacy-fallback" : "canonical",
+    composite: row.composite == null ? null : Number(row.composite),
+    rankingLowerBound: row.ranking_lower_bound == null ? null : Number(row.ranking_lower_bound),
+    uncertainty: Number(row.uncertainty),
+    createdAt: asIso(row.created_at),
+  };
+}
+
+function mapScoreComponent(row: Record<string, unknown>): ScoreComponentRow {
+  const codes = row.reason_codes;
+  return {
+    scoringRunId: String(row.scoring_run_id),
+    dimension: String(row.dimension),
+    knowledgeState: String(row.knowledge_state),
+    value: row.value == null ? null : Number(row.value),
+    weight: Number(row.weight),
+    uncertainty: Number(row.uncertainty),
+    reasonCodes: Array.isArray(codes) ? codes.map((item) => String(item)) : [],
+  };
+}
+
+type ScoringPack = { runs: ScoringRunRow[]; components: ScoreComponentRow[] };
+
+function bindProviderRow<T extends { sov_score: number; oss_score: number; conf_score: number }>(
+  row: T,
+  pack: ScoringPack | undefined
+): T & ScoreEngineMeta {
+  const runs = pack?.runs ?? [];
+  const latest = selectLatestScoringRun(runs);
+  return applyDisplayedScore(
+    row,
+    bindDisplayedScore({
+      legacySql: { sov: row.sov_score, oss: row.oss_score, conf: row.conf_score },
+      runs,
+      components: pack?.components ?? [],
+      identity: latest ? scoringRunIdentity(latest) : null,
+    })
+  );
+}
+
+async function loadScoringPackByProvider(ids: string[]): Promise<Map<string, ScoringPack>> {
+  const out = new Map<string, ScoringPack>();
+  if (ids.length === 0) return out;
+  try {
+    const { rows } = await pool.query(LATEST_SCORING_RUN_BY_PROVIDER_SQL, [ids, CURRENT_METHODOLOGY.id]);
+    const runs = (rows as Record<string, unknown>[]).map(mapScoringRun);
+    const runIds = runs.map((run) => run.id);
+    let components: ScoreComponentRow[] = [];
+    if (runIds.length > 0) {
+      const componentRows = await pool.query(SCORE_COMPONENTS_FOR_RUNS_SQL, [runIds]);
+      components = (componentRows.rows as Record<string, unknown>[]).map(mapScoreComponent);
+    }
+    for (const run of runs) {
+      if (!run.providerId) continue;
+      out.set(run.providerId, {
+        runs: [run],
+        components: components.filter((row) => row.scoringRunId === run.id),
+      });
+    }
+  } catch {
+    /* scoring_runs absent: labeled legacy fallback */
+  }
+  return out;
 }
 
 export type ArenaRow = OverviewProvider & {
@@ -175,43 +320,8 @@ export async function getArena(): Promise<ArenaRow[]> {
     GROUP BY p.id, s.data_residency, st.hypervisor, st.orchestration, st.storage, st.container_runtime, st.control_plane, st.open_source, st.source_url
     ORDER BY p.is_local_asean DESC, p.name
   `);
-  const meta = await loadScoreMetaByProvider(rows.map((r) => r.id));
-  return rows.map((row) => ({ ...row, ...(meta.get(row.id) ?? legacyScoreMeta()) }));
-}
-
-async function loadScoreMetaByProvider(ids: string[]): Promise<Map<string, ScoreEngineMeta>> {
-  const out = new Map<string, ScoreEngineMeta>();
-  if (ids.length === 0) return out;
-  try {
-    const { rows } = await pool.query<{
-      provider_id: string;
-      algorithm_version: string;
-      ruleset_hash: string;
-      data_revision: string;
-      uncertainty: number | null;
-      engine: "canonical" | "legacy-fallback";
-    }>(
-      `SELECT DISTINCT ON (provider_id)
-         provider_id, algorithm_version, ruleset_hash, data_revision, uncertainty::float, engine
-       FROM scoring_runs
-       WHERE provider_id = ANY($1)
-       ORDER BY provider_id, created_at DESC`,
-      [ids]
-    );
-    for (const row of rows) {
-      out.set(row.provider_id, {
-        score_engine: row.engine,
-        algorithm_version: row.algorithm_version,
-        ruleset_hash: row.ruleset_hash,
-        data_revision: row.data_revision,
-        uncertainty: row.uncertainty,
-        fallback_label: row.engine === "legacy-fallback" ? LEGACY_FALLBACK_LABEL : null,
-      });
-    }
-  } catch {
-    /* scoring_runs absent: labeled legacy fallback */
-  }
-  return out;
+  const pack = await loadScoringPackByProvider(rows.map((r) => r.id));
+  return rows.map((row) => bindProviderRow(row, pack.get(row.id)));
 }
 
 export type ProviderDetail = {
@@ -342,14 +452,16 @@ export async function getProvider(id: string): Promise<ProviderDetail | null> {
       [id]
     ),
   ]);
-  const meta = await loadScoreMetaByProvider([id]);
-  return {
-    ...p,
-    cities: locs.rows,
-    sources: srcs.rows,
-    tiers: tiers.rows,
-    ...(meta.get(id) ?? legacyScoreMeta()),
-  };
+  const pack = await loadScoringPackByProvider([id]);
+  return bindProviderRow(
+    {
+      ...p,
+      cities: locs.rows,
+      sources: srcs.rows,
+      tiers: tiers.rows,
+    },
+    pack.get(id)
+  );
 }
 
 export type BuildingRow = {
