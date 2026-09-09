@@ -1,5 +1,5 @@
 {
-  "schema_version": 13,
+  "schema_version": 14,
   "migrations": [
     {
       "version": 1,
@@ -65,6 +65,11 @@
       "version": 13,
       "filename": "0013_immutable_data_revisions.sql",
       "checksum": "4b1a8093d8e7cb44e262fe4e393a65a1f4639e4d40871fb2644bb9a2302ac6c6"
+    },
+    {
+      "version": 14,
+      "filename": "0014_structured_price_terms.sql",
+      "checksum": "1efdad08ebfa696ce611e0063937807f47bb7d77a5004feef9bafdfa7739e6b6"
     }
   ]
 }

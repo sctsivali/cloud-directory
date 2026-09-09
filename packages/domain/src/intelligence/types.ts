@@ -97,6 +97,8 @@ export type VerifiedFact = {
   methodologyVersion: string;
   dataRevision: string;
   comparable?: boolean;
+  priceTerms?: Record<string, unknown> | null;
+  basketFingerprint?: string | null;
   amount?: number | null;
   currency?: string | null;
   billingUnit?: string | null;

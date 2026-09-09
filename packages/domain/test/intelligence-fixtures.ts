@@ -15,6 +15,14 @@ export function makeFact(partial: Omit<VerifiedFact, "methodologyVersion" | "dat
     publishedAt: partial.publishedAt ?? partial.observedAt,
     verifiedAt: partial.publishedAt ?? partial.observedAt,
     ...partial,
+    // Synthetic basket terms are explicit fixture data, not production defaults.
+    ...(partial.fieldName === 'price' ? { afterValue: {
+      billingUnit: 'month', commitmentMonths: 0, renewalAmount: 10,
+      tax: 'exclusive', region: 'fixture-region', deploymentId: 'fixture-deployment',
+      vcpu: 2, ramGb: 4, storageGb: 40, storageType: 'ssd',
+      comparable: partial.comparable, promo: partial.promo ?? false,
+      ...(partial.afterValue as Record<string, unknown>),
+    } } : {}),
   };
 }
 

@@ -1,3 +1,4 @@
+import { priceTerms, basketFingerprint } from './price-terms.ts';
 import { ledgerState } from "../revisions/state.ts";
 import type { ChangeType, VerificationState, VerifiedFact } from "./types.ts";
 import { INTELLIGENCE_METHODOLOGY_ID } from "./types.ts";
@@ -89,10 +90,12 @@ export function factFromLedgerRow(row: LedgerFactRow): VerifiedFact {
     beforeValue: row.beforeValue,
     methodologyVersion: row.methodologyVersion ?? INTELLIGENCE_METHODOLOGY_ID,
     dataRevision: row.dataRevision ?? "unspecified",
-    comparable: valueSensitivity === "redacted" ? false : readBool(after, "comparable"),
+    priceTerms: valueSensitivity === 'redacted' ? null : priceTerms(after),
+    basketFingerprint: valueSensitivity === 'redacted' ? null : basketFingerprint(after),
+    comparable: valueSensitivity !== 'redacted' && priceTerms(after).comparable,
     amount: valueSensitivity === "redacted" ? null : readNumber(after, "amount"),
     currency: readString(after, "currency"),
-    billingUnit: readString(after, "billingUnit"),
+    billingUnit: priceTerms(after).billing_unit as string | null,
     promo: readBool(after, "promo"),
     technologySlug: readString(after, "slug") ?? readString(after, "technologySlug"),
     facilityId: readString(after, "facilityId") ?? (row.entityType === "facility" ? row.entityId : null),

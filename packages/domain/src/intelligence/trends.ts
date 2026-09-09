@@ -1,3 +1,4 @@
+import { priceTerms, basketFingerprint } from './price-terms.ts';
 import { canonicalizeCountryCode, extractCountryFromValue } from "./countries.ts";
 import { INTELLIGENCE_RULESET, INTELLIGENCE_RULESET_HASH } from "./methodology.ts";
 import { evaluateForecastEligibility } from "./gates.ts";
@@ -268,10 +269,7 @@ function currencyOf(fact: VerifiedFact): string | null {
 }
 
 function isComparablePrice(fact: VerifiedFact): boolean {
-  if (fact.promo) return false;
-  if (fact.comparable === false) return false;
-  const amount = amountOf(fact);
-  return amount != null && amount > 0 && Boolean(currencyOf(fact));
+  return fact.valueSensitivity !== 'redacted' && fact.comparable === true && priceTerms(fact.afterValue).comparable;
 }
 
 function hhi(counts: Map<string, number>): number | null {
@@ -391,7 +389,7 @@ function metricValue(
   providerScoped: VerifiedFact[],
   countryScoped: VerifiedFact[],
   query: IntelligenceQuery,
-  baselinePrices: Map<string, { amount: number; currency: string }>
+  baselinePrices: Map<string, { amount: number; currency: string; fingerprint: string | null }>
 ): TrendPoint {
   const asOf = period.end;
   const state = latestStateByEntity(providerScoped, asOf);
@@ -484,19 +482,19 @@ function metricValue(
   }
   if (metric === "comparable_basket_price_index") {
     const prices = present.filter((row) => (row.fieldName === "price" || row.entityType === "price") && isComparablePrice(row));
-    const current = new Map<string, { amount: number; currency: string; revisionId: string }>();
+    const current = new Map<string, { amount: number; currency: string; revisionId: string; fingerprint: string | null }>();
     for (const row of prices) {
       const amount = amountOf(row);
       const currency = currencyOf(row);
       if (amount == null || !currency) continue;
-      current.set(row.entityId, { amount, currency, revisionId: row.revisionId });
+      current.set(row.entityId, { amount, currency, revisionId: row.revisionId, fingerprint: basketFingerprint(row.afterValue) });
     }
     const ratios: number[] = [];
     const members: string[] = [];
     for (const [id, base] of baselinePrices) {
       const now = current.get(id);
       if (!now) continue;
-      if (INTELLIGENCE_RULESET.comparableBasket.requireSameCurrency && now.currency !== base.currency) continue;
+      if (now.currency !== base.currency || !now.fingerprint || now.fingerprint !== base.fingerprint) continue;
       ratios.push(now.amount / base.amount);
       members.push(id);
     }
@@ -513,19 +511,19 @@ function baselinePriceBasket(
   providerScoped: VerifiedFact[],
   periods: Period[],
   countryCode?: string | null
-): Map<string, { amount: number; currency: string }> {
+): Map<string, { amount: number; currency: string; fingerprint: string | null }> {
   if (periods.length === 0) return new Map();
   const first = periods[0]!;
   const state = latestStateByEntity(providerScoped, first.end);
   const present = presentFacts(state, first.end).filter((row) => countryMatches(row, countryCode));
-  const basket = new Map<string, { amount: number; currency: string }>();
+  const basket = new Map<string, { amount: number; currency: string; fingerprint: string | null }>();
   for (const row of present) {
     if (row.fieldName !== "price" && row.entityType !== "price") continue;
     if (!isComparablePrice(row)) continue;
     const amount = amountOf(row);
     const currency = currencyOf(row);
     if (amount == null || !currency) continue;
-    basket.set(row.entityId, { amount, currency });
+    basket.set(row.entityId, { amount, currency, fingerprint: basketFingerprint(row.afterValue) });
   }
   return basket;
 }
