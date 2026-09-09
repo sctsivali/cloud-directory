@@ -1,6 +1,6 @@
 export const MCP_CONTRACT_NAME = "cloud-directory-mcp";
-export const MCP_CONTRACT_VERSION = "1.0.0";
-export const MCP_SCHEMA_VERSION = 8;
+export const MCP_CONTRACT_VERSION = "1.2.0";
+export const MCP_SCHEMA_VERSION = 9;
 
 export const CAPABILITIES = [
   "read",
@@ -9,6 +9,7 @@ export const CAPABILITIES = [
   "review",
   "approve",
   "publish",
+  "verify",
 ] as const;
 
 export type Capability = (typeof CAPABILITIES)[number];
@@ -43,6 +44,8 @@ export const PUBLICATION_TOOLS = [
   "directory.publish_change",
 ] as const;
 
+export const VERIFICATION_TOOLS = ["directory.verify_publication"] as const;
+
 export const FORBIDDEN_TOOL_NAMES = [
   "sql.query",
   "sql.execute",
@@ -56,12 +59,14 @@ export type ReadToolName = (typeof READ_TOOLS)[number];
 export type ProposalToolName = (typeof PROPOSAL_TOOLS)[number];
 export type ReviewToolName = (typeof REVIEW_TOOLS)[number];
 export type PublicationToolName = (typeof PUBLICATION_TOOLS)[number];
+export type VerificationToolName = (typeof VERIFICATION_TOOLS)[number];
 export type WorkflowReadToolName = (typeof WORKFLOW_READ_TOOLS)[number];
 export type Phase3ToolName =
   | ReadToolName
   | ProposalToolName
   | ReviewToolName
   | WorkflowReadToolName;
+export type AvailableToolName = Phase3ToolName | PublicationToolName | VerificationToolName;
 
 export type JsonSchemaType = "string" | "number" | "integer" | "boolean" | "object" | "array";
 
@@ -383,16 +388,69 @@ export const TOOL_DEFINITIONS: readonly ToolDefinition[] = [
   {
     name: "directory.publish_revision",
     capability: "publish",
-    description: "Reserved publication tool. Unavailable in Phase 3.",
+    description: "Publish an approved proposal revision as an append-only receipt and change event.",
     phase3Available: false,
-    inputSchema: objectSchema(["proposalId"], { proposalId: stringField }),
+    inputSchema: objectSchema(
+      [
+        "proposalId",
+        "expectedRevisionId",
+        "expectedBodyDigest",
+        "idempotencyKey",
+        "methodologyVersion",
+        "dataRevision",
+      ],
+      {
+        proposalId: stringField,
+        expectedRevisionId: stringField,
+        expectedBodyDigest: stringField,
+        idempotencyKey: stringField,
+        methodologyVersion: stringField,
+        dataRevision: stringField,
+        expectedCanonicalDigest: optionalString,
+        rollbackOfReceiptId: optionalString,
+      }
+    ),
   },
   {
     name: "directory.publish_change",
     capability: "publish",
-    description: "Reserved publication tool. Unavailable in Phase 3.",
+    description: "Publish a specific approved revision, including rollback/correction events.",
     phase3Available: false,
-    inputSchema: objectSchema(["revisionId"], { revisionId: stringField }),
+    inputSchema: objectSchema(
+      [
+        "revisionId",
+        "expectedRevisionId",
+        "expectedBodyDigest",
+        "idempotencyKey",
+        "methodologyVersion",
+        "dataRevision",
+      ],
+      {
+        revisionId: stringField,
+        expectedRevisionId: stringField,
+        expectedBodyDigest: stringField,
+        idempotencyKey: stringField,
+        methodologyVersion: stringField,
+        dataRevision: stringField,
+        expectedCanonicalDigest: optionalString,
+        rollbackOfReceiptId: optionalString,
+      }
+    ),
+  },
+  {
+    name: "directory.verify_publication",
+    capability: "verify",
+    description: "Verify a published receipt against an authoritative canonical readback. Requires a different principal than the publisher.",
+    phase3Available: false,
+    inputSchema: objectSchema(
+      ["receiptId", "eventId", "expectedValueDigest", "expectedDataRevision"],
+      {
+        receiptId: stringField,
+        eventId: stringField,
+        expectedValueDigest: stringField,
+        expectedDataRevision: stringField,
+      }
+    ),
   },
 ];
 
@@ -421,10 +479,24 @@ export function isPhase3AvailableTool(name: string): boolean {
   return getToolDefinition(name)?.phase3Available === true;
 }
 
+export function isPublicationTool(name: string): boolean {
+  return (PUBLICATION_TOOLS as readonly string[]).includes(name);
+}
+
+export function isVerificationTool(name: string): boolean {
+  return (VERIFICATION_TOOLS as readonly string[]).includes(name);
+}
+
+export function isAvailableTool(name: string): boolean {
+  if (isPhase3AvailableTool(name)) return true;
+  return isPublicationTool(name) || isVerificationTool(name);
+}
+
 export function capabilityForTool(name: string): Capability {
   const found = getToolDefinition(name);
   if (found) return found.capability;
   if ((PUBLICATION_TOOLS as readonly string[]).includes(name)) return "publish";
+  if ((VERIFICATION_TOOLS as readonly string[]).includes(name)) return "verify";
   throw new Error(`unknown tool: ${name}`);
 }
 
@@ -465,6 +537,8 @@ const FORBIDDEN_INPUT_KEYS = [
   "queryText",
   "actorId",
   "reviewerId",
+  "publisherId",
+  "verifierId",
 ] as const;
 
 export function validateToolInput(name: string, input: unknown): ContractValidationResult {
@@ -472,7 +546,7 @@ export function validateToolInput(name: string, input: unknown): ContractValidat
   if (!tool) {
     return { ok: false, errors: [`unknown tool: ${name}`] };
   }
-  if (!tool.phase3Available) {
+  if (!isAvailableTool(name)) {
     return { ok: false, errors: [`tool unavailable: ${name}`] };
   }
   if (!isPlainObject(input)) {
@@ -508,7 +582,7 @@ export function validateToolInput(name: string, input: unknown): ContractValidat
 }
 
 export function toolsRequiringCapability(capability: Capability): string[] {
-  return TOOL_DEFINITIONS.filter(
-    (tool) => tool.phase3Available && tool.capability === capability
-  ).map((tool) => tool.name);
+  return TOOL_DEFINITIONS.filter((tool) => isAvailableTool(tool.name) && tool.capability === capability).map(
+    (tool) => tool.name
+  );
 }

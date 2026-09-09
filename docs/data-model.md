@@ -1,6 +1,6 @@
 # Data model
 
-Status: Phase 5. Public legacy tables from `migrations/0001_legacy_baseline.sql` remain the display grain when canonical offering/deployment subjects are missing. Migrations 0002–0007 add catalog, evidence, proposals, and collection tables. Migration 0008 adds methodology versions and scoring runs. No production ranking cutover is authorized by this document.
+Status: Phase 6. Public legacy tables from `migrations/0001_legacy_baseline.sql` remain the display grain when canonical offering/deployment subjects are missing. Migrations 0002–0007 add catalog, evidence, proposals, and collection tables. Migration 0008 adds methodology versions and scoring runs. Migration 0009 adds the append-only publication ledger and `change_events` used by `/updates`. No production ranking cutover is authorized by this document.
 
 ## Public legacy tables (unchanged grain)
 
@@ -26,7 +26,7 @@ Status: Phase 5. Public legacy tables from `migrations/0001_legacy_baseline.sql`
 
 ### Transparency
 
-`directory_updates` is still a hand-written or script-inserted feed.
+`directory_updates` remains the public fallback feed when no published `change_events` exist. Generic script insertion into that table is retired.
 
 ## Phase 2 canonical tables
 
@@ -99,7 +99,16 @@ Workers persist receipts. They submit MCP proposals with status `pending_review`
 - `scoring_runs` — one run per offering/deployment (or labeled fallback). Stores `data_revision`, `recommendation_group`, `composite` (nullable), `ranking_lower_bound` (nullable; unknown not zeroed on composite), `uncertainty`, `reason_codes`, `engine`.
 - `score_components` — per-dimension `knowledge_state` and nullable `value`. Unknown/conflicting are stored as NULL, not zero.
 
-Publication receipts, trends, and outlooks remain future work.
+Publication receipts, `change_events`, and `/updates` are generated in Phase 6. Trends and outlooks remain future work.
+
+## Phase 6 publication ledger (`0009_publication_ledger.sql`)
+
+- `canonical_states` — compare-and-set current typed value per entity/field, with `value_digest` and `data_revision`.
+- `publication_attempts` — durable pending/committed/uncertain outcomes. Attempt identity (request digest, proposal, revision, publisher) is immutable. States are monotonic; committed/reconciled rows never regress to uncertain. Ambiguous commits are reconcilable and never blind-retried.
+- `publication_receipts` — append-only publication record bound to exact revision/body digest, approval digest, evidence snapshot IDs, methodology version, data revision, publisher principal, and idempotency key. Historical columns cannot be rewritten. `verification_state` starts at `pending` and is set to `verified` only after a separate post-public readback.
+- `change_events` — public transparency rows generated from receipts: safe old/new values, source/evidence, detected/observed/reviewed/published times, revision link, and correction provenance.
+- `proposal_reviews.bound_revision_id` / `bound_body_digest` — approval is valid only for that exact revision.
+- Rollback inserts a new receipt and event only when the original receipt/event subject equals the rollback target, the current canonical digest equals the original after-value digest, and the supersession chain is valid. It does not delete prior rows. The proposal author cannot publish their own proposal. The publisher cannot verify their own publication.
 
 ## Sanitized acceptance corpus
 

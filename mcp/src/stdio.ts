@@ -3,6 +3,7 @@ import { requirePrincipalId } from "./principal.ts";
 import { parseCapabilities, createDirectoryMcpServer, connectStdio } from "./server.ts";
 import { PostgresDirectoryReader } from "./read-tools.ts";
 import { PostgresProposalRepository } from "./pg-store.ts";
+import { PostgresPublicationStore } from "./pg-publication.ts";
 
 const principalId = requirePrincipalId(process.env.MCP_PRINCIPAL_ID);
 
@@ -28,6 +29,7 @@ const handle = createDirectoryMcpServer({
   context: {
     reader: new PostgresDirectoryReader(pool),
     repo: new PostgresProposalRepository(pool),
+    publication: new PostgresPublicationStore(pool),
     principalId,
   },
 });

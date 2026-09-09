@@ -1,14 +1,14 @@
-# MCP contract (Phase 3, used by Phase 4 workers; Phase 5 explain_score)
+# MCP contract (Phase 3–6)
 
-Status: Phase 4 workers submit through this same proposal-only contract. Phase 5 points `directory.explain_score` at the shared scoring engine (or a labeled legacy fallback). Built-in Model Context Protocol server for `guide.cloudin.asia`. AI clients may read the directory and submit typed proposals. They cannot publish, execute SQL, or rewrite canonical facts.
+Status: Phase 4 workers submit through this same proposal-only contract. Phase 5 points `directory.explain_score` at the shared scoring engine (or a labeled legacy fallback). Phase 6 registers publication tools only for sessions that explicitly include the `publish` capability. Built-in Model Context Protocol server for `guide.cloudin.asia`. AI clients may read the directory and submit typed proposals. Default, read, and propose sessions cannot publish, execute SQL, or rewrite canonical facts.
 
 ## Contract identity
 
 | Field | Value |
 |---|---|
 | Name | `cloud-directory-mcp` |
-| Contract version | `1.0.0` |
-| Backing schema version | `8` (`migrations/0008_scoring_runs.sql`) |
+| Contract version | `1.2.0` |
+| Backing schema version | `9` (`migrations/0009_publication_ledger.sql`) |
 | Transport | stdio (official MCP TypeScript SDK) or in-process for tests |
 
 This contract is separate from the public HTTP API and from any WordPress/editorial MCP.
@@ -17,14 +17,15 @@ This contract is separate from the public HTTP API and from any WordPress/editor
 
 Server-side only. A client cannot escalate by declaring extra MCP features.
 
-| Capability | Phase 3 |
+| Capability | Availability |
 |---|---|
 | `read` | Available. Discovery includes the read tools below. |
 | `collect` | Reserved on MCP. Collection runs in `workers/` with injected DNS/HTTP. Workers submit through a transport-level MCP proposal client. Identity is the server-bound principal (`MCP_PRINCIPAL_ID`), not a worker `actor_id`. |
 | `propose` | Available. Typed proposal tools only. |
 | `review` | Available. Non-approval review decisions. |
 | `approve` | Available. Approval cannot be performed by the proposer. |
-| `publish` | **Unavailable.** Publication tools stay unreachable even if a session lists `publish`. |
+| `publish` | **Explicit only.** Publication tools are discovered and invocable solely when the session lists `publish`. Default, read, and propose sessions never see them. Handler-level auth rejects missing `publish` even if dispatch is bypassed. |
+| `verify` | **Explicit only.** `directory.verify_publication` is discovered and invocable solely when the session lists `verify`. Publish sessions do not inherit it. The verifier principal must differ from the publisher. |
 
 Discovery lists only tools the session is authorized to use **and** that are available in this phase. Handler-level enforcement rejects hidden names before any tool handler runs.
 
@@ -40,7 +41,7 @@ Discovery lists only tools the session is authorized to use **and** that are ava
 - `directory.get_quality_report`
 - `directory.get_proposal` (status of a durable proposal)
 
-Read tools do not write canonical facts or `/updates`. `explain_score` uses the same offering/deployment engine as Arena, wizard, compare, provider, and methodology. Optional `offeringId` / `deploymentId` select the subject. When no canonical subject exists, the tool returns a payload labeled `legacy-fallback`.
+Read tools do not write canonical facts or `/updates`. `explain_score` uses the same offering/deployment engine as Arena, wizard, compare, provider, and methodology. Optional `offeringId` / `deploymentId` select the subject. When no canonical subject exists, the tool returns a payload labeled `legacy-fallback`. Public `/updates` is generated from published `change_events`.
 
 ## Proposal-only mutation tools
 
@@ -62,25 +63,26 @@ There is no generic SQL tool and no arbitrary field-mutation tool. Phase 4 worke
 - `directory.review_proposal` — `reject` or `request_changes`
 - `directory.approve_proposal` — forbidden when the bound `principalId` equals the proposer
 
-Approvals are invalidated when the proposal body changes.
+Approvals are invalidated when the proposal body changes. An approval is bound to the exact revision id and body digest.
 
-## Publication tools (unavailable)
+## Publication tools (explicit publish capability)
 
-Reserved names, not registered, not reachable in Phase 3:
+Registered only for sessions with `publish`. Direct invocation from read/propose sessions is rejected before handler execution. Handler-level auth also requires `publish`.
 
-- `directory.publish_revision`
-- `directory.publish_change`
+- `directory.publish_revision` — publish an approved proposal revision
+- `directory.publish_change` — publish a specific approved revision, including rollback/correction
+- `directory.verify_publication` — post-public authoritative readback; requires `verify` and a different canonical principal than the publisher
 
-Direct invocation by name is rejected before handler execution.
+A publication is one serialized atomic transaction with row locks and canonical-state compare-and-set. After `SELECT proposal FOR UPDATE` it re-reads and verifies current proposal status/body digest, the exact revision, the latest valid approval bound to that revision/body, and publisher separation before any canonical/receipt/event write. It binds the exact approved revision and body digest, evidence snapshot IDs, reviewer/approval digest, methodology version, data revision, publisher principal, idempotency key, publication receipt, and verification state. New receipts start at `verification_state=pending`. `directory.verify_publication` atomically transitions `pending` to `verified` when receipt, event, canonical value digest, and data revision match; mismatches are recorded as `failed` or `uncertain` without rewriting published history. The proposal author cannot publish their own proposal. Ambiguous commit outcomes are durable and must be reconciled; they are never blind-retried. `publication_attempts` identities are immutable and states are monotonic: committed/reconciled rows never regress to uncertain. Rollback appends a new approved revision and change event only when the original receipt/event subject equals the rollback target, the current canonical digest equals the original after-value digest, and the supersession chain is valid; it never deletes history.
 
 ## Idempotency and outcomes
 
-Proposal tools require `idempotencyKey`. Actor, reviewer, and revision identity come from a non-model-controlled `principalId` on `ToolContext` / server configuration (`MCP_PRINCIPAL_ID` is required for stdio). The value must be a strict canonical lowercase ASCII identifier. Model-supplied `actorId` and `reviewerId` fields are rejected. PostgreSQL also rejects non-canonical `proposals.actor_id`, `revisions.actor_id`, and `proposal_reviews.reviewer_id`. The server stores a SHA-256 digest of the canonical proposal body.
+Proposal tools require `idempotencyKey`. Actor, reviewer, publisher, and revision identity come from a non-model-controlled `principalId` on `ToolContext` / server configuration (`MCP_PRINCIPAL_ID` is required for stdio). The value must be a strict canonical lowercase ASCII identifier. Model-supplied `actorId`, `reviewerId`, and `publisherId` fields are rejected. PostgreSQL also rejects non-canonical `proposals.actor_id`, `revisions.actor_id`, `proposal_reviews.reviewer_id`, and `publication_receipts.publisher_id`. The server stores a SHA-256 digest of the canonical proposal body and of the publication request. Model-supplied `verifierId` is rejected.
 
 | Situation | Outcome |
 |---|---|
 | New key | `created` |
-| Same key and same digest | `replayed` (same proposal id) |
+| Same key and same digest | `replayed` (same proposal or receipt id) |
 | Same key and different body | `rejected` / `idempotency_conflict` |
 | Malformed or extra fields | `rejected` / `malformed_payload` |
 | Commit cannot be confirmed | `ambiguous` — never insert a second row |
@@ -91,5 +93,5 @@ Clients must not retry an insert after `ambiguous`. They should read by idempote
 
 - Collectors and extractors (Phase 4)
 - Replacing public ranking (Phase 5)
-- Generating `/updates` from revisions (Phase 6)
+- Trend products and outlooks (Phase 7)
 - Granting any model generic SQL

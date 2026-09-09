@@ -57,9 +57,13 @@ EXPECTED_TABLES = (
     "methodology_versions",
     "scoring_runs",
     "score_components",
+    "canonical_states",
+    "publication_attempts",
+    "publication_receipts",
+    "change_events",
 )
 
-CURRENT_VERSIONS = [1, 2, 3, 4, 5, 6, 7, 8]
+CURRENT_VERSIONS = [1, 2, 3, 4, 5, 6, 7, 8, 9]
 
 BUILDING_PATCH_COLUMNS = (
     "facilities",

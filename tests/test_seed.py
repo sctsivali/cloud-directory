@@ -109,3 +109,11 @@ class TestDailyRefreshPaths(unittest.TestCase):
         src = (ROOT / "scripts" / "daily_refresh.py").read_text()
         self.assertIn("workers.orchestrator", src)
         self.assertIn("--legacy-direct-write", src)
+
+    def test_log_update_does_not_insert_directory_updates(self):
+        src = (ROOT / "scripts" / "daily_refresh.py").read_text()
+        import inspect
+        body = inspect.getsource(daily_refresh.log_update)
+        self.assertNotIn("INSERT INTO directory_updates", body)
+        self.assertNotIn("apply_sql", body)
+        self.assertIn("change_events", body)

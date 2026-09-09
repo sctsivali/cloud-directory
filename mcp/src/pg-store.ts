@@ -117,6 +117,8 @@ export class PostgresProposalRepository implements ProposalRepository {
       comment: string | null;
       created_at: Date | string;
       invalidated_at: Date | string | null;
+      bound_revision_id: string | null;
+      bound_body_digest: string | null;
     }>("SELECT * FROM proposal_reviews WHERE proposal_id = $1 ORDER BY created_at", [proposalId]);
     return rows.map((row) => ({
       id: row.id,
@@ -126,6 +128,8 @@ export class PostgresProposalRepository implements ProposalRepository {
       comment: row.comment,
       createdAt: iso(row.created_at),
       invalidatedAt: row.invalidated_at ? iso(row.invalidated_at) : null,
+      boundRevisionId: row.bound_revision_id ? String(row.bound_revision_id) : null,
+      boundBodyDigest: row.bound_body_digest ? String(row.bound_body_digest) : null,
     }));
   }
 
@@ -234,8 +238,9 @@ export class PostgresProposalRepository implements ProposalRepository {
   private async insertReviewRow(client: QueryExecutor, row: ReviewRecord): Promise<void> {
     await client.query(
       `INSERT INTO proposal_reviews (
-         id, proposal_id, reviewer_id, decision, comment, created_at, invalidated_at
-       ) VALUES ($1,$2,$3,$4,$5,$6,$7)`,
+         id, proposal_id, reviewer_id, decision, comment, created_at, invalidated_at,
+         bound_revision_id, bound_body_digest
+       ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
       [
         row.id,
         row.proposalId,
@@ -244,6 +249,8 @@ export class PostgresProposalRepository implements ProposalRepository {
         row.comment,
         row.createdAt,
         row.invalidatedAt,
+        row.boundRevisionId ?? null,
+        row.boundBodyDigest ?? null,
       ]
     );
   }

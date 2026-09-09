@@ -341,16 +341,12 @@ def snap(pid: str) -> str:
 
 def log_update(kind: str, pid: str, title_id: str, title_en: str,
                summary_id: str, summary_en: str, href: str) -> None:
-    sql = (
-        "INSERT INTO directory_updates "
-        "(kind, provider_id, title_id, title_en, summary_id, summary_en, href) VALUES ("
-        f"{sql_lit(kind)},{sql_lit(pid)},{sql_lit(title_id)},{sql_lit(title_en)},"
-        f"{sql_lit(summary_id)},{sql_lit(summary_en)},{sql_lit(href)});"
+    warnings.warn(
+        "generic directory_updates insertion is retired; public updates come from published change_events",
+        DeprecationWarning,
+        stacklevel=2,
     )
-    p = TMP / "log-update.sql"
-    TMP.mkdir(parents=True, exist_ok=True)
-    p.write_text(sql)
-    apply_sql(p)
+    return
 
 
 def refresh_known() -> list[str]:

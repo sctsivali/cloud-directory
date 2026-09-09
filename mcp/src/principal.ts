@@ -3,7 +3,7 @@ import type { RejectedOutcome } from "./types.ts";
 
 export const PRINCIPAL_ID_PATTERN = /^[a-z][a-z0-9_-]{0,63}$/;
 
-export const MODEL_IDENTITY_FIELDS = ["actorId", "reviewerId"] as const;
+export const MODEL_IDENTITY_FIELDS = ["actorId", "reviewerId", "publisherId", "verifierId"] as const;
 
 export type PrincipalParseResult =
   | { ok: true; value: string }

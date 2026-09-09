@@ -28,7 +28,7 @@ export function parseCapabilities(raw: string | undefined): Capability[] {
     .split(",")
     .map((part) => part.trim())
     .filter(Boolean);
-  const allowed: Capability[] = ["read", "collect", "propose", "review", "approve", "publish"];
+  const allowed: Capability[] = ["read", "collect", "propose", "review", "approve", "publish", "verify"];
   return parts.filter((part): part is Capability => (allowed as string[]).includes(part));
 }
 
@@ -37,6 +37,10 @@ export function createDirectoryMcpServer(options: DirectoryMcpOptions): Director
   if (!principal.ok) {
     throw new Error(principal.message);
   }
+  const context: ToolContext = {
+    ...options.context,
+    capabilities: options.capabilities,
+  };
   const server = new McpServer({
     name: MCP_CONTRACT_NAME,
     version: MCP_CONTRACT_VERSION,
@@ -48,7 +52,7 @@ export function createDirectoryMcpServer(options: DirectoryMcpOptions): Director
       capabilities: options.capabilities,
       name,
       args,
-      handler: async (input) => executeTool(options.context, name, input),
+      handler: async (input) => executeTool(context, name, input),
     });
     if (!gated.ok) {
       return {
@@ -98,12 +102,12 @@ export function createDirectoryMcpServer(options: DirectoryMcpOptions): Director
             isError: true,
           };
         }
-        return executeTool(options.context, name, args);
+        return executeTool(context, name, args);
       }
     );
   }
 
-  return { server, capabilities: options.capabilities, context: options.context, invoke };
+  return { server, capabilities: options.capabilities, context, invoke };
 }
 
 export async function connectStdio(handle: DirectoryMcpHandle): Promise<void> {

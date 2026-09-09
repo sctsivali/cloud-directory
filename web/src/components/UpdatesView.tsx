@@ -1,18 +1,9 @@
 "use client";
 
 import { useLang } from "./Language";
+import type { PublicDirectoryUpdate } from "../../../packages/domain/src/revisions/public-feed.ts";
 
-export type UpdateItem = {
-  id: number;
-  kind: "discovered" | "updated";
-  provider_id: string | null;
-  title_id: string;
-  title_en: string;
-  summary_id: string | null;
-  summary_en: string | null;
-  href: string | null;
-  occurred_at: string;
-};
+export type UpdateItem = PublicDirectoryUpdate;
 
 function fmtWib(iso: string, lang: "id" | "en") {
   const d = new Date(iso);
@@ -32,6 +23,23 @@ function fmtWib(iso: string, lang: "id" | "en") {
   return `${date}, ${time} WIB`;
 }
 
+function kindLabel(kind: UpdateItem["kind"], t: { updNew: string; updChanged: string; updCorrection: string; updRollback: string }) {
+  if (kind === "discovered") return t.updNew;
+  if (kind === "correction") return t.updCorrection;
+  if (kind === "rollback") return t.updRollback;
+  return t.updChanged;
+}
+
+function formatValue(value: unknown): string | null {
+  if (value == null) return null;
+  if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") return String(value);
+  try {
+    return JSON.stringify(value);
+  } catch {
+    return null;
+  }
+}
+
 export function UpdatesView({ items }: { items: UpdateItem[] }) {
   const { lang, t } = useLang();
   return (
@@ -46,7 +54,9 @@ export function UpdatesView({ items }: { items: UpdateItem[] }) {
           {items.map((it) => {
             const title = lang === "en" ? it.title_en : it.title_id;
             const summary = lang === "en" ? it.summary_en : it.summary_id;
-            const kind = it.kind === "discovered" ? t.updNew : t.updChanged;
+            const kind = kindLabel(it.kind, t);
+            const oldValue = formatValue(it.old_value);
+            const newValue = formatValue(it.new_value);
             const inner = (
               <>
                 <p className="update-meta">
@@ -55,10 +65,22 @@ export function UpdatesView({ items }: { items: UpdateItem[] }) {
                 </p>
                 <h2 className="update-title">{title}</h2>
                 {summary ? <p className="section-sub">{summary}</p> : null}
+                {it.field ? (
+                  <p className="section-sub">
+                    {it.entity_type} {it.field}
+                    {oldValue || newValue ? `: ${oldValue ?? "—"} → ${newValue ?? "—"}` : ""}
+                  </p>
+                ) : null}
+                {it.revision_href ? (
+                  <p className="section-sub">
+                    {t.updRevision}: {it.revision_id}
+                    {it.correction_of ? ` · ${t.updCorrectionOf}: ${it.correction_of}` : ""}
+                  </p>
+                ) : null}
               </>
             );
             return (
-              <li key={it.id} className="update-item">
+              <li key={String(it.id)} className="update-item">
                 {it.href ? (
                   <a className="update-link" href={it.href}>
                     {inner}

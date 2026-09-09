@@ -94,3 +94,25 @@ export {
   recommendSubjects,
   type RecommendationBuckets,
 } from "./recommendation/index.ts";
+export {
+  publishRevision,
+  validatePublishBindings,
+} from "./revisions/publish.ts";
+export { rollbackPublication } from "./revisions/publish.ts";
+export { validateRollbackBindings } from "./revisions/rollback.ts";
+export { verifyPublication } from "./revisions/verify.ts";
+export {
+  selectPublicUpdates,
+  toApiUpdate,
+  toPublicUpdate,
+  type LegacyDirectoryUpdate,
+  type PublicDirectoryUpdate,
+} from "./revisions/public-feed.ts";
+export { MemoryPublicationStore } from "./revisions/memory.ts";
+export {
+  PUBLICATION_ERROR,
+  type ChangeEvent,
+  type PublicationOutcome,
+  type PublicationReceipt,
+  type PublishRequest,
+} from "./revisions/types.ts";

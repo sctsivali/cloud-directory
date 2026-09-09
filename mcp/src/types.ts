@@ -1,4 +1,9 @@
-export type ProposalStatus = "pending_review" | "approved" | "rejected" | "changes_requested";
+export type ProposalStatus =
+  | "pending_review"
+  | "approved"
+  | "rejected"
+  | "changes_requested"
+  | "published";
 
 export type ProposalRecord = {
   id: string;
@@ -32,6 +37,8 @@ export type ReviewRecord = {
   comment: string | null;
   createdAt: string;
   invalidatedAt: string | null;
+  boundRevisionId?: string | null;
+  boundBodyDigest?: string | null;
 };
 
 export type RejectedOutcome = {

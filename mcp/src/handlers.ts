@@ -1,5 +1,7 @@
-import { validateToolInput } from "../../packages/contracts/src/mcp.ts";
+import { validateToolInput, type Capability } from "../../packages/contracts/src/mcp.ts";
+import type { PublicationStore } from "../../packages/domain/src/revisions/types.ts";
 import { ERROR_CODE, OUTCOME } from "./errors.ts";
+import { publishApprovedRevision, verifyPublishedReceipt } from "./publication-tools.ts";
 import { submitProposal } from "./proposal-tools.ts";
 import { approveProposal, reviewProposal, reviseProposal } from "./review-tools.ts";
 import type { DirectoryReader } from "./read-tools.ts";
@@ -8,7 +10,9 @@ import type { ProposalRepository } from "./store.ts";
 export type ToolContext = {
   reader: DirectoryReader | null;
   repo: ProposalRepository | null;
+  publication?: PublicationStore | null;
   principalId: string;
+  capabilities?: readonly Capability[];
 };
 
 function jsonResult(value: unknown): { content: { type: "text"; text: string }[] } {
@@ -132,6 +136,17 @@ export async function executeTool(
     case "directory.approve_proposal": {
       const repo = await requireRepo(ctx);
       return jsonResult(await approveProposal(repo, input, ctx.principalId));
+    }
+    case "directory.publish_revision":
+    case "directory.publish_change": {
+      const result = await publishApprovedRevision(ctx, name, input);
+      const ok = result.outcome === OUTCOME.created || result.outcome === OUTCOME.replayed;
+      return jsonResult({ ok, ...result });
+    }
+    case "directory.verify_publication": {
+      const result = await verifyPublishedReceipt(ctx, input);
+      const ok = result.outcome === OUTCOME.created || result.outcome === OUTCOME.replayed;
+      return jsonResult({ ok, ...result });
     }
     default:
       return errorResult(ERROR_CODE.toolUnavailable, `tool unavailable: ${name}`, {

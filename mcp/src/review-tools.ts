@@ -101,6 +101,8 @@ export async function approveProposal(
     return rejected(ERROR_CODE.selfApprovalForbidden, "proposal cannot self-approve");
   }
   const now = nowIso();
+  const revisions = await repo.listRevisions(proposalId);
+  const latest = revisions[revisions.length - 1];
   const review: ReviewRecord = {
     id: newProposalId(),
     proposalId,
@@ -109,6 +111,8 @@ export async function approveProposal(
     comment: typeof bound.record.comment === "string" ? bound.record.comment : null,
     createdAt: now,
     invalidatedAt: null,
+    boundRevisionId: latest?.id ?? null,
+    boundBodyDigest: existing.bodyDigest,
   };
   const wrote = await repo.recordReviewAndStatus(review);
   if (wrote.write === "not_found") {

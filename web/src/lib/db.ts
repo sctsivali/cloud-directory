@@ -1,5 +1,11 @@
 import { Pool } from "pg";
 import { CURRENT_METHODOLOGY, LEGACY_FALLBACK_LABEL } from "../../../packages/domain/src/scoring/index.ts";
+import {
+  selectPublicUpdates,
+  type LegacyDirectoryUpdate,
+  type PublicDirectoryUpdate,
+} from "../../../packages/domain/src/revisions/public-feed.ts";
+import type { ChangeEvent } from "../../../packages/domain/src/revisions/types.ts";
 import { LEGACY_CONF_SQL, LEGACY_OSS_SQL, LEGACY_SOV_SQL } from "./legacy-scoring";
 
 const globalForPg = globalThis as unknown as { pool?: Pool };
@@ -507,25 +513,62 @@ export async function getMapSites(): Promise<MapSite[]> {
   return rows;
 }
 
-export type DirectoryUpdate = {
-  id: number;
-  kind: "discovered" | "updated";
-  provider_id: string | null;
-  title_id: string;
-  title_en: string;
-  summary_id: string | null;
-  summary_en: string | null;
-  href: string | null;
-  occurred_at: string;
-};
+export type DirectoryUpdate = PublicDirectoryUpdate;
+
+function mapChangeEventRow(row: Record<string, unknown>): ChangeEvent {
+  const evidence = row.evidence_snapshot_ids;
+  return {
+    id: String(row.id),
+    receiptId: String(row.receipt_id),
+    revisionId: String(row.revision_id),
+    proposalId: String(row.proposal_id),
+    changeType: row.change_type as ChangeEvent["changeType"],
+    entityType: String(row.entity_type),
+    entityId: String(row.entity_id),
+    fieldName: String(row.field_name),
+    oldValue: row.old_value,
+    newValue: row.new_value,
+    valueSensitivity: (row.value_sensitivity as ChangeEvent["valueSensitivity"]) ?? "public",
+    sourceId: row.source_id ? String(row.source_id) : null,
+    evidenceSnapshotIds: Array.isArray(evidence) ? evidence.filter((item): item is string => typeof item === "string") : [],
+    detectedAt: row.detected_at ? String(row.detected_at) : null,
+    observedAt: row.observed_at ? String(row.observed_at) : null,
+    reviewedAt: row.reviewed_at ? String(row.reviewed_at) : null,
+    publishedAt: String(row.published_at),
+    correctionOfEventId: row.correction_of_event_id ? String(row.correction_of_event_id) : null,
+    titleId: String(row.title_id),
+    titleEn: String(row.title_en),
+    summaryId: row.summary_id ? String(row.summary_id) : null,
+    summaryEn: row.summary_en ? String(row.summary_en) : null,
+    providerId: row.provider_id ? String(row.provider_id) : null,
+    href: row.href ? String(row.href) : null,
+  };
+}
 
 export async function getDirectoryUpdates(): Promise<DirectoryUpdate[]> {
-  const { rows } = await pool.query<DirectoryUpdate>(`
+  try {
+    const events = await pool.query(`
+      SELECT id, receipt_id, revision_id, proposal_id, change_type, entity_type, entity_id, field_name,
+             old_value, new_value, value_sensitivity, source_id, evidence_snapshot_ids,
+             detected_at::text AS detected_at, observed_at::text AS observed_at,
+             reviewed_at::text AS reviewed_at, published_at::text AS published_at,
+             correction_of_event_id, title_id, title_en, summary_id, summary_en, provider_id, href
+      FROM change_events
+      ORDER BY published_at DESC, id DESC
+      LIMIT 80
+    `);
+    if (events.rows.length > 0) {
+      return selectPublicUpdates(events.rows.map(mapChangeEventRow), []);
+    }
+  } catch {
+    // Fall back to the legacy public table when the ledger is absent or empty.
+  }
+  const { rows } = await pool.query<LegacyDirectoryUpdate>(`
     SELECT id, kind, provider_id, title_id, title_en, summary_id, summary_en, href,
            occurred_at::text AS occurred_at
     FROM directory_updates
     ORDER BY occurred_at DESC, id DESC
     LIMIT 80
   `);
-  return rows;
+  return selectPublicUpdates([], rows);
 }

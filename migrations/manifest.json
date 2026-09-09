@@ -1,5 +1,5 @@
 {
-  "schema_version": 8,
+  "schema_version": 9,
   "migrations": [
     {
       "version": 1,
@@ -40,6 +40,11 @@
       "version": 8,
       "filename": "0008_scoring_runs.sql",
       "checksum": "c4c276b0aff7e128f71e3ee56d08b6f94f1b06476f5f6cd8b5095473c68368a6"
+    },
+    {
+      "version": 9,
+      "filename": "0009_publication_ledger.sql",
+      "checksum": "e18d8df7cf6d3e07192d0a158b503cefa590e15a5a13974f111bded2dd93d7f8"
     }
   ]
 }

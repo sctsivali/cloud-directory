@@ -14,7 +14,7 @@ PostgreSQL remains the canonical store. Application caches, search indexes, MCP 
 
 ## Consequences
 
-- Schema changes go through versioned migrations (Phase 1+), not one-off ingest SQL as the upgrade path. Phase 2 adds migrations 0002–0005 beside the public legacy tables. Phase 3 adds `0006_proposals_reviews_revisions.sql`. Phase 4 adds `0007_collection_pipeline.sql`. Phase 5 adds `0008_scoring_runs.sql`.
+- Schema changes go through versioned migrations (Phase 1+), not one-off ingest SQL as the upgrade path. Phase 2 adds migrations 0002–0005 beside the public legacy tables. Phase 3 adds `0006_proposals_reviews_revisions.sql`. Phase 4 adds `0007_collection_pipeline.sql`. Phase 5 adds `0008_scoring_runs.sql`. Phase 6 adds `0009_publication_ledger.sql`.
 - Collectors persist receipts; they do not become a second canonical database.
 - Production stays read-only for this program until a separately approved cutover.
 - Phase 0 fixtures are files, not a second live database.

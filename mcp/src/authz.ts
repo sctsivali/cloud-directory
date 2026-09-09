@@ -3,7 +3,7 @@ import {
   TOOL_DEFINITIONS,
   capabilityForTool,
   getToolDefinition,
-  isPhase3AvailableTool,
+  isAvailableTool,
   type Capability,
 } from "../../packages/contracts/src/mcp.ts";
 
@@ -22,16 +22,13 @@ export function authorizeToolCall(capabilities: readonly Capability[], name: str
     return { allowed: false, code: "tool_unavailable", message: `tool unavailable: ${name}` };
   }
   const definition = getToolDefinition(name);
-  if (!definition || !isPhase3AvailableTool(name)) {
+  if (!definition || !isAvailableTool(name)) {
     return { allowed: false, code: "tool_unavailable", message: `tool unavailable: ${name}` };
   }
   let required: ReturnType<typeof capabilityForTool>;
   try {
     required = capabilityForTool(name);
   } catch {
-    return { allowed: false, code: "tool_unavailable", message: `tool unavailable: ${name}` };
-  }
-  if (required === "publish") {
     return { allowed: false, code: "tool_unavailable", message: `tool unavailable: ${name}` };
   }
   if (!capabilities.includes(required)) {

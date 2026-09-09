@@ -14,6 +14,11 @@ export const ERROR_CODE = {
   commitUncertain: "commit_uncertain",
   notFound: "not_found",
   invalidPrincipal: "invalid_principal",
+  selfPublishForbidden: "self_publish_forbidden",
+  staleApproval: "stale_approval",
+  casConflict: "canonical_state_conflict",
+  selfVerifyForbidden: "self_verify_forbidden",
+  verificationMismatch: "verification_mismatch",
 } as const;
 
 export class CommitUncertainError extends Error {

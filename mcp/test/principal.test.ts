@@ -55,7 +55,7 @@ describe("canonical principalId", () => {
   });
 
   it("treats model-supplied actorId and reviewerId as identity fields", () => {
-    assert.deepEqual([...MODEL_IDENTITY_FIELDS], ["actorId", "reviewerId"]);
+    assert.deepEqual([...MODEL_IDENTITY_FIELDS], ["actorId", "reviewerId", "publisherId", "verifierId"]);
     assert.deepEqual(modelSuppliedIdentityFields({ proposalId: "p1", reviewerId: "editor-1" }), [
       "reviewerId",
     ]);

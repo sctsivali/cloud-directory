@@ -16,6 +16,7 @@ import {
   REVIEW_TOOLS,
   TOOL_CATALOG,
   capabilityForTool,
+  isAvailableTool,
   isPhase3AvailableTool,
   validateToolInput,
 } from "../src/mcp.ts";
@@ -27,7 +28,7 @@ describe("versioned MCP contract", () => {
     assert.equal(MCP_CONTRACT_NAME, "cloud-directory-mcp");
     assert.match(MCP_CONTRACT_VERSION, /^\d+\.\d+\.\d+$/);
     assert.equal(TOOL_CATALOG.contractVersion, MCP_CONTRACT_VERSION);
-    assert.equal(TOOL_CATALOG.schemaVersion, 8);
+    assert.equal(TOOL_CATALOG.schemaVersion, 9);
   });
 
   it("lists the Phase 3 read tools", () => {
@@ -68,19 +69,23 @@ describe("versioned MCP contract", () => {
     }
   });
 
-  it("keeps publication tools in the reserved set and out of Phase 3 availability", () => {
+  it("keeps publication tools out of Phase 3 availability and in the Phase 6 catalog", () => {
     assert.ok(PUBLICATION_TOOLS.includes("directory.publish_revision"));
     for (const name of PUBLICATION_TOOLS) {
       assert.equal(isPhase3AvailableTool(name), false, name);
+      assert.equal(isAvailableTool(name), true, name);
       assert.ok(PHASE3_UNAVAILABLE_TOOLS.includes(name));
     }
+    assert.equal(isAvailableTool("directory.verify_publication"), true);
+    assert.equal(isPhase3AvailableTool("directory.verify_publication"), false);
+    assert.equal(capabilityForTool("directory.verify_publication"), "verify");
     for (const name of PHASE3_AVAILABLE_TOOLS) {
       assert.equal(PUBLICATION_TOOLS.includes(name as (typeof PUBLICATION_TOOLS)[number]), false);
     }
   });
 
   it("maps every catalog tool to a server-side capability", () => {
-    assert.deepEqual([...CAPABILITIES], ["read", "collect", "propose", "review", "approve", "publish"]);
+    assert.deepEqual([...CAPABILITIES], ["read", "collect", "propose", "review", "approve", "publish", "verify"]);
     for (const tool of TOOL_CATALOG.tools) {
       const cap = capabilityForTool(tool.name);
       assert.ok(CAPABILITIES.includes(cap), tool.name);
@@ -134,15 +139,15 @@ describe("versioned MCP contract", () => {
   it("is documented in docs/mcp-contract.md", () => {
     const doc = readFileSync(join(repoRoot, "docs", "mcp-contract.md"), "utf8");
     assert.match(doc, /cloud-directory-mcp/);
-    assert.match(doc, /1\.0\.0/);
+    assert.match(doc, /1\.2\.0/);
     for (const name of [...READ_TOOLS, ...PROPOSAL_TOOLS]) {
       assert.match(doc, new RegExp(name.replace(".", "\\.")));
     }
     assert.match(doc, /proposal-only/i);
     assert.match(doc, /publish/i);
-    assert.match(doc, /unavailable|not available|Phase 3/i);
+    assert.match(doc, /explicit publish|publish capability|Phase 6/i);
     assert.match(doc, /principalId/);
     assert.match(doc, /MCP_PRINCIPAL_ID/);
-    assert.doesNotMatch(doc, /directory\.execute_sql/);
+    assert.match(doc, /directory\.verify_publication/);
   });
 });

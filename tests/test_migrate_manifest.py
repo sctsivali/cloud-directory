@@ -50,6 +50,18 @@ REQUIRED_PHASE2_MARKERS = (
     ("0008_scoring_runs.sql", "asean-offering-deployment-v1"),
     ("0008_scoring_runs.sql", "evidence_readiness"),
     ("0008_scoring_runs.sql", "ranking_lower_bound"),
+    ("0009_publication_ledger.sql", "CREATE TABLE IF NOT EXISTS canonical_states"),
+    ("0009_publication_ledger.sql", "CREATE TABLE IF NOT EXISTS publication_attempts"),
+    ("0009_publication_ledger.sql", "CREATE TABLE IF NOT EXISTS publication_receipts"),
+    ("0009_publication_ledger.sql", "CREATE TABLE IF NOT EXISTS change_events"),
+    ("0009_publication_ledger.sql", "bound_revision_id"),
+    ("0009_publication_ledger.sql", "approval_digest"),
+    ("0009_publication_ledger.sql", "proposal author cannot publish own proposal"),
+    ("0009_publication_ledger.sql", "DEFAULT 'pending'"),
+    ("0009_publication_ledger.sql", "publication attempt identity is immutable"),
+    ("0009_publication_ledger.sql", "publication attempt state cannot regress"),
+    ("0009_publication_ledger.sql", "publication receipt history cannot be rewritten"),
+    ("0009_publication_ledger.sql", "verified_by"),
 )
 
 REQUIRED_BASELINE_MARKERS = (
@@ -123,10 +135,11 @@ class TestManifestLedger(unittest.TestCase):
             "0006_proposals_reviews_revisions.sql",
             "0007_collection_pipeline.sql",
             "0008_scoring_runs.sql",
+            "0009_publication_ledger.sql",
         ]
         manifest = json.loads(self.manifest_path.read_text())
-        self.assertEqual(manifest["schema_version"], 8)
-        self.assertEqual(len(manifest["migrations"]), 8)
+        self.assertEqual(manifest["schema_version"], 9)
+        self.assertEqual(len(manifest["migrations"]), 9)
         for i, filename in enumerate(expected_files, start=1):
             row = manifest["migrations"][i - 1]
             self.assertEqual(row["version"], i)
@@ -136,7 +149,7 @@ class TestManifestLedger(unittest.TestCase):
             digest = hashlib.sha256(path.read_bytes()).hexdigest()
             self.assertEqual(row["checksum"], digest)
         loaded = migrate.load_manifest(self.migrations_dir)
-        self.assertEqual(loaded.schema_version, 8)
+        self.assertEqual(loaded.schema_version, 9)
         self.assertEqual([m.filename for m in loaded.migrations], expected_files)
         self.assertEqual(loaded.migrations[0].checksum, hashlib.sha256(self.baseline.read_bytes()).hexdigest())
 
@@ -192,6 +205,7 @@ class TestManifestLedger(unittest.TestCase):
         migrate.assert_supported_schema_version(applied_max=6, manifest_max=6)
         migrate.assert_supported_schema_version(applied_max=7, manifest_max=7)
         migrate.assert_supported_schema_version(applied_max=8, manifest_max=8)
+        migrate.assert_supported_schema_version(applied_max=9, manifest_max=9)
 
     def test_recorded_checksum_mismatch_fails_closed(self):
         with self.assertRaises(migrate.ChecksumMismatchError) as ctx:

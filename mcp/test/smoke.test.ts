@@ -71,6 +71,7 @@ describe("MCP in-memory smoke", () => {
     }
     assert.equal(names.includes("directory.propose_claim"), false);
     assert.equal(names.includes("directory.publish_revision"), false);
+    assert.equal(names.includes("directory.verify_publication"), false);
     const got = await client.callTool({
       name: "directory.get_provider",
       arguments: { id: "local-packages" },
@@ -81,7 +82,7 @@ describe("MCP in-memory smoke", () => {
   });
 
   it("rejects a hidden publication tool at the protocol boundary", async () => {
-    const { client, handle } = await connectedClient(["read", "propose", "publish"]);
+    const { client, handle } = await connectedClient(["read", "propose"]);
     const listed = await client.listTools();
     assert.equal(
       listed.tools.some((tool) => tool.name.startsWith("directory.publish_")),
@@ -93,13 +94,13 @@ describe("MCP in-memory smoke", () => {
     });
     assert.equal(hidden.isError, true);
     assert.match(toolText(hidden), /not found|unavailable/i);
-    let ran = false;
     const direct = await handle.invoke("directory.publish_revision", { proposalId: "p-1" });
     const payload = JSON.parse((direct as { content: { text: string }[] }).content[0].text);
     assert.equal(payload.ok, false);
-    assert.equal(payload.code, "tool_unavailable");
+    assert.ok(payload.code === "tool_unavailable" || payload.code === "capability_missing");
+    let ran = false;
     const gated = await dispatchAuthorizedTool({
-      capabilities: ["publish"],
+      capabilities: ["read", "propose"],
       name: "directory.publish_change",
       args: { revisionId: "r-1" },
       handler: async () => {
@@ -129,11 +130,11 @@ describe("MCP in-memory smoke", () => {
   });
 });
 
-describe("publication tools stay unreachable", () => {
-  it("does not register a publication handler that could run", async () => {
+describe("publication tools stay unreachable without publish", () => {
+  it("does not run a publication handler without the publish capability", async () => {
     let ran = false;
     const result = await dispatchAuthorizedTool({
-      capabilities: ["read", "propose", "review", "approve", "publish"],
+      capabilities: ["read", "propose", "review", "approve"],
       name: "directory.publish_revision",
       args: {},
       handler: async () => {

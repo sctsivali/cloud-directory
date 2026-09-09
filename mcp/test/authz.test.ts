@@ -1,7 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
-  PHASE3_UNAVAILABLE_TOOLS,
   PROPOSAL_TOOLS,
   PUBLICATION_TOOLS,
   READ_TOOLS,
@@ -29,18 +28,21 @@ describe("MCP capability authorization", () => {
       assert.ok(proposeOnly.includes(name), name);
     }
     assert.equal(proposeOnly.includes("directory.get_provider"), false);
+    assert.equal(proposeOnly.includes("directory.publish_revision"), false);
 
     const collectOnly = discoverTools(["collect"]);
     assert.deepEqual(collectOnly, []);
   });
 
-  it("never discovers publication tools, including a publish session", () => {
-    const all = discoverTools(["read", "collect", "propose", "review", "approve", "publish"]);
+  it("discovers publication tools only when publish is explicitly granted", () => {
+    const all = discoverTools(["read", "collect", "propose", "review", "approve", "publish", "verify"]);
     for (const name of PUBLICATION_TOOLS) {
-      assert.equal(all.includes(name), false, name);
+      assert.ok(all.includes(name), name);
     }
-    for (const name of PHASE3_UNAVAILABLE_TOOLS) {
-      assert.equal(all.includes(name), false, name);
+    assert.ok(all.includes("directory.verify_publication"));
+    const withoutPublish = discoverTools(["read", "collect", "propose", "review", "approve"]);
+    for (const name of PUBLICATION_TOOLS) {
+      assert.equal(withoutPublish.includes(name), false, name);
     }
   });
 
@@ -50,6 +52,7 @@ describe("MCP capability authorization", () => {
       "directory.approve_proposal",
       "directory.publish_revision",
       "directory.publish_change",
+      "directory.verify_publication",
       "sql.execute",
       "directory.execute_sql",
     ];
@@ -70,10 +73,10 @@ describe("MCP capability authorization", () => {
     }
   });
 
-  it("rejects publication tools before handler execution even when publish is granted", async () => {
+  it("allows publication tools only after the publish capability gate", async () => {
     let ran = false;
-    const result = await dispatchAuthorizedTool({
-      capabilities: ["read", "propose", "review", "approve", "publish"],
+    const denied = await dispatchAuthorizedTool({
+      capabilities: ["read", "propose", "review", "approve"],
       name: "directory.publish_revision",
       args: { proposalId: "p-1" },
       handler: async () => {
@@ -81,10 +84,21 @@ describe("MCP capability authorization", () => {
         return { ok: true, value: "published" };
       },
     });
-    assert.equal(result.ok, false);
-    assert.equal(result.code, "tool_unavailable");
+    assert.equal(denied.ok, false);
     assert.equal(ran, false);
-    assert.equal(authorizeToolCall(["publish"], "directory.publish_change").allowed, false);
+
+    const allowed = await dispatchAuthorizedTool({
+      capabilities: ["publish"],
+      name: "directory.publish_revision",
+      args: { proposalId: "p-1" },
+      handler: async () => {
+        ran = true;
+        return { ok: true, value: "published" };
+      },
+    });
+    assert.equal(allowed.ok, true);
+    assert.equal(ran, true);
+    assert.equal(authorizeToolCall(["publish"], "directory.publish_change").allowed, true);
   });
 
   it("allows an authorized propose tool only after the authz gate", async () => {
