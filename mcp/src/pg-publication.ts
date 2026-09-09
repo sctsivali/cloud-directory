@@ -50,6 +50,17 @@ function asStringArray(value: unknown): string[] {
   return [];
 }
 
+async function lockCanonicalKey(
+  client: QueryExecutor,
+  entityType: string,
+  entityId: string,
+  fieldName: string
+): Promise<void> {
+  await client.query("SELECT pg_advisory_xact_lock(('x' || substr(md5($1), 1, 16))::bit(64)::bigint)", [
+    `canonical\u001f${entityType}\u001f${entityId}\u001f${fieldName}`,
+  ]);
+}
+
 function mapProposal(row: Record<string, unknown>): ProposalSnapshot {
   return {
     id: String(row.id),
@@ -320,11 +331,7 @@ export class PostgresPublicationStore implements PublicationStore {
         return { write: "rejected" as const, code: "already_published" as const, message: "revision already published" };
       }
 
-      await client.query("SELECT * FROM canonical_states WHERE entity_type = $1 AND entity_id = $2 AND field_name = $3 FOR UPDATE", [
-        plan.entityType,
-        plan.entityId,
-        plan.fieldName,
-      ]);
+      await lockCanonicalKey(client, plan.entityType, plan.entityId, plan.fieldName);
       const current = await client.query(
         "SELECT value_digest FROM canonical_states WHERE entity_type = $1 AND entity_id = $2 AND field_name = $3",
         [plan.entityType, plan.entityId, plan.fieldName]
@@ -426,25 +433,46 @@ export class PostgresPublicationStore implements PublicationStore {
       const attemptId = existingAttempt.id;
 
       const afterDigest = bodyDigestFromValue(plan.afterValue);
-      await client.query(
-        `INSERT INTO canonical_states (
-           entity_type, entity_id, field_name, value, value_digest, data_revision, updated_at
-         ) VALUES ($1,$2,$3,$4::jsonb,$5,$6,$7)
-         ON CONFLICT (entity_type, entity_id, field_name) DO UPDATE SET
-           value = EXCLUDED.value,
-           value_digest = EXCLUDED.value_digest,
-           data_revision = EXCLUDED.data_revision,
-           updated_at = EXCLUDED.updated_at`,
-        [
-          plan.entityType,
-          plan.entityId,
-          plan.fieldName,
-          JSON.stringify(plan.afterValue),
-          afterDigest,
-          plan.dataRevision,
-          plan.publishedAt,
-        ]
-      );
+      if (!current.rows[0]) {
+        await client.query(
+          `INSERT INTO canonical_states (
+             entity_type, entity_id, field_name, value, value_digest, data_revision, updated_at
+           ) VALUES ($1,$2,$3,$4::jsonb,$5,$6,$7)`,
+          [
+            plan.entityType,
+            plan.entityId,
+            plan.fieldName,
+            JSON.stringify(plan.afterValue),
+            afterDigest,
+            plan.dataRevision,
+            plan.publishedAt,
+          ]
+        );
+      } else {
+        const updated = await client.query(
+          `UPDATE canonical_states SET
+             value = $4::jsonb,
+             value_digest = $5,
+             data_revision = $6,
+             updated_at = $7
+           WHERE entity_type = $1 AND entity_id = $2 AND field_name = $3
+             AND value_digest IS NOT DISTINCT FROM $8
+           RETURNING entity_type`,
+          [
+            plan.entityType,
+            plan.entityId,
+            plan.fieldName,
+            JSON.stringify(plan.afterValue),
+            afterDigest,
+            plan.dataRevision,
+            plan.publishedAt,
+            plan.expectedCanonicalDigest,
+          ]
+        );
+        if (!updated.rows[0]) {
+          return { write: "cas_conflict" as const };
+        }
+      }
 
       await client.query(
         `INSERT INTO publication_receipts (
@@ -557,10 +585,7 @@ export class PostgresPublicationStore implements PublicationStore {
       if (plan.verifierPrincipal === receipt.publisherId) return { write: "self_verify" as const };
       const eventRows = await client.query("SELECT * FROM change_events WHERE receipt_id = $1 FOR UPDATE", [receipt.id]);
       const event = eventRows.rows[0] ? mapEvent(eventRows.rows[0]) : null;
-      await client.query(
-        "SELECT * FROM canonical_states WHERE entity_type = $1 AND entity_id = $2 AND field_name = $3 FOR UPDATE",
-        [receipt.entityType, receipt.entityId, receipt.fieldName]
-      );
+      await lockCanonicalKey(client, receipt.entityType, receipt.entityId, receipt.fieldName);
       const canonicalRows = await client.query(
         "SELECT * FROM canonical_states WHERE entity_type = $1 AND entity_id = $2 AND field_name = $3",
         [receipt.entityType, receipt.entityId, receipt.fieldName]

@@ -1,6 +1,7 @@
 import { getCountry, requireRegisteredIso2 } from "./countries.ts";
 import { INTELLIGENCE_RULESET_HASH } from "./methodology.ts";
 import { filterFacts, isStaleAt, isVerified, resolveFactCountry } from "./trends.ts";
+import { projectPublicTimelineEvent } from "../revisions/public-projection.ts";
 import {
   INTELLIGENCE_METHODOLOGY_ID,
   type IntelligenceQuery,
@@ -19,7 +20,7 @@ function compareEvents(a: TimelineEvent, b: TimelineEvent): number {
 
 function toEvent(fact: VerifiedFact, asOf: string): TimelineEvent {
   const countryCode = resolveFactCountry(fact);
-  return {
+  return projectPublicTimelineEvent({
     receiptId: fact.receiptId,
     revisionId: fact.revisionId,
     providerId: fact.providerId,
@@ -39,7 +40,8 @@ function toEvent(fact: VerifiedFact, asOf: string): TimelineEvent {
     beforeValue: fact.beforeValue,
     stale: isStaleAt(fact, asOf),
     conflict: fact.knowledgeState === "conflicting",
-  };
+    valueSensitivity: fact.valueSensitivity === "redacted" ? "redacted" : "public",
+  });
 }
 
 function verifiedInWindow(facts: VerifiedFact[], window: { start: string; end: string }): VerifiedFact[] {

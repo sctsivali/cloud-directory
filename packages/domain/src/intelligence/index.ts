@@ -25,7 +25,7 @@ export {
   publicOutlookEligibilityView,
   refuseForecastPublication,
 } from "./outlook.ts";
-export { factFromLedgerRow, factsFromLedgerRows, type LedgerFactRow } from "./ledger.ts";
+export { factFromLedgerRow, factsFromLedgerRows, ledgerFactRowFromJoin, type LedgerFactRow } from "./ledger.ts";
 export { buildCountryTimeline, buildProviderTimeline } from "./timeline.ts";
 export {
   INTELLIGENCE_SURFACES,

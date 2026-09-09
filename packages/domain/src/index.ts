@@ -108,6 +108,11 @@ export {
   type LegacyDirectoryUpdate,
   type PublicDirectoryUpdate,
 } from "./revisions/public-feed.ts";
+export {
+  projectPublicTimelineDocument,
+  projectVerifiedPublicReadModel,
+  type PublicReadModel,
+} from "./revisions/public-projection.ts";
 export { MemoryPublicationStore } from "./revisions/memory.ts";
 export {
   PUBLICATION_ERROR,

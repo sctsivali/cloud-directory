@@ -14,6 +14,7 @@ import {
   canonicalizeCountryCode,
   factsFromLedgerRows,
   inferObservationWindow,
+  ledgerFactRowFromJoin,
   publicOutlookEligibilityView,
   publicTrendView,
   resolveCountry,
@@ -21,6 +22,7 @@ import {
   type TrendMetric,
   type VerifiedFact,
 } from "../../packages/domain/src/intelligence/index.ts";
+import { projectPublicTimelineDocument, projectVerifiedPublicReadModel } from "../../packages/domain/src/revisions/public-projection.ts";
 import { Client } from "./pg.ts";
 
 export type JsonObject = Record<string, unknown>;
@@ -106,7 +108,24 @@ export class PostgresDirectoryReader implements DirectoryReader {
        FROM offerings WHERE provider_id = $1 ORDER BY name`,
       [providerId]
     );
-    return rows;
+    const fromLedger = projectVerifiedPublicReadModel(await this.loadLedgerFacts()).offerings.filter(
+      (row) => row.providerId === providerId
+    );
+    const projected = fromLedger.map((row) => {
+      const value = row.value && typeof row.value === "object" ? (row.value as Record<string, unknown>) : {};
+      return {
+        id: row.entityId,
+        provider_id: row.providerId,
+        service_id: value.serviceId ?? null,
+        name: value.name ?? row.entityId,
+        status: value.status ?? null,
+        entityType: row.entityType,
+        fieldName: row.fieldName,
+        verification_state: row.verificationState,
+      };
+    });
+    const seen = new Set(projected.map((row) => String(row.id)));
+    return [...projected, ...rows.filter((row) => !seen.has(String((row as { id?: unknown }).id)))];
   }
 
   async getClaims(subjectType: string, subjectId: string): Promise<JsonObject[]> {
@@ -117,7 +136,26 @@ export class PostgresDirectoryReader implements DirectoryReader {
        ORDER BY recorded_at`,
       [subjectType, subjectId]
     );
-    return rows;
+    const fromLedger = projectVerifiedPublicReadModel(await this.loadLedgerFacts()).claims.filter(
+      (row) => row.entityType === subjectType && row.entityId === subjectId
+    );
+    const projected = fromLedger.map((row) => ({
+      id: `${row.entityType}:${row.entityId}:${row.fieldName}`,
+      subject_type: row.entityType,
+      subject_id: row.entityId,
+      claim_type: row.fieldName,
+      fieldName: row.fieldName,
+      value: row.value,
+      knowledge_state: row.knowledgeState,
+      verification_state: row.verificationState,
+      change_type: row.changeType,
+      value_sensitivity: row.valueSensitivity,
+    }));
+    const seen = new Set(projected.map((row) => `${row.subject_type}:${row.subject_id}:${row.claim_type}`));
+    return [
+      ...projected,
+      ...rows.filter((row) => !seen.has(`${String((row as { subject_type?: unknown }).subject_type)}:${String((row as { subject_id?: unknown }).subject_id)}:${String((row as { claim_type?: unknown }).claim_type)}`)),
+    ];
   }
 
   async getEvidence(args: {
@@ -291,10 +329,10 @@ export class PostgresDirectoryReader implements DirectoryReader {
     const built = await this.buildIntelligence(args);
     if ("error" in built) return built;
     if (args.providerId) {
-      return { ok: true, ...buildProviderTimeline({ ...built.query, providerId: args.providerId }) };
+      return { ok: true, ...projectPublicTimelineDocument(buildProviderTimeline({ ...built.query, providerId: args.providerId })) };
     }
     if (built.query.countryCode) {
-      return { ok: true, ...buildCountryTimeline({ ...built.query, countryCode: built.query.countryCode }) };
+      return { ok: true, ...projectPublicTimelineDocument(buildCountryTimeline({ ...built.query, countryCode: built.query.countryCode })) };
     }
     return { ok: false, error: "providerId or country is required" };
   }
@@ -337,29 +375,11 @@ export class PostgresDirectoryReader implements DirectoryReader {
         `SELECT r.id AS receipt_id, r.revision_id, r.change_type, r.entity_type, r.entity_id, r.field_name,
                 r.before_value, r.after_value, r.verification_state, r.methodology_version, r.data_revision,
                 r.published_at::text AS published_at, r.supersedes_receipt_id,
-                e.observed_at::text AS observed_at, e.provider_id
+                e.observed_at::text AS observed_at, e.provider_id, e.value_sensitivity
          FROM publication_receipts r
          JOIN change_events e ON e.receipt_id = r.id`
       );
-      return factsFromLedgerRows(
-        (rows as Array<Record<string, unknown>>).map((row) => ({
-          receiptId: String(row.receipt_id),
-          revisionId: String(row.revision_id),
-          changeType: String(row.change_type),
-          entityType: String(row.entity_type),
-          entityId: String(row.entity_id),
-          fieldName: String(row.field_name),
-          providerId: row.provider_id ? String(row.provider_id) : null,
-          observedAt: row.observed_at ? String(row.observed_at) : null,
-          publishedAt: String(row.published_at),
-          verificationState: String(row.verification_state),
-          afterValue: row.after_value,
-          beforeValue: row.before_value,
-          methodologyVersion: row.methodology_version ? String(row.methodology_version) : null,
-          dataRevision: row.data_revision ? String(row.data_revision) : null,
-          supersedesReceiptId: row.supersedes_receipt_id ? String(row.supersedes_receipt_id) : null,
-        }))
-      );
+      return factsFromLedgerRows((rows as Array<Record<string, unknown>>).map(ledgerFactRowFromJoin));
     } catch {
       return [];
     }

@@ -57,6 +57,7 @@ describe("public change-event feed", () => {
     assert.equal(update.field, "hypervisor");
     assert.deepEqual(update.old_value, { text: "Xen" });
     assert.deepEqual(update.new_value, { text: "KVM" });
+    assert.equal(update.value_sensitivity, "public");
     assert.equal(update.source, "src-1");
     assert.deepEqual(update.evidence_snapshot_ids, ["snap-1"]);
     assert.equal(update.detected_at, event.detectedAt);
@@ -78,6 +79,7 @@ describe("public change-event feed", () => {
     });
     assert.equal(redacted.old_value, null);
     assert.equal(redacted.new_value, null);
+    assert.equal(redacted.value_sensitivity, "redacted");
   });
 
   it("prefers change events and falls back to directory_updates when none exist", () => {

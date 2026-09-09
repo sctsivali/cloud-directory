@@ -1,4 +1,5 @@
 import type { ChangeEvent } from "./types.ts";
+import { redactPublicPair } from "./public-projection.ts";
 
 export type LegacyDirectoryUpdate = {
   id: number;
@@ -22,6 +23,7 @@ export type PublicDirectoryUpdate = {
   field: string | null;
   old_value: unknown;
   new_value: unknown;
+  value_sensitivity: "public" | "redacted";
   source: string | null;
   evidence_snapshot_ids: string[];
   detected_at: string | null;
@@ -46,11 +48,8 @@ function kindForChange(changeType: string): PublicDirectoryUpdate["kind"] {
   return "updated";
 }
 
-function safeValue(value: unknown, sensitivity: "public" | "redacted"): unknown {
-  return sensitivity === "redacted" ? null : value;
-}
-
 export function toPublicUpdate(event: ChangeEvent): PublicDirectoryUpdate {
+  const values = redactPublicPair(event.oldValue, event.newValue, event.valueSensitivity);
   return {
     id: event.id,
     kind: kindForChange(event.changeType),
@@ -59,8 +58,9 @@ export function toPublicUpdate(event: ChangeEvent): PublicDirectoryUpdate {
     entity_type: event.entityType,
     entity_id: event.entityId,
     field: event.fieldName,
-    old_value: safeValue(event.oldValue, event.valueSensitivity),
-    new_value: safeValue(event.newValue, event.valueSensitivity),
+    old_value: values.beforeValue,
+    new_value: values.afterValue,
+    value_sensitivity: values.valueSensitivity,
     source: event.sourceId,
     evidence_snapshot_ids: [...event.evidenceSnapshotIds],
     detected_at: event.detectedAt,
@@ -90,6 +90,7 @@ export function toLegacyPublicUpdate(row: LegacyDirectoryUpdate): PublicDirector
     field: null,
     old_value: null,
     new_value: null,
+    value_sensitivity: "public",
     source: null,
     evidence_snapshot_ids: [],
     detected_at: null,

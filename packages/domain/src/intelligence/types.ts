@@ -105,6 +105,7 @@ export type VerifiedFact = {
   stale?: boolean;
   /** Immutable identity scope (e.g. country_presence target). Never derived from mutable afterValue. */
   scopeId?: string | null;
+  valueSensitivity?: "public" | "redacted";
 };
 
 export type TrendPoint = {
@@ -272,6 +273,7 @@ export type TimelineEvent = {
   beforeValue: unknown;
   stale: boolean;
   conflict: boolean;
+  valueSensitivity: "public" | "redacted";
 };
 
 export type TimelineDocument = {

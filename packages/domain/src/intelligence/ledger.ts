@@ -19,6 +19,7 @@ export type LedgerFactRow = {
   methodologyVersion?: string | null;
   dataRevision?: string | null;
   supersedesReceiptId?: string | null;
+  valueSensitivity?: string | null;
 };
 
 function asChangeType(value: string): ChangeType {
@@ -77,8 +78,17 @@ function readBool(value: unknown, key: string): boolean | undefined {
   return typeof raw === "boolean" ? raw : undefined;
 }
 
+function toIsoTimestamp(value: string | null | undefined): string | null {
+  if (!value) return null;
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return value;
+  return parsed.toISOString();
+}
+
 export function factFromLedgerRow(row: LedgerFactRow): VerifiedFact {
   const after = row.afterValue;
+  const valueSensitivity = row.valueSensitivity === "redacted" ? "redacted" : "public";
+  const publishedAt = toIsoTimestamp(row.publishedAt) ?? row.publishedAt;
   return {
     receiptId: row.receiptId,
     revisionId: row.revisionId,
@@ -88,16 +98,16 @@ export function factFromLedgerRow(row: LedgerFactRow): VerifiedFact {
     fieldName: row.fieldName,
     providerId: row.providerId ?? readString(after, "providerId") ?? null,
     countryCode: extractCountryFromValue(after),
-    observedAt: row.observedAt ?? row.publishedAt,
-    publishedAt: row.publishedAt,
+    observedAt: toIsoTimestamp(row.observedAt) ?? publishedAt,
+    publishedAt,
     verificationState: asVerification(row.verificationState),
     knowledgeState: deriveKnowledge(row.changeType, after),
     afterValue: after,
     beforeValue: row.beforeValue,
     methodologyVersion: row.methodologyVersion ?? INTELLIGENCE_METHODOLOGY_ID,
     dataRevision: row.dataRevision ?? "unspecified",
-    comparable: readBool(after, "comparable"),
-    amount: readNumber(after, "amount"),
+    comparable: valueSensitivity === "redacted" ? false : readBool(after, "comparable"),
+    amount: valueSensitivity === "redacted" ? null : readNumber(after, "amount"),
     currency: readString(after, "currency"),
     billingUnit: readString(after, "billingUnit"),
     promo: readBool(after, "promo"),
@@ -106,9 +116,31 @@ export function factFromLedgerRow(row: LedgerFactRow): VerifiedFact {
     operatorId: readString(after, "operatorId") ?? readString(after, "operator"),
     validTo: readString(after, "validTo"),
     supersedesReceiptId: row.supersedesReceiptId ?? null,
+    valueSensitivity,
   };
 }
 
 export function factsFromLedgerRows(rows: LedgerFactRow[]): VerifiedFact[] {
   return rows.map(factFromLedgerRow);
+}
+
+export function ledgerFactRowFromJoin(row: Record<string, unknown>): LedgerFactRow {
+  return {
+    receiptId: String(row.receipt_id),
+    revisionId: String(row.revision_id),
+    changeType: String(row.change_type),
+    entityType: String(row.entity_type),
+    entityId: String(row.entity_id),
+    fieldName: String(row.field_name),
+    providerId: row.provider_id ? String(row.provider_id) : null,
+    observedAt: row.observed_at ? String(row.observed_at) : null,
+    publishedAt: String(row.published_at),
+    verificationState: String(row.verification_state),
+    afterValue: row.after_value,
+    beforeValue: row.before_value,
+    methodologyVersion: row.methodology_version ? String(row.methodology_version) : null,
+    dataRevision: row.data_revision ? String(row.data_revision) : null,
+    supersedesReceiptId: row.supersedes_receipt_id ? String(row.supersedes_receipt_id) : null,
+    valueSensitivity: row.value_sensitivity ? String(row.value_sensitivity) : null,
+  };
 }
