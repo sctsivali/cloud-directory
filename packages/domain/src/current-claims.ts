@@ -1,4 +1,5 @@
 import type { AssessmentState, KnowledgeState } from "./knowledge-state.ts";
+import { canonicalJson } from "./scoring/hash.ts";
 
 export const ASSESSMENT_AUTHORITY_RANK: Record<AssessmentState, number> = {
   rejected: 0,
@@ -64,7 +65,7 @@ export function claimIsTemporallyValid(claim: ClaimRecord, now: string): boolean
 }
 
 function valueKey(value: unknown): string {
-  return JSON.stringify(value) ?? "null";
+  return canonicalJson(value) ?? "null";
 }
 
 function compareLatest(a: ClaimRecord, b: ClaimRecord): number {

@@ -215,6 +215,28 @@ describe("L7 current-claim resolver", () => {
     assert.notEqual(resolved[0]?.id, "extracted-later");
   });
 
+  it("treats JSON objects with different key order as the same value", () => {
+    const first = claim({
+      id: "same-json-a",
+      value: { hypervisor: "KVM", nested: { storage: "Ceph", version: 2 } },
+      assessmentState: "independently_verified",
+      observedAt: "2026-04-01T00:00:00.000Z",
+    });
+    const second = claim({
+      id: "same-json-z",
+      value: { nested: { version: 2, storage: "Ceph" }, hypervisor: "KVM" },
+      assessmentState: "independently_verified",
+      observedAt: "2026-05-01T00:00:00.000Z",
+    });
+
+    const resolved = current([first, second]);
+    assert.equal(resolved.length, 1);
+    assert.equal(resolved[0]?.id, "same-json-z");
+    assert.equal(resolved[0]?.knowledgeState, "present");
+    assert.deepEqual(resolved[0]?.value, second.value);
+    assert.deepEqual(resolved[0]?.contributingIds, ["same-json-z"]);
+  });
+
   it("emits conflicting when current valid authoritative sources disagree", () => {
     const kvm = claim({
       id: "src-kvm",
