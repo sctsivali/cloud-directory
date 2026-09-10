@@ -1,5 +1,6 @@
 import { Pool } from "pg";
 import { loadDataRevision } from '../../../packages/domain/src/intelligence/data-revisions.ts';
+import { CURRENT_CLAIMS_AT_SQL } from '../../../packages/domain/src/current-claims.ts';
 import {
   bindDisplayedScore,
   CURRENT_METHODOLOGY,
@@ -718,4 +719,9 @@ export async function getOutlookEligibility(metric: TrendMetric, countryCode?: s
   const { facts, id: dataRevision } = await loadDataRevision(pool, requestedRevision);
   const window = windowFromInferred(inferObservationWindow(facts));
   return publicOutlookEligibilityView(buildOutlook({ facts, window, countryCode: countryCode ?? null, dataRevision }, metric));
+}
+
+export async function getCurrentClaims(subjectType: string, subjectId: string, at?: string) {
+  const { rows } = await pool.query(CURRENT_CLAIMS_AT_SQL, [at ?? new Date().toISOString(), subjectType, subjectId]);
+  return rows;
 }

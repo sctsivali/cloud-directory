@@ -58,6 +58,14 @@ export {
   type ClaimInput,
 } from "./claim-validation.ts";
 export {
+  ASSESSMENT_AUTHORITY_RANK,
+  CURRENT_CLAIMS_AT_SQL,
+  claimIsTemporallyValid,
+  resolveCurrentClaims,
+  type ClaimRecord,
+  type CurrentClaim,
+} from "./current-claims.ts";
+export {
   ALGORITHM_VERSION,
   CANONICAL_METRIC_DESCRIPTORS,
   CURRENT_METHODOLOGY,

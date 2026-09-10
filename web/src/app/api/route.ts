@@ -17,6 +17,7 @@ export function GET() {
       building: `${base}/api/buildings/{id}`,
       map: `${base}/api/map`,
       updates: `${base}/api/updates`,
+      claims: `${base}/api/claims`,
     },
   });
 }

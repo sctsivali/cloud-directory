@@ -26,6 +26,7 @@ import {
   type VerifiedFact,
 } from "../../packages/domain/src/intelligence/index.ts";
 import { projectPublicTimelineDocument, projectVerifiedPublicReadModel } from "../../packages/domain/src/revisions/public-projection.ts";
+import { CURRENT_CLAIMS_AT_SQL } from "../../packages/domain/src/current-claims.ts";
 import { Client } from "./pg.ts";
 import { loadDataRevision, DataRevisionError } from '../../packages/domain/src/intelligence/data-revisions.ts';
 
@@ -135,13 +136,11 @@ export class PostgresDirectoryReader implements DirectoryReader {
   }
 
   async getClaims(subjectType: string, subjectId: string): Promise<JsonObject[]> {
-    const { rows } = await this.client.query(
-      `SELECT id, subject_type, subject_id, claim_type, value, knowledge_state, assessment_state,
-              observed_at, recorded_at, valid_from, valid_to
-       FROM claims WHERE subject_type = $1 AND subject_id = $2
-       ORDER BY recorded_at`,
-      [subjectType, subjectId]
-    );
+    const { rows } = await this.client.query(CURRENT_CLAIMS_AT_SQL, [
+      new Date().toISOString(),
+      subjectType,
+      subjectId,
+    ]);
     const fromLedger = projectVerifiedPublicReadModel(await this.loadLedgerFacts()).claims.filter(
       (row) => row.entityType === subjectType && row.entityId === subjectId
     );
