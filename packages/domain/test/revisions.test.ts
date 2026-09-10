@@ -69,6 +69,42 @@ describe("revision publication ledger", () => {
     assert.equal(store.events.length, 1);
   });
 
+  it("replays when an identical receipt becomes visible after the initial lookup", async () => {
+    class DelayedReceiptVisibilityStore extends MemoryPublicationStore {
+      hideNextReceiptLookup = false;
+
+      override async findReceiptByIdempotencyKey(key: string) {
+        if (this.hideNextReceiptLookup) {
+          this.hideNextReceiptLookup = false;
+          return null;
+        }
+        return super.findReceiptByIdempotencyKey(key);
+      }
+    }
+
+    const store = new DelayedReceiptVisibilityStore();
+    const seeded = seedApprovedClaim(store);
+    const request = {
+      proposalId: seeded.proposal.id,
+      expectedRevisionId: seeded.revision.id,
+      expectedBodyDigest: seeded.proposal.bodyDigest,
+      idempotencyKey: "pub-late-receipt",
+      methodologyVersion: CURRENT_METHODOLOGY.id,
+      dataRevision: "drv-1",
+      publisherPrincipal: "publisher-1",
+      expectedCanonicalDigest: null,
+    };
+    const first = await publishRevision(store, request);
+    assert.equal(first.outcome, "created");
+
+    store.hideNextReceiptLookup = true;
+    const raced = await publishRevision(store, request);
+
+    assert.equal(raced.outcome, "replayed");
+    assert.equal(store.receipts.length, 1);
+    assert.equal(store.events.length, 1);
+  });
+
   it("rejects the same idempotency key with an altered request", async () => {
     const store = new MemoryPublicationStore();
     const seeded = seedApprovedClaim(store);

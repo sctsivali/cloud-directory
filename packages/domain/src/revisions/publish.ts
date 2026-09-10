@@ -202,6 +202,18 @@ export async function publishRevision(
   const currentDigest = current?.valueDigest ?? null;
   const expectedDigest = request.expectedCanonicalDigest;
   if ((expectedDigest ?? null) !== (currentDigest ?? null)) {
+    const racedReceipt = await store.findReceiptByIdempotencyKey(request.idempotencyKey);
+    if (racedReceipt) {
+      const racedAttempt = await store.findAttemptByIdempotencyKey(request.idempotencyKey);
+      if (!publicationReplayAllowed({ receipt: racedReceipt, attempt: racedAttempt, incoming: incomingIdentity })) {
+        return rejectedOutcome(PUBLICATION_ERROR.idempotencyConflict, "same idempotency key with an altered publication request");
+      }
+      const racedEvent = await store.findEventByReceiptId(racedReceipt.id);
+      if (!racedEvent) {
+        return ambiguous(request.idempotencyKey, racedAttempt?.id);
+      }
+      return { outcome: "replayed", receipt: racedReceipt, event: racedEvent };
+    }
     return rejectedOutcome(PUBLICATION_ERROR.casConflict, "canonical state does not match expected digest");
   }
 
