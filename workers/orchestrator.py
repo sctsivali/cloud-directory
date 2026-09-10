@@ -91,6 +91,7 @@ def _submit_required(
     required: list[SubmissionOutcome],
     proposal_ids: list[str],
     now: datetime,
+    local_outcome: str | None = None,
 ) -> SubmissionOutcome:
     digest = request_digest_for(tool_name, payload)
     existing = store.get_submission_outcome(idempotency_key)
@@ -107,6 +108,22 @@ def _submit_required(
             if existing.proposal_id and existing.outcome in {"created", "replayed"}:
                 proposal_ids.append(existing.proposal_id)
             return existing
+    if local_outcome == "rejected":
+        recorded = store.record_submission_outcome(
+            SubmissionOutcome(
+                id="cso-" + uuid4().hex,
+                task_id=task.id,
+                tool_name=tool_name,
+                idempotency_key=idempotency_key,
+                request_digest=digest,
+                outcome="rejected",
+                proposal_id=None,
+                reason_codes=reason_codes,
+                created_at=_iso(now),
+            )
+        )
+        required.append(recorded)
+        return recorded
     if tool_name == "directory.propose_claim":
         submitted = proposals.invoke("directory.propose_claim", payload, idempotency_key=idempotency_key)
     elif tool_name == "directory.propose_facility":
@@ -251,8 +268,33 @@ def run_collection_task(
                 claimed_scope=str(tech.get("scope") or "provider"),
             )
         )
-        if verification.assessment_state == "rejected" and not verification.review_required:
+        if verification.assessment_state == "rejected":
             result.errors.extend(verification.reasons)
+            reason_codes = reason_codes_from_verifier_reasons(verification.reasons)
+            pending.append(
+                {
+                    "tool_name": "directory.propose_claim",
+                    "payload": {
+                        "subjectType": "provider",
+                        "subjectId": provider_id,
+                        "claimType": "hypervisor",
+                        "value": {
+                            "text": tech.get("name"),
+                            "hedged": tech.get("hedged"),
+                            "verifierReasons": list(verification.reasons),
+                            "reasonCodes": list(reason_codes),
+                        },
+                        "knowledgeState": verification.knowledge_state,
+                        "assessmentState": "rejected",
+                        "observedAt": receipt.fetched_at,
+                        "snapshotId": result.snapshot_id,
+                        "excerpt": tech.get("excerpt"),
+                    },
+                    "idempotency_key": f"{idempotency_key}:claim:hypervisor:{tech.get('name')}",
+                    "reason_codes": reason_codes,
+                    "local_outcome": "rejected",
+                }
+            )
             continue
         if verification.knowledge_state == "conflicting" or verification.review_required:
             knowledge = verification.knowledge_state
@@ -307,8 +349,23 @@ def run_collection_task(
                 claimed_scope=str(precision),
             )
         )
+        reason_codes = reason_codes_from_verifier_reasons(verification.reasons)
         if verification.assessment_state == "rejected":
             result.errors.extend(verification.reasons)
+            pending.append(
+                {
+                    "tool_name": "directory.propose_facility",
+                    "payload": {
+                        "name": fac.get("name") or kind or "undisclosed",
+                        "mapPrecision": precision if precision != "facility_exact" or kind == "datacenter" else "undisclosed",
+                        "address": fac.get("address") or "",
+                        "operator": "",
+                    },
+                    "idempotency_key": f"{idempotency_key}:facility:{fac.get('kind')}:{fac.get('name')}",
+                    "reason_codes": reason_codes,
+                    "local_outcome": "rejected",
+                }
+            )
             continue
         pending.append(
             {
@@ -320,7 +377,7 @@ def run_collection_task(
                     "operator": "",
                 },
                 "idempotency_key": f"{idempotency_key}:facility:{fac.get('kind')}:{fac.get('name')}",
-                "reason_codes": reason_codes_from_verifier_reasons(verification.reasons),
+                "reason_codes": reason_codes,
             }
         )
 
@@ -393,6 +450,7 @@ def run_collection_task(
             required=required,
             proposal_ids=proposal_ids,
             now=submit_now,
+            local_outcome=item.get("local_outcome"),
         )
 
     status = resolve_collection_task_status(required, task.required_submission_count or 0)

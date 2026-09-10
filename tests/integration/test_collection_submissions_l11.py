@@ -224,3 +224,120 @@ class TestCollectionSubmissionOutcomesPg(unittest.TestCase):
             self.conn.execute("SELECT status FROM collection_tasks WHERE idempotency_key = %s", ("pg-crash",)).fetchone()[0],
             "proposed",
         )
+
+    def test_direct_db_rejects_outcome_after_proposed_and_cap(self):
+        digest = "a" * 64
+        self.conn.execute(
+            """
+            INSERT INTO collection_tasks (id, idempotency_key, source_url, status, required_submission_count)
+            VALUES ('task-gate', 'pg-gate', %s, 'extracted', 1)
+            """,
+            (URL,),
+        )
+        self.conn.execute(
+            """
+            INSERT INTO collection_submission_outcomes (
+              id, task_id, tool_name, idempotency_key, request_digest, outcome, reason_codes
+            ) VALUES ('cso-ok', 'task-gate', 'directory.propose_claim', 'pg-gate:ok', %s, 'created', '{}')
+            """,
+            (digest,),
+        )
+        self.conn.execute("UPDATE collection_tasks SET status = 'proposed' WHERE id = 'task-gate'")
+        self.conn.commit()
+        with self.assertRaises(Exception):
+            self.conn.execute(
+                """
+                INSERT INTO collection_submission_outcomes (
+                  id, task_id, tool_name, idempotency_key, request_digest, outcome, reason_codes
+                ) VALUES ('cso-rej', 'task-gate', 'directory.propose_claim', 'pg-gate:rej', %s, 'rejected', '{malformed_payload}')
+                """,
+                ("b" * 64,),
+            )
+        self.conn.rollback()
+        with self.assertRaises(Exception):
+            self.conn.execute(
+                """
+                INSERT INTO collection_submission_outcomes (
+                  id, task_id, tool_name, idempotency_key, request_digest, outcome, reason_codes
+                ) VALUES ('cso-extra', 'task-gate', 'directory.propose_claim', 'pg-gate:extra', %s, 'created', '{}')
+                """,
+                ("c" * 64,),
+            )
+        self.conn.rollback()
+        status = self.conn.execute("SELECT status FROM collection_tasks WHERE id = 'task-gate'").fetchone()[0]
+        kinds = [row[0] for row in self.conn.execute("SELECT outcome FROM collection_submission_outcomes WHERE task_id = 'task-gate'").fetchall()]
+        self.assertEqual(status, "proposed")
+        self.assertEqual(kinds, ["created"])
+
+    def test_concurrent_rejected_insert_cannot_coexist_with_proposed(self):
+        import threading
+
+        digest = "d" * 64
+        self.conn.execute(
+            """
+            INSERT INTO collection_tasks (id, idempotency_key, source_url, status, required_submission_count)
+            VALUES ('task-race', 'pg-race', %s, 'extracted', 1)
+            """,
+            (URL,),
+        )
+        self.conn.execute(
+            """
+            INSERT INTO collection_submission_outcomes (
+              id, task_id, tool_name, idempotency_key, request_digest, outcome, reason_codes
+            ) VALUES ('cso-race-ok', 'task-race', 'directory.propose_claim', 'pg-race:ok', %s, 'created', '{}')
+            """,
+            (digest,),
+        )
+        self.conn.commit()
+        barrier = threading.Barrier(2)
+        errors: list[str] = []
+
+        def propose():
+            conn = _connect()
+            try:
+                barrier.wait(timeout=10)
+                conn.execute("UPDATE collection_tasks SET status = 'proposed' WHERE id = 'task-race'")
+                conn.commit()
+            except Exception as exc:
+                errors.append(f"propose:{exc}")
+                conn.rollback()
+            finally:
+                conn.close()
+
+        def reject():
+            conn = _connect()
+            try:
+                barrier.wait(timeout=10)
+                conn.execute(
+                    """
+                    INSERT INTO collection_submission_outcomes (
+                      id, task_id, tool_name, idempotency_key, request_digest, outcome, reason_codes
+                    ) VALUES ('cso-race-rej', 'task-race', 'directory.propose_claim', 'pg-race:rej', %s, 'rejected', '{malformed_payload}')
+                    """,
+                    ("e" * 64,),
+                )
+                conn.commit()
+            except Exception as exc:
+                errors.append(f"reject:{exc}")
+                conn.rollback()
+            finally:
+                conn.close()
+
+        threads = [threading.Thread(target=propose), threading.Thread(target=reject)]
+        for thread in threads:
+            thread.start()
+        for thread in threads:
+            thread.join(timeout=15)
+        status = self.conn.execute("SELECT status FROM collection_tasks WHERE id = 'task-race'").fetchone()[0]
+        kinds = {
+            row[0]
+            for row in self.conn.execute(
+                "SELECT outcome FROM collection_submission_outcomes WHERE task_id = 'task-race'"
+            ).fetchall()
+        }
+        self.assertFalse(status == "proposed" and "rejected" in kinds)
+        self.assertFalse(status == "proposed" and "ambiguous" in kinds)
+        if status == "proposed":
+            self.assertEqual(kinds, {"created"})
+        if "rejected" in kinds:
+            self.assertNotEqual(status, "proposed")

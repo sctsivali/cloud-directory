@@ -136,3 +136,49 @@ CREATE TRIGGER collection_tasks_proposed_gate
   BEFORE INSERT OR UPDATE ON collection_tasks
   FOR EACH ROW
   EXECUTE PROCEDURE collection_task_proposed_requires_successful_submissions();
+
+CREATE OR REPLACE FUNCTION collection_submission_outcome_insert_gate()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $$
+DECLARE
+  task_status text;
+  task_count integer;
+  existing_count integer;
+BEGIN
+  SELECT status, required_submission_count
+    INTO task_status, task_count
+  FROM collection_tasks
+  WHERE id = NEW.task_id
+  FOR UPDATE;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'collection task missing for submission outcome';
+  END IF;
+
+  IF task_status = 'proposed' THEN
+    RAISE EXCEPTION 'cannot insert submission outcome after task is proposed';
+  END IF;
+
+  SELECT count(DISTINCT idempotency_key) INTO existing_count
+  FROM collection_submission_outcomes
+  WHERE task_id = NEW.task_id;
+
+  IF task_count IS NOT NULL
+     AND NOT EXISTS (
+       SELECT 1 FROM collection_submission_outcomes
+       WHERE task_id = NEW.task_id AND idempotency_key = NEW.idempotency_key
+     )
+     AND existing_count >= task_count THEN
+    RAISE EXCEPTION 'required submission count cap exceeded';
+  END IF;
+
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS collection_submission_outcomes_insert_gate ON collection_submission_outcomes;
+CREATE TRIGGER collection_submission_outcomes_insert_gate
+  BEFORE INSERT ON collection_submission_outcomes
+  FOR EACH ROW
+  EXECUTE PROCEDURE collection_submission_outcome_insert_gate();

@@ -79,6 +79,8 @@ REQUIRED_PHASE2_MARKERS = (
     ("0016_collection_submission_outcomes.sql", "CREATE TABLE IF NOT EXISTS collection_submission_outcomes"),
     ("0016_collection_submission_outcomes.sql", "collection_submission_outcomes are append-only"),
     ("0016_collection_submission_outcomes.sql", "rejected or ambiguous required submissions prevent proposed"),
+    ("0016_collection_submission_outcomes.sql", "cannot insert submission outcome after task is proposed"),
+    ("0016_collection_submission_outcomes.sql", "required submission count cap exceeded"),
 )
 
 REQUIRED_BASELINE_MARKERS = (

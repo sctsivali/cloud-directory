@@ -325,6 +325,13 @@ class MemoryCollectionStore:
             ):
                 raise StoreError("idempotency identity collision")
             return existing
+        task = next((row for row in self.tasks.values() if row.id == outcome.task_id), None)
+        if task is not None and task.status == "proposed":
+            raise StoreError("cannot insert submission outcome after task is proposed")
+        if task is not None and task.required_submission_count is not None:
+            keys = {row.idempotency_key for row in self.outcomes.values() if row.task_id == task.id}
+            if outcome.idempotency_key not in keys and len(keys) >= task.required_submission_count:
+                raise StoreError("required submission count cap exceeded")
         self.outcomes[outcome.idempotency_key] = outcome
         return outcome
 

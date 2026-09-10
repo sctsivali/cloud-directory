@@ -19,7 +19,6 @@ from workers.submissions import (
     resolve_collection_task_status,
     should_auto_retry_submission,
 )
-from workers.orchestrator import _submit_required
 
 PUBLIC_IP = "93.184.216.34"
 URL = "https://fixtures.example.test/page"
@@ -88,7 +87,7 @@ class MixedOutcomeTransport(TestOnlyInMemoryMcpTransport):
         return super().call_tool(name, arguments)
 
 
-def _run(store, client, key="k-l11"):
+def _run(store, client, key="k-l11", adapters=None):
     return run_collection_task(
         source_url=URL,
         idempotency_key=key,
@@ -98,6 +97,7 @@ def _run(store, client, key="k-l11"):
         store=store,
         proposals=client,
         clock=FrozenClock(),
+        adapters=adapters,
     )
 
 
@@ -357,3 +357,51 @@ class TestWorkerSubmissionOutcomes(unittest.TestCase):
             )
         with self.assertRaises(StoreError):
             store.set_required_submission_count(task, (task.required_submission_count or 0) + 1, datetime(2026, 9, 1, tzinfo=timezone.utc))
+
+    def test_verifier_rejection_records_outcome_without_mcp_and_fails_task(self):
+        class MissingExcerptAdapter:
+            model_provider = "rules"
+            model_name = "extractor.technology.v1"
+
+            def complete(self, envelope):
+                return {
+                    "technologies": [
+                        {
+                            "name": "KVM",
+                            "knowledge_state": "present",
+                            "hedged": False,
+                            "excerpt": "not-in-snapshot-excerpt",
+                            "scope": "provider",
+                        }
+                    ]
+                }
+
+        store = MemoryCollectionStore()
+        transport = TestOnlyInMemoryMcpTransport(principal_id="collector-worker")
+        result = _run(
+            store,
+            McpProposalClient(transport),
+            "k-verify-reject",
+            adapters={"technology": MissingExcerptAdapter()},
+        )
+        task = store.get_task_by_key("k-verify-reject")
+        assert task is not None
+        rejected = [
+            row
+            for row in store.list_submission_outcomes(task.id)
+            if row.idempotency_key.endswith(":claim:hypervisor:KVM")
+        ]
+        self.assertEqual(len(rejected), 1)
+        self.assertEqual(rejected[0].outcome, "rejected")
+        self.assertIsNone(rejected[0].proposal_id)
+        self.assertIn("excerpt_missing", rejected[0].reason_codes)
+        self.assertRegex(rejected[0].request_digest, r"^[0-9a-f]{64}$")
+        self.assertEqual(task.status, "failed")
+        self.assertEqual(result.status, "failed")
+        hyp_calls = [
+            call
+            for call in transport.calls
+            if str(call["arguments"].get("idempotencyKey") or "").endswith(":claim:hypervisor:KVM")
+        ]
+        self.assertEqual(hyp_calls, [])
+        self.assertEqual(task.required_submission_count, len(store.list_submission_outcomes(task.id)))
