@@ -1,5 +1,5 @@
 {
-  "schema_version": 15,
+  "schema_version": 16,
   "migrations": [
     {
       "version": 1,
@@ -75,6 +75,11 @@
       "version": 15,
       "filename": "0015_current_claims.sql",
       "checksum": "e29a96d08484bc4f706923a7e7cf878c0836366adddb305f61410486ef73e188"
+    },
+    {
+      "version": 16,
+      "filename": "0016_collection_submission_outcomes.sql",
+      "checksum": "3315b3e273fcc97f7e233defb1990f5f4fa98df9640003b5b3007d4cd1c6c27e"
     }
   ]
 }

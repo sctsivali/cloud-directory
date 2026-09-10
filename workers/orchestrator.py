@@ -19,6 +19,16 @@ from workers.store import (
     StoredModelRun,
     can_retry,
 )
+from workers.submissions import (
+    SubmissionOutcome,
+    merge_reason_codes,
+    reason_codes_from_mcp,
+    reason_codes_from_verifier_reasons,
+    request_digest_for,
+    require_submission_identity,
+    resolve_collection_task_status,
+    should_auto_retry_submission,
+)
 from workers.verifier.verify_claim import VerificationRequest, verify_claim
 
 SUCCESS_FETCH_STATES = frozenset({"ok", "redirect"})
@@ -36,6 +46,7 @@ class PipelineResult:
     retried: bool = False
     published_canonical: bool = False
     errors: list[str] = field(default_factory=list)
+    status: str = ""
 
 
 def _now(clock: Clock) -> datetime:
@@ -66,6 +77,74 @@ def _persist_model_run(store: CollectionStore, task_id: str, extraction, recorde
         recorded_at=_iso(recorded_at),
     )
     return store.save_model_run(run)
+
+
+def _submit_required(
+    *,
+    store: CollectionStore,
+    task,
+    proposals: McpProposalClient,
+    tool_name: str,
+    payload: dict[str, Any],
+    idempotency_key: str,
+    reason_codes: tuple[str, ...],
+    required: list[SubmissionOutcome],
+    proposal_ids: list[str],
+    now: datetime,
+) -> SubmissionOutcome:
+    digest = request_digest_for(tool_name, payload)
+    existing = store.get_submission_outcome(idempotency_key)
+    if existing is not None:
+        require_submission_identity(
+            existing,
+            task_id=task.id,
+            tool_name=tool_name,
+            idempotency_key=idempotency_key,
+            request_digest=digest,
+        )
+        if not should_auto_retry_submission(existing):
+            required.append(existing)
+            if existing.proposal_id and existing.outcome in {"created", "replayed"}:
+                proposal_ids.append(existing.proposal_id)
+            return existing
+    if tool_name == "directory.propose_claim":
+        submitted = proposals.invoke("directory.propose_claim", payload, idempotency_key=idempotency_key)
+    elif tool_name == "directory.propose_facility":
+        submitted = proposals.invoke("directory.propose_facility", payload, idempotency_key=idempotency_key)
+    elif tool_name == "directory.propose_price_observation":
+        submitted = proposals.invoke(
+            "directory.propose_price_observation", payload, idempotency_key=idempotency_key
+        )
+    elif tool_name == "directory.propose_offering":
+        submitted = proposals.invoke("directory.propose_offering", payload, idempotency_key=idempotency_key)
+    elif tool_name == "directory.propose_location":
+        submitted = proposals.invoke("directory.propose_location", payload, idempotency_key=idempotency_key)
+    elif tool_name == "directory.propose_technology_deployment":
+        submitted = proposals.invoke(
+            "directory.propose_technology_deployment", payload, idempotency_key=idempotency_key
+        )
+    elif tool_name == "directory.propose_retraction":
+        submitted = proposals.invoke("directory.propose_retraction", payload, idempotency_key=idempotency_key)
+    else:
+        raise ValueError(f"unknown proposal tool: {tool_name}")
+    codes = merge_reason_codes(reason_codes, reason_codes_from_mcp(submitted.code))
+    recorded = store.record_submission_outcome(
+        SubmissionOutcome(
+            id="cso-" + uuid4().hex,
+            task_id=task.id,
+            tool_name=tool_name,
+            idempotency_key=idempotency_key,
+            request_digest=digest,
+            outcome=submitted.outcome,
+            proposal_id=submitted.proposal_id,
+            reason_codes=codes,
+            created_at=_iso(now),
+        )
+    )
+    required.append(recorded)
+    if recorded.proposal_id and recorded.outcome in {"created", "replayed"}:
+        proposal_ids.append(recorded.proposal_id)
+    return recorded
 
 
 def run_collection_task(
@@ -149,6 +228,9 @@ def run_collection_task(
 
     current_now = now_override or _iso(_now(clock))
     proposal_ids: list[str] = []
+    required: list[SubmissionOutcome] = []
+    pending: list[dict[str, Any]] = []
+    submit_now = _now(clock)
 
     for tech in technology_ex.output.get("technologies") or []:
         verification = verify_claim(
@@ -178,23 +260,30 @@ def run_collection_task(
         else:
             knowledge = verification.knowledge_state
             assessment = "extracted"
-        submitted = proposals.invoke(
-            "directory.propose_claim",
+        reason_codes = reason_codes_from_verifier_reasons(verification.reasons)
+        pending.append(
             {
-                "subjectType": "provider",
-                "subjectId": provider_id,
-                "claimType": "hypervisor",
-                "value": {"text": tech.get("name"), "hedged": tech.get("hedged")},
-                "knowledgeState": knowledge,
-                "assessmentState": assessment,
-                "observedAt": receipt.fetched_at,
-                "snapshotId": result.snapshot_id,
-                "excerpt": tech.get("excerpt"),
-            },
-            idempotency_key=f"{idempotency_key}:claim:hypervisor:{tech.get('name')}",
+                "tool_name": "directory.propose_claim",
+                "payload": {
+                    "subjectType": "provider",
+                    "subjectId": provider_id,
+                    "claimType": "hypervisor",
+                    "value": {
+                        "text": tech.get("name"),
+                        "hedged": tech.get("hedged"),
+                        "verifierReasons": list(verification.reasons),
+                        "reasonCodes": list(reason_codes),
+                    },
+                    "knowledgeState": knowledge,
+                    "assessmentState": assessment,
+                    "observedAt": receipt.fetched_at,
+                    "snapshotId": result.snapshot_id,
+                    "excerpt": tech.get("excerpt"),
+                },
+                "idempotency_key": f"{idempotency_key}:claim:hypervisor:{tech.get('name')}",
+                "reason_codes": reason_codes,
+            }
         )
-        if submitted.proposal_id:
-            proposal_ids.append(submitted.proposal_id)
 
     for fac in facility_ex.output.get("facilities") or []:
         kind = fac.get("kind")
@@ -221,18 +310,19 @@ def run_collection_task(
         if verification.assessment_state == "rejected":
             result.errors.extend(verification.reasons)
             continue
-        submitted = proposals.invoke(
-            "directory.propose_facility",
+        pending.append(
             {
-                "name": fac.get("name") or kind or "undisclosed",
-                "mapPrecision": precision if precision != "facility_exact" or kind == "datacenter" else "undisclosed",
-                "address": fac.get("address") or "",
-                "operator": "",
-            },
-            idempotency_key=f"{idempotency_key}:facility:{fac.get('kind')}:{fac.get('name')}",
+                "tool_name": "directory.propose_facility",
+                "payload": {
+                    "name": fac.get("name") or kind or "undisclosed",
+                    "mapPrecision": precision if precision != "facility_exact" or kind == "datacenter" else "undisclosed",
+                    "address": fac.get("address") or "",
+                    "operator": "",
+                },
+                "idempotency_key": f"{idempotency_key}:facility:{fac.get('kind')}:{fac.get('name')}",
+                "reason_codes": reason_codes_from_verifier_reasons(verification.reasons),
+            }
         )
-        if submitted.proposal_id:
-            proposal_ids.append(submitted.proposal_id)
 
     for off in offering_ex.output.get("offerings") or []:
         try:
@@ -250,43 +340,71 @@ def run_collection_task(
         except PriceNormalizationError as exc:
             result.errors.append(str(exc))
             continue
-        submitted = proposals.invoke(
-            "directory.propose_price_observation",
+        pending.append(
             {
-                "offeringId": f"{provider_id}:{off.get('name')}",
-                "amount": float(normalized.amount),
-                "currency": normalized.currency,
-                "billingUnit": normalized.billing_unit,
-                "observedAt": receipt.fetched_at,
-                "commitment": normalized.commitment,
-                "promo": normalized.promo,
-            },
-            idempotency_key=f"{idempotency_key}:price:{off.get('name')}:{normalized.currency}",
+                "tool_name": "directory.propose_price_observation",
+                "payload": {
+                    "offeringId": f"{provider_id}:{off.get('name')}",
+                    "amount": float(normalized.amount),
+                    "currency": normalized.currency,
+                    "billingUnit": normalized.billing_unit,
+                    "observedAt": receipt.fetched_at,
+                    "commitment": normalized.commitment,
+                    "promo": normalized.promo,
+                },
+                "idempotency_key": f"{idempotency_key}:price:{off.get('name')}:{normalized.currency}",
+                "reason_codes": (),
+            }
         )
-        if submitted.proposal_id:
-            proposal_ids.append(submitted.proposal_id)
 
     if provider_ex.output.get("provider_name"):
-        submitted = proposals.invoke(
-            "directory.propose_claim",
+        pending.append(
             {
-                "subjectType": "provider",
-                "subjectId": provider_id,
-                "claimType": "provider_name",
-                "value": {"text": provider_ex.output.get("provider_name")},
-                "knowledgeState": "present",
-                "assessmentState": "extracted",
-                "observedAt": receipt.fetched_at,
-                "snapshotId": result.snapshot_id,
-            },
-            idempotency_key=f"{idempotency_key}:claim:provider_name",
+                "tool_name": "directory.propose_claim",
+                "payload": {
+                    "subjectType": "provider",
+                    "subjectId": provider_id,
+                    "claimType": "provider_name",
+                    "value": {
+                        "text": provider_ex.output.get("provider_name"),
+                        "verifierReasons": [],
+                        "reasonCodes": [],
+                    },
+                    "knowledgeState": "present",
+                    "assessmentState": "extracted",
+                    "observedAt": receipt.fetched_at,
+                    "snapshotId": result.snapshot_id,
+                },
+                "idempotency_key": f"{idempotency_key}:claim:provider_name",
+                "reason_codes": (),
+            }
         )
-        if submitted.proposal_id:
-            proposal_ids.append(submitted.proposal_id)
 
-    store.mark_status(task, "proposed", _now(clock))
+    task = store.set_required_submission_count(task, len(pending), submit_now)
+    for item in pending:
+        _submit_required(
+            store=store,
+            task=task,
+            proposals=proposals,
+            tool_name=item["tool_name"],
+            payload=item["payload"],
+            idempotency_key=item["idempotency_key"],
+            reason_codes=item["reason_codes"],
+            required=required,
+            proposal_ids=proposal_ids,
+            now=submit_now,
+        )
+
+    status = resolve_collection_task_status(required, task.required_submission_count or 0)
+    error = None
+    if status == "failed":
+        error = "required submission rejected or incomplete"
+    elif status in {"needs_review", "ambiguous"}:
+        error = "required submission ambiguous"
+    store.mark_status(task, status, _now(clock), error)
     result.proposal_ids = proposal_ids
     result.published_canonical = False
+    result.status = status
     return result
 
 

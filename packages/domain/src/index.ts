@@ -66,6 +66,20 @@ export {
   type CurrentClaim,
 } from "./current-claims.ts";
 export {
+  MAX_REQUIRED_SUBMISSIONS,
+  MAX_SUBMISSION_REASON_CODES,
+  SUBMISSION_OUTCOMES,
+  boundReasonCodes,
+  isAmbiguousTerminal,
+  reasonCodesFromVerifierReasons,
+  requireSubmissionIdentity,
+  resolveCollectionTaskStatus,
+  shouldAutoRetrySubmission,
+  submissionIdentityMatches,
+  type CollectionSubmissionOutcome,
+  type SubmissionOutcomeKind,
+} from "./collection-submissions.ts";
+export {
   ALGORITHM_VERSION,
   CANONICAL_METRIC_DESCRIPTORS,
   CURRENT_METHODOLOGY,

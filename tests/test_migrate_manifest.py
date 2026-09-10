@@ -76,6 +76,9 @@ REQUIRED_PHASE2_MARKERS = (
     ("0011_sod_state_replay.sql", "revision author cannot self-approve"),
     ("0011_sod_state_replay.sql", "proposal_status_transition_allowed"),
     ("0011_sod_state_replay.sql", "illegal proposal status transition"),
+    ("0016_collection_submission_outcomes.sql", "CREATE TABLE IF NOT EXISTS collection_submission_outcomes"),
+    ("0016_collection_submission_outcomes.sql", "collection_submission_outcomes are append-only"),
+    ("0016_collection_submission_outcomes.sql", "rejected or ambiguous required submissions prevent proposed"),
 )
 
 REQUIRED_BASELINE_MARKERS = (
@@ -156,10 +159,11 @@ class TestManifestLedger(unittest.TestCase):
             "0013_immutable_data_revisions.sql",
             "0014_structured_price_terms.sql",
             "0015_current_claims.sql",
+            "0016_collection_submission_outcomes.sql",
         ]
         manifest = json.loads(self.manifest_path.read_text())
-        self.assertEqual(manifest["schema_version"], 15)
-        self.assertEqual(len(manifest["migrations"]), 15)
+        self.assertEqual(manifest["schema_version"], 16)
+        self.assertEqual(len(manifest["migrations"]), 16)
         for i, filename in enumerate(expected_files, start=1):
             row = manifest["migrations"][i - 1]
             self.assertEqual(row["version"], i)
@@ -169,7 +173,7 @@ class TestManifestLedger(unittest.TestCase):
             digest = hashlib.sha256(path.read_bytes()).hexdigest()
             self.assertEqual(row["checksum"], digest)
         loaded = migrate.load_manifest(self.migrations_dir)
-        self.assertEqual(loaded.schema_version, 15)
+        self.assertEqual(loaded.schema_version, 16)
         self.assertEqual([m.filename for m in loaded.migrations], expected_files)
         self.assertEqual(loaded.migrations[0].checksum, hashlib.sha256(self.baseline.read_bytes()).hexdigest())
 

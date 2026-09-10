@@ -87,8 +87,9 @@ Publication receipts are not created in this phase.
 
 ## Phase 4 collection tables (`0007_collection_pipeline.sql`)
 
-- `collection_tasks` — durable fetch/extract/verify/propose work. Unique `idempotency_key`. Lease owner must be a canonical principal. `fetched_at` is immutable once set so replay cannot change freshness.
+- `collection_tasks` — durable fetch/extract/verify/propose work. Unique `idempotency_key`. Lease owner must be a canonical principal. `fetched_at` is immutable once set so replay cannot change freshness. Status may be `failed` or `needs_review`/`ambiguous` when a required submission is rejected or ambiguous; `proposed` only after every required submission is `created` or `replayed`.
 - `model_runs` — immutable extractor provenance: model/provider, ruleset version, input digest, output digest, least-data envelope, exact JSON output. Unique per `(collection_task_id, adapter_name, input_digest)`.
+- `collection_submission_outcomes` — append-only worker MCP results (`created`/`replayed`/`rejected`/`ambiguous`) keyed by `task_id`, `tool_name`, unique `idempotency_key`, `request_digest`, optional `proposal_id`, bounded `reason_codes`, and `created_at`. Ambiguous is terminal and never auto-retried. Verifier reasons are stored on the proposal payload and the outcome row.
 - `fetch_snapshots.fetch_state` — distinct `ok` / `redirect` / `forbidden` / `not_found` / `timeout` / `blocked` / `oversized` / `malformed` / `unsupported_content_type`. Redirect hops are stored on `redirect_chain` and every hop is revalidated.
 
 Workers persist receipts. They submit MCP proposals with status `pending_review` through the MCP server; they do not insert into `proposals`, `revisions`, `proposal_reviews`, or public `providers`, `tiers`, `stacks`, or `directory_updates`.
