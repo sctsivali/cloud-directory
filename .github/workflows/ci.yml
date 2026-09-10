@@ -84,12 +84,14 @@ jobs:
           python - <<'PY'
           import importlib.util
           import os
+          import sys
           from pathlib import Path
           import psycopg
 
           root = Path.cwd()
           spec = importlib.util.spec_from_file_location("migrate", root / "scripts" / "migrate.py")
           migrate = importlib.util.module_from_spec(spec)
+          sys.modules[spec.name] = migrate
           spec.loader.exec_module(migrate)
           url = os.environ["TEST_DATABASE_URL"]
           sql = (root / "tests" / "fixtures" / "sql" / "representative_legacy.sql").read_text()
