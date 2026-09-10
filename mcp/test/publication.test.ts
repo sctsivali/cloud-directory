@@ -325,7 +325,7 @@ describe("PostgreSQL publication ledger", { skip: !TEST_DATABASE_URL }, () => {
     });
   });
 
-  it("serializes concurrent publishes of the same proposal to one receipt", async () => {
+  it("serializes concurrent publishes to one receipt and converges safe ambiguity to replay", async () => {
     await withMigratedDatabase(async (client, pool) => {
       const ready = await approveClaim(pool, "pg-race");
       const publisher = createDirectoryMcpServer({
@@ -343,13 +343,18 @@ describe("PostgreSQL publication ledger", { skip: !TEST_DATABASE_URL }, () => {
       );
       const payloads = results.map(payloadOf);
       const created = payloads.filter((row) => row.outcome === OUTCOME.created);
-      const replayed = payloads.filter((row) => row.outcome === OUTCOME.replayed);
+      const accepted = payloads.filter(
+        (row) => row.outcome === OUTCOME.created || row.outcome === OUTCOME.replayed || row.outcome === OUTCOME.ambiguous
+      );
       assert.equal(created.length, 1);
-      assert.equal(created.length + replayed.length, payloads.length);
+      assert.equal(accepted.length, payloads.length, JSON.stringify(payloads));
       const receipts = await client.query("SELECT id FROM publication_receipts");
       const events = await client.query("SELECT id FROM change_events");
       assert.equal(receipts.rows.length, 1);
       assert.equal(events.rows.length, 1);
+
+      const converged = payloadOf(await publisher.invoke("directory.publish_revision", args));
+      assert.equal(converged.outcome, OUTCOME.replayed);
     });
   });
 
