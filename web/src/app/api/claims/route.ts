@@ -1,5 +1,6 @@
 import { getCurrentClaims } from "@/lib/db";
 import { apiJson, apiOptions } from "@/lib/api-json";
+import { projectPublicCurrentClaim } from "../../../../../packages/domain/src/revisions/public-projection.ts";
 
 export function OPTIONS() {
   return apiOptions();
@@ -13,5 +14,5 @@ export async function GET(req: Request) {
     return apiJson({ ok: false, error: "subjectType and subjectId are required" }, 400);
   }
   const claims = await getCurrentClaims(subjectType, subjectId);
-  return apiJson({ ok: true, claims });
+  return apiJson({ ok: true, claims: claims.map(projectPublicCurrentClaim) });
 }

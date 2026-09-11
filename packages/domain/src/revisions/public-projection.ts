@@ -4,6 +4,17 @@ import { sha256Hex } from "../scoring/hash.ts";
 
 export type PublicValueSensitivity = "public" | "redacted";
 
+const REDACTED_FIELDS = ["password", "secret", "token", "credential", "private_key"];
+
+export function sensitivityFor(fieldName: string): PublicValueSensitivity {
+  return REDACTED_FIELDS.includes(fieldName) ? "redacted" : "public";
+}
+
+export function projectPublicCurrentClaim<T extends { claim_type: string; value: unknown }>(claim: T) {
+  const values = redactPublicPair(null, claim.value, sensitivityFor(claim.claim_type));
+  return { ...claim, value: values.afterValue, value_sensitivity: values.valueSensitivity };
+}
+
 export type PublicReadEntity = {
   entityType: string;
   entityId: string;

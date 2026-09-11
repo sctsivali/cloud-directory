@@ -1,8 +1,6 @@
 import type { ProposalSnapshot, PublicationReceipt, RevisionSnapshot } from "./types.ts";
-import { stableHashId } from "./public-projection.ts";
+import { sensitivityFor, stableHashId } from "./public-projection.ts";
 import { ledgerState } from "./state.ts";
-
-const REDACTED_FIELDS = ["password", "secret", "token", "credential", "private_key"];
 
 export type DerivedSubject = {
   entityType: string;
@@ -42,10 +40,6 @@ function evidenceFrom(body: Record<string, unknown>): { ids: string[]; snapshot:
       ? [snapshot]
       : [];
   return { ids: evidenceSnapshotIds, snapshot };
-}
-
-function sensitivityFor(fieldName: string): "public" | "redacted" {
-  return REDACTED_FIELDS.includes(fieldName) ? "redacted" : "public";
 }
 
 function titled(
