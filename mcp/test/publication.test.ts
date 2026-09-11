@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
+import { registerHooks } from "node:module";
 import { CURRENT_METHODOLOGY } from "../../packages/domain/src/scoring/methodology.ts";
 import { bodyDigestFromValue } from "../../packages/domain/src/revisions/digest.ts";
 import { selectPublicUpdates, toApiUpdate, toPublicUpdate } from "../../packages/domain/src/revisions/public-feed.ts";
@@ -90,6 +91,74 @@ function publishArgs(proposalId: string, revisionId: string, bodyDigest: string,
 }
 
 describe("PostgreSQL publication ledger", { skip: !TEST_DATABASE_URL }, () => {
+  it("verified claim correction and retraction override stale legacy claims in API and MCP", async () => {
+    await withMigratedDatabase(async (client, pool) => {
+      const store = new PostgresPublicationStore(pool);
+      async function publishClaim(key: string, value: string, knowledgeState = "present") {
+        const ready = await approveProposalBody(pool, "directory.propose_claim", {
+          ...claim, value: { text: value }, knowledgeState,
+        }, key);
+        const result = await publishRevision(store, {
+          ...publishArgs(ready.proposal.id, ready.revision.id, ready.proposal.bodyDigest, key),
+          expectedCanonicalDigest: (await store.getCanonicalState("provider", "local-packages", "hypervisor"))?.valueDigest ?? null,
+          publisherPrincipal: "publisher-1",
+        });
+        assert.equal(result.outcome, "created");
+        if (result.outcome !== "created") throw new Error(JSON.stringify(result));
+        const verified = await verifyPublication(store, {
+          receiptId: result.receipt.id, eventId: result.event.id,
+          expectedValueDigest: bodyDigestFromValue(result.receipt.afterValue),
+          expectedDataRevision: result.receipt.dataRevision, verifierPrincipal: "verifier-1",
+        });
+        assert.equal(verified.outcome, "created");
+        return result;
+      }
+      await publishClaim("claims-initial", "KVM");
+      await client.query(`INSERT INTO claims
+        (id, subject_type, subject_id, claim_type, value, knowledge_state, assessment_state)
+        VALUES ('stale', 'provider', 'local-packages', 'hypervisor', '{"text":"ESXi"}', 'present', 'independently_verified')`);
+      const globals = globalThis as unknown as { pool?: unknown };
+      const oldPool = globals.pool;
+      globals.pool = pool;
+      const hooks = registerHooks({
+        resolve(specifier, context, nextResolve) {
+          if (specifier.startsWith("@/")) return nextResolve(new URL(`../../web/src/${specifier.slice(2)}.ts`, import.meta.url).href, context);
+          if (specifier === "next/server") return nextResolve("next/server.js", context);
+          if (specifier === "./legacy-scoring") return nextResolve("./legacy-scoring.ts", context);
+          return nextResolve(specifier, context);
+        },
+      });
+      try {
+        const { GET } = await import(new URL("../../web/src/app/api/claims/route.ts", import.meta.url).href) as {
+          GET(req: Request): Promise<Response>;
+        };
+        async function readBoth() {
+          const response = await GET(new Request("http://test.invalid/api/claims?subjectType=provider&subjectId=local-packages"));
+          assert.equal(response.status, 200);
+          const api = await response.json() as { ok: boolean; claims: Record<string, unknown>[] };
+          const mcp = payloadOf(await executeTool({ reader: new PostgresDirectoryReader(pool), repo: null,
+            principalId: "reader", capabilities: ["read"] }, "directory.get_claims", {
+            subjectType: "provider", subjectId: "local-packages",
+          })) as { ok: boolean; claims: Record<string, unknown>[] };
+          assert.equal(api.ok, true);
+          assert.equal(mcp.ok, true);
+          const state = (rows: Record<string, unknown>[]) => rows.map(({ claim_type, value, knowledge_state }) => ({ claim_type, value, knowledge_state }));
+          assert.deepEqual(state(api.claims), state(mcp.claims), "API and MCP must agree on verified current claims");
+          return state(api.claims);
+        }
+        const correction = await publishClaim("claims-correction", "Xen");
+        assert.equal(correction.receipt.changeType, "update");
+        assert.deepEqual(await readBoth(), [{ claim_type: "hypervisor", value: { text: "Xen" }, knowledge_state: "present" }]);
+        const retraction = await publishClaim("claims-retraction", "withdrawn", "confirmed_absent");
+        assert.equal(retraction.receipt.changeType, "retract");
+        assert.deepEqual(await readBoth(), [], "verified retraction must not resurrect stale legacy data");
+        assert.equal((await client.query("SELECT value FROM claims WHERE id = 'stale'")).rows[0].value.text, "ESXi");
+      } finally {
+        hooks.deregister();
+        globals.pool = oldPool;
+      }
+    });
+  });
   it("Batch A: typed states, effective transitions, and verified-only factual SQL", async () => {
     await withMigratedDatabase(async (client, pool) => {
       const store = new PostgresPublicationStore(pool);
@@ -1331,7 +1400,8 @@ describe("PostgreSQL publication ledger", { skip: !TEST_DATABASE_URL }, () => {
       const claims = await reader.getClaims("provider", "local-packages");
       const timeline = await reader.getTimeline({ providerId: "local-packages" });
       assert.equal(offerings.filter((row) => row.entityType === "offering" || row.name).length >= 2, true);
-      assert.equal(claims.some((row) => row.fieldName === "hypervisor" || row.claim_type === "hypervisor"), true);
+      assert.equal(claims.some((row) => row.fieldName === "hypervisor" || row.claim_type === "hypervisor"), false,
+        "verified retraction removes hypervisor from current claims");
       const model = projectVerifiedPublicReadModel(
         factsFromLedgerRows(
           (

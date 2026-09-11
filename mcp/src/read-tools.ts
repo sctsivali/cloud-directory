@@ -25,7 +25,7 @@ import {
   type TrendMetric,
   type VerifiedFact,
 } from "../../packages/domain/src/intelligence/index.ts";
-import { projectPublicTimelineDocument, projectVerifiedPublicReadModel } from "../../packages/domain/src/revisions/public-projection.ts";
+import { projectPublicCurrentClaim, projectPublicTimelineDocument, projectVerifiedPublicReadModel } from "../../packages/domain/src/revisions/public-projection.ts";
 import { CURRENT_CLAIMS_AT_SQL } from "../../packages/domain/src/current-claims.ts";
 import { Client } from "./pg.ts";
 import { loadDataRevision, DataRevisionError } from '../../packages/domain/src/intelligence/data-revisions.ts';
@@ -141,26 +141,7 @@ export class PostgresDirectoryReader implements DirectoryReader {
       subjectType,
       subjectId,
     ]);
-    const fromLedger = projectVerifiedPublicReadModel(await this.loadLedgerFacts()).claims.filter(
-      (row) => row.entityType === subjectType && row.entityId === subjectId
-    );
-    const projected = fromLedger.map((row) => ({
-      id: `${row.entityType}:${row.entityId}:${row.fieldName}`,
-      subject_type: row.entityType,
-      subject_id: row.entityId,
-      claim_type: row.fieldName,
-      fieldName: row.fieldName,
-      value: row.value,
-      knowledge_state: row.knowledgeState,
-      verification_state: row.verificationState,
-      change_type: row.changeType,
-      value_sensitivity: row.valueSensitivity,
-    }));
-    const seen = new Set(projected.map((row) => `${row.subject_type}:${row.subject_id}:${row.claim_type}`));
-    return [
-      ...projected,
-      ...rows.filter((row) => !seen.has(`${String((row as { subject_type?: unknown }).subject_type)}:${String((row as { subject_id?: unknown }).subject_id)}:${String((row as { claim_type?: unknown }).claim_type)}`)),
-    ];
+    return rows.map(projectPublicCurrentClaim);
   }
 
   async getEvidence(args: {
