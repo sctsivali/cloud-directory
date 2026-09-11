@@ -1,0 +1,90 @@
+{
+  "schema_version": 17,
+  "migrations": [
+    {
+      "version": 1,
+      "filename": "0001_legacy_baseline.sql",
+      "checksum": "c0fcb09fe38aae098eff51b0baf098765ce8221b950296135e07dd041d4498c6"
+    },
+    {
+      "version": 2,
+      "filename": "0002_entities_services_offerings.sql",
+      "checksum": "66b2b98be9d1bd52eab2bf53e473a45eb651061f0100757712e04d9086641da1"
+    },
+    {
+      "version": 3,
+      "filename": "0003_locations_facilities_deployments.sql",
+      "checksum": "b012ff78f3d7c4492146f5ab7ab32f190ef0a6cad19d812191b1d221f7fb9b5f"
+    },
+    {
+      "version": 4,
+      "filename": "0004_technologies.sql",
+      "checksum": "f50a1aa8f94097c697bf836f26969ef3ea0359c41a2c527cc1173e2d31bae38e"
+    },
+    {
+      "version": 5,
+      "filename": "0005_claims_evidence_snapshots.sql",
+      "checksum": "aeb7b2e4f7422cd93e62ea91ae8073e0e8b068c5b00e247fab6b2d9efcab3c2d"
+    },
+    {
+      "version": 6,
+      "filename": "0006_proposals_reviews_revisions.sql",
+      "checksum": "305cb0b0a45016b9f1f5d98b2efd48066bdd7b62e1afeb6b812e7cd59d155131"
+    },
+    {
+      "version": 7,
+      "filename": "0007_collection_pipeline.sql",
+      "checksum": "5727bc359fbe51d75ccadc002a7fc9c518bbc08f08f776ea71bf1da21b7906de"
+    },
+    {
+      "version": 8,
+      "filename": "0008_scoring_runs.sql",
+      "checksum": "c4c276b0aff7e128f71e3ee56d08b6f94f1b06476f5f6cd8b5095473c68368a6"
+    },
+    {
+      "version": 9,
+      "filename": "0009_publication_ledger.sql",
+      "checksum": "e18d8df7cf6d3e07192d0a158b503cefa590e15a5a13974f111bded2dd93d7f8"
+    },
+    {
+      "version": 10,
+      "filename": "0010_trend_series_outlook.sql",
+      "checksum": "34c143c70de457dbfd8c6f60e4c7be5855e0a9ba958927eeb707b374be604ef7"
+    },
+    {
+      "version": 11,
+      "filename": "0011_sod_state_replay.sql",
+      "checksum": "35d3d63dfb3c231748f431312ee80de8aa80f7b6927bd3c1eb4bedb8b49007bf"
+    },
+    {
+      "version": 12,
+      "filename": "0012_typed_publication_state.sql",
+      "checksum": "e0b6c77aee40245a1f4933d98c139755f22558b1087bebc4c9941c3bfedefbe2"
+    },
+    {
+      "version": 13,
+      "filename": "0013_immutable_data_revisions.sql",
+      "checksum": "4b1a8093d8e7cb44e262fe4e393a65a1f4639e4d40871fb2644bb9a2302ac6c6"
+    },
+    {
+      "version": 14,
+      "filename": "0014_structured_price_terms.sql",
+      "checksum": "1efdad08ebfa696ce611e0063937807f47bb7d77a5004feef9bafdfa7739e6b6"
+    },
+    {
+      "version": 15,
+      "filename": "0015_current_claims.sql",
+      "checksum": "e29a96d08484bc4f706923a7e7cf878c0836366adddb305f61410486ef73e188"
+    },
+    {
+      "version": 16,
+      "filename": "0016_collection_submission_outcomes.sql",
+      "checksum": "2b545917c0f76ec38d353e853cf247b2b34846f8c583e2d2e86dcc3af04e6da3"
+    },
+    {
+      "version": 17,
+      "filename": "0017_current_claim_knowledge_conflicts.sql",
+      "checksum": "c0ca3198cab3ca9ff83b7265018588c6325b3ba56b67141f564f003f51189fc9"
+    }
+  ]
+}

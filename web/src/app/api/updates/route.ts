@@ -11,6 +11,7 @@ export async function GET() {
     count: updates.length,
     updates: updates.map((u) => ({
       ...u,
+      evidence_snapshot_ids: [...(u.evidence_snapshot_ids ?? [])],
       href: u.href?.startsWith("http")
         ? u.href
         : u.href

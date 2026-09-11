@@ -511,3 +511,114 @@ export function arenaHref(derived: DerivedNeeds) {
   if (derived.country !== "all") q.set("hq", derived.country);
   return `/arena?${q.toString()}`;
 }
+
+export type HardNeedConstraints = {
+  country?: string;
+  legalCountry?: string;
+  requireNamedFacility?: boolean;
+  residencyCountry?: string;
+  residencyPlane?: "primary" | "backup" | "metadata";
+};
+
+export function constraintsFromNeeds(state: NeedsState): HardNeedConstraints {
+  const derived = deriveNeeds(state);
+  const constraints: HardNeedConstraints = {};
+  if (derived.country !== "all") {
+    constraints.country = derived.country;
+  }
+  if (
+    state.extras.residency === "must_in_country" ||
+    state.extras.campus_prio === "stay_in_country"
+  ) {
+    constraints.residencyCountry = derived.country !== "all" ? derived.country : undefined;
+    constraints.residencyPlane = "primary";
+    if (!constraints.residencyCountry && state.countries.length === 1) {
+      constraints.residencyCountry = state.countries[0];
+    }
+  }
+  if (state.extras.hall === "need_hall") {
+    constraints.requireNamedFacility = true;
+  }
+  if (state.extras.entity === "local_entity") {
+    constraints.legalCountry = derived.country !== "all" ? derived.country : state.countries[0];
+  }
+  return constraints;
+}
+
+export function hasHardNeedConstraints(constraints: HardNeedConstraints): boolean {
+  return Boolean(
+    constraints.country ||
+      constraints.legalCountry ||
+      constraints.requireNamedFacility ||
+      constraints.residencyCountry
+  );
+}
+
+export function reconcileCompareIds(ids: string[], availableIds: readonly string[]): string[] {
+  const available = new Set(availableIds);
+  return ids.filter((id) => available.has(id)).slice(0, 4);
+}
+
+function rankLegacy(list: Rankable[], derived: DerivedNeeds): Rankable[] {
+  const copy = [...list];
+  copy.sort((a, b) => {
+    let primary = 0;
+    if (derived.sort === "sov") primary = b.sov_score - a.sov_score;
+    else if (derived.sort === "oss") primary = b.oss_score - a.oss_score;
+    else if (derived.sort === "conf") primary = b.conf_score - a.conf_score;
+    else if (derived.sort === "cost") primary = (a.min_price ?? 9e9) - (b.min_price ?? 9e9);
+    else if (derived.sort === "cover") primary = b.loc_count - a.loc_count;
+    else primary = (b.max_vcpu ?? 0) - (a.max_vcpu ?? 0) || (b.max_ram ?? 0) - (a.max_ram ?? 0);
+    if (primary !== 0) return primary;
+    return a.id.localeCompare(b.id) || a.name.localeCompare(b.name);
+  });
+  return copy;
+}
+
+export const WIZARD_FALLBACK_LABEL =
+  "Legacy fallback: canonical offering/deployment data unavailable";
+
+export type WizardRecommendation = {
+  engine: "canonical" | "legacy-fallback";
+  fallbackLabel?: string;
+  eligible: Rankable[];
+  needs_verification: Rankable[];
+  excluded: Rankable[];
+  picks: Rankable[];
+};
+
+/**
+ * Wizard ranking used by the result page. Country/legal/facility/residency
+ * filters never widen. Without offering/deployment facts nobody is eligible.
+ */
+export function recommendWizardRows(rows: Rankable[], state: NeedsState, n = 4): WizardRecommendation {
+  const derived = deriveNeeds(state);
+  const constraints = constraintsFromNeeds(state);
+  let base = derived.scope === "asean" ? rows.filter((r) => r.is_local_asean) : rows;
+
+  const country = constraints.country;
+  const eligible: Rankable[] = [];
+  let needs: Rankable[] = [];
+  let excluded: Rankable[] = [];
+
+  if (country) {
+    needs = base.filter((r) => (r.hq_country || "") === country);
+    excluded = base.filter((r) => (r.hq_country || "") !== country);
+  } else if (hasHardNeedConstraints(constraints)) {
+    needs = base;
+  } else {
+    needs = base;
+  }
+
+  const rankedNeeds = rankLegacy(needs, derived);
+  const rankedExcluded = rankLegacy(excluded, derived);
+  const picks = rankedNeeds.slice(0, n);
+  return {
+    engine: "legacy-fallback",
+    fallbackLabel: WIZARD_FALLBACK_LABEL,
+    eligible,
+    needs_verification: rankedNeeds,
+    excluded: rankedExcluded,
+    picks,
+  };
+}

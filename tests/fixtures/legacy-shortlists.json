@@ -1,0 +1,221 @@
+{
+  "methodology": "legacy-wizard-v1",
+  "blessed_for_new_engine": false,
+  "generated_from": "web/src/lib/needs.ts + rankArenaRows",
+  "note": "Wizard and Arena outputs for the acceptance corpus. Country relaxation is a captured defect, not a future rule.",
+  "arena": {
+    "fetch_order": [
+      "solo-brunei",
+      "local-no-packages",
+      "kvm-negated",
+      "local-packages",
+      "price-unsupported",
+      "multi-region",
+      "evidence-stale",
+      "global-asean"
+    ],
+    "sov_asean": [
+      "local-packages",
+      "multi-region",
+      "solo-brunei",
+      "kvm-negated",
+      "price-unsupported",
+      "evidence-stale",
+      "local-no-packages"
+    ],
+    "oss_asean": [
+      "local-packages",
+      "multi-region",
+      "local-no-packages",
+      "kvm-negated",
+      "evidence-stale",
+      "solo-brunei",
+      "price-unsupported"
+    ],
+    "conf_asean": [
+      "local-packages",
+      "multi-region",
+      "kvm-negated",
+      "evidence-stale",
+      "solo-brunei",
+      "price-unsupported",
+      "local-no-packages"
+    ],
+    "cost_all": [
+      "kvm-negated",
+      "price-unsupported",
+      "local-packages",
+      "global-asean",
+      "multi-region",
+      "solo-brunei",
+      "evidence-stale",
+      "local-no-packages"
+    ],
+    "cover_asean": [
+      "multi-region",
+      "solo-brunei",
+      "local-no-packages",
+      "kvm-negated",
+      "local-packages",
+      "price-unsupported",
+      "evidence-stale"
+    ],
+    "perf_asean": [
+      "multi-region",
+      "local-packages",
+      "evidence-stale",
+      "kvm-negated",
+      "solo-brunei",
+      "price-unsupported",
+      "local-no-packages"
+    ],
+    "brunei_hard": ["solo-brunei"]
+  },
+  "cases": {
+    "wizard-public-indonesia": {
+      "id": "wizard-public-indonesia",
+      "blessed_for_new_engine": false,
+      "needs": {
+        "sector": "public",
+        "workloads": ["publicsvc"],
+        "impact": "critical",
+        "data": "sensitive",
+        "countries": ["Indonesia"],
+        "priorities": ["location", "docs"],
+        "extras": {
+          "residency": "must_in_country",
+          "hall": "need_hall",
+          "entity": "local_entity",
+          "docs": "need_docs"
+        }
+      },
+      "derived": {
+        "sort": "sov",
+        "scope": "asean",
+        "country": "Indonesia",
+        "highImpact": true,
+        "arena_href": "/arena?need=1&sort=sov&scope=asean&hq=Indonesia"
+      },
+      "shortlist_ids": ["local-packages", "local-no-packages"]
+    },
+    "wizard-learn-price": {
+      "id": "wizard-learn-price",
+      "blessed_for_new_engine": false,
+      "needs": {
+        "sector": "learn",
+        "workloads": ["unsure"],
+        "impact": "unknown",
+        "data": "unknown",
+        "countries": [],
+        "priorities": [],
+        "extras": { "learn_focus": "price" }
+      },
+      "derived": {
+        "sort": "cost",
+        "scope": "all",
+        "country": "all",
+        "highImpact": false,
+        "arena_href": "/arena?need=1&sort=cost&scope=all"
+      },
+      "shortlist_ids": ["kvm-negated", "price-unsupported", "local-packages", "global-asean"]
+    },
+    "wizard-portability": {
+      "id": "wizard-portability",
+      "blessed_for_new_engine": false,
+      "needs": {
+        "sector": "biz",
+        "workloads": ["web"],
+        "impact": "low",
+        "data": "public",
+        "countries": ["Singapore", "Malaysia"],
+        "priorities": ["portability"],
+        "extras": { "market": "global" }
+      },
+      "derived": {
+        "sort": "oss",
+        "scope": "all",
+        "country": "all",
+        "highImpact": false,
+        "arena_href": "/arena?need=1&sort=oss&scope=all"
+      },
+      "shortlist_ids": ["local-packages", "multi-region", "local-no-packages", "kvm-negated"]
+    },
+    "wizard-brunei-relaxes": {
+      "id": "wizard-brunei-relaxes",
+      "blessed_for_new_engine": false,
+      "known_defects": [
+        {
+          "id": "one-country-shortlist-relaxation",
+          "blessed": false,
+          "legacy_behavior": "When fewer than two HQ matches exist, shortlistProviders keeps the wider ASEAN list.",
+          "target_behavior": "A hard country constraint must exclude non-matching providers or return needs_verification, never silently widen."
+        }
+      ],
+      "needs": {
+        "sector": "biz",
+        "workloads": ["internal"],
+        "impact": "ops",
+        "data": "personal",
+        "countries": ["Brunei"],
+        "priorities": ["location"],
+        "extras": { "market": "domestic" }
+      },
+      "derived": {
+        "sort": "sov",
+        "scope": "asean",
+        "country": "Brunei",
+        "highImpact": false,
+        "arena_href": "/arena?need=1&sort=sov&scope=asean&hq=Brunei"
+      },
+      "shortlist_ids": ["local-packages", "multi-region", "solo-brunei", "kvm-negated"]
+    },
+    "wizard-docs-conf": {
+      "id": "wizard-docs-conf",
+      "blessed_for_new_engine": false,
+      "needs": {
+        "sector": "biz",
+        "workloads": ["web"],
+        "impact": "low",
+        "data": "public",
+        "countries": ["Singapore", "Malaysia"],
+        "priorities": ["docs"],
+        "extras": { "market": "global" }
+      },
+      "derived": {
+        "sort": "conf",
+        "scope": "all",
+        "country": "all",
+        "highImpact": false,
+        "arena_href": "/arena?need=1&sort=conf&scope=all"
+      },
+      "shortlist_ids": ["local-packages", "multi-region", "kvm-negated", "evidence-stale"]
+    },
+    "compare-top-sov": {
+      "id": "compare-top-sov",
+      "blessed_for_new_engine": false,
+      "selected_ids": ["local-packages", "multi-region"],
+      "values": [
+        {
+          "id": "local-packages",
+          "name": "Nusantara Compute",
+          "hq_country": "Indonesia",
+          "sov_score": 100,
+          "oss_score": 100,
+          "conf_score": 100,
+          "min_price": 8.5,
+          "hypervisor": "KVM"
+        },
+        {
+          "id": "multi-region",
+          "name": "Sea Mesh Cloud",
+          "hq_country": "Singapore",
+          "sov_score": 100,
+          "oss_score": 100,
+          "conf_score": 100,
+          "min_price": 15,
+          "hypervisor": "KVM"
+        }
+      ]
+    }
+  }
+}

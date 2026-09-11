@@ -1,0 +1,5 @@
+{
+  "name": "@cloud-directory/domain",
+  "private": true,
+  "type": "module"
+}

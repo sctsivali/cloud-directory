@@ -24,6 +24,7 @@ export function Footer() {
         <nav aria-label={t.footAbout}>
           <p className="foot-label">{t.footAbout}</p>
           <a href="/updates">{t.navUpdates}</a>
+          <a href="/trends">{t.navTrends}</a>
           <a href="/methodology">{t.navMethod}</a>
           <a href="/about">{t.navAbout}</a>
           <a href="/correct">{t.navCorrect}</a>

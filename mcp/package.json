@@ -1,0 +1,13 @@
+{
+  "name": "@cloud-directory/mcp",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node --experimental-strip-types src/stdio.ts"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.30.0",
+    "@types/pg": "8.21.0",
+    "pg": "8.23.0"
+  }
+}

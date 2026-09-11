@@ -1,0 +1,42 @@
+{
+  "id": "price-unsupported",
+  "name": "Peso Node",
+  "hq_country": "Philippines",
+  "legal_country": "Philippines",
+  "origin": "local",
+  "is_local_asean": true,
+  "data_residency": "local",
+  "coverage_tags": ["unsupported_currency", "source_malformed"],
+  "stack": {
+    "hypervisor": null,
+    "orchestration": null,
+    "storage": null,
+    "control_plane": null,
+    "open_source": null
+  },
+  "locations": [{ "city": "Manila", "country": "Philippines" }],
+  "buildings": [],
+  "tiers": [
+    {
+      "id": "price-unsupported-1",
+      "tier_name": "Compute 1",
+      "status": "OK",
+      "vcpu": 1,
+      "ram_gb": 1,
+      "price_amount": 80000,
+      "currency": "LAK",
+      "price_usd_month": 5,
+      "billing_period": "monthly",
+      "dc_city": "Manila",
+      "dc_country": "Philippines"
+    }
+  ],
+  "sources": [
+    {
+      "url": "https://fixtures.example.test/peso-node/plans",
+      "status": "malformed",
+      "fixture": "malformed.html",
+      "observed_at": "2026-09-01T00:00:00Z"
+    }
+  ]
+}

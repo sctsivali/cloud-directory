@@ -1,4 +1,6 @@
 -- Building facility facts (2026-08-30). Null stays Not disclosed.
+-- Schema changes in this file are deprecated.
+-- Canonical schema is migrations/0001_legacy_baseline.sql (scripts/migrate.py).
 ALTER TABLE buildings ADD COLUMN IF NOT EXISTS operator_country text;
 ALTER TABLE buildings ADD COLUMN IF NOT EXISTS dc_tier text;
 ALTER TABLE buildings ADD COLUMN IF NOT EXISTS telcos text;

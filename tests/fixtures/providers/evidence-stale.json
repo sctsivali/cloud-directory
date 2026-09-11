@@ -1,0 +1,42 @@
+{
+  "id": "evidence-stale",
+  "name": "Stale Rack",
+  "hq_country": "Malaysia",
+  "legal_country": "Malaysia",
+  "origin": "local",
+  "is_local_asean": true,
+  "data_residency": "local",
+  "coverage_tags": ["annual_commitment", "source_stale", "confirmed_kvm"],
+  "stack": {
+    "hypervisor": "KVM",
+    "orchestration": null,
+    "storage": null,
+    "control_plane": null,
+    "open_source": null
+  },
+  "locations": [{ "city": "Kuala Lumpur", "country": "Malaysia" }],
+  "buildings": [],
+  "tiers": [
+    {
+      "id": "evidence-stale-annual",
+      "tier_name": "Compute 2 annual",
+      "status": "OK",
+      "vcpu": 2,
+      "ram_gb": 4,
+      "price_usd_month": 96,
+      "currency": "USD",
+      "billing_period": "annual",
+      "dc_city": "Kuala Lumpur",
+      "dc_country": "Malaysia"
+    }
+  ],
+  "sources": [
+    {
+      "url": "https://fixtures.example.test/stale-rack/2022-pricelist",
+      "status": "200",
+      "fixture": "stale-evidence.html",
+      "observed_at": "2022-03-01T00:00:00Z",
+      "freshness": "stale"
+    }
+  ]
+}

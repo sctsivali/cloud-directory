@@ -1,0 +1,41 @@
+{
+  "id": "solo-brunei",
+  "name": "Brunei Node",
+  "hq_country": "Brunei",
+  "legal_country": "Brunei",
+  "origin": "local",
+  "is_local_asean": true,
+  "data_residency": "local",
+  "coverage_tags": ["city_only_disclosure", "one_country_shortlist_relaxation"],
+  "stack": {
+    "hypervisor": null,
+    "orchestration": null,
+    "storage": null,
+    "control_plane": null,
+    "open_source": null
+  },
+  "locations": [{ "city": "Bandar Seri Begawan", "country": "Brunei" }],
+  "buildings": [],
+  "tiers": [
+    {
+      "id": "solo-brunei-1",
+      "tier_name": "Node 1",
+      "status": "OK",
+      "vcpu": 1,
+      "ram_gb": 1,
+      "price_usd_month": 40,
+      "currency": "USD",
+      "billing_period": "monthly",
+      "dc_city": "Bandar Seri Begawan",
+      "dc_country": "Brunei"
+    }
+  ],
+  "sources": [
+    {
+      "url": "https://fixtures.example.test/brunei-node/",
+      "status": "200",
+      "fixture": "ok-200.html",
+      "observed_at": "2026-09-01T00:00:00Z"
+    }
+  ]
+}

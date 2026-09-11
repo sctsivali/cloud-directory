@@ -1,0 +1,18 @@
+[project]
+name = "cloud-directory"
+version = "0.1.0"
+description = "ASEAN cloud directory"
+readme = "README.md"
+requires-python = ">=3.11"
+
+[project.optional-dependencies]
+test = [
+    "pytest>=8.0",
+    "psycopg[binary]>=3.1",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests", "workers"]
+pythonpath = ["."]
+python_files = ["test_*.py"]
+addopts = "-q"

@@ -1,3 +1,5 @@
+-- Schema changes in this file are deprecated.
+-- Canonical schema is migrations/0001_legacy_baseline.sql (scripts/migrate.py).
 CREATE TABLE IF NOT EXISTS correction_requests (
   id serial PRIMARY KEY,
   kind text NOT NULL CHECK (kind IN ('rescan','claim')),

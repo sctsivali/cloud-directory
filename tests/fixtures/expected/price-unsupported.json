@@ -1,0 +1,19 @@
+{
+  "provider_id": "price-unsupported",
+  "blessed_for_new_engine": false,
+  "legacy": { "sov": 80, "conf": 65, "oss": 0, "min_price": 5 },
+  "known_defects": [
+    {
+      "id": "unsupported-currency-idr-fallback",
+      "blessed": false,
+      "legacy_behavior": "LAK 80000 is converted with the IDR fallback rate 16000 → USD 5.00.",
+      "target_behavior": "Unsupported currency must fail closed, not reuse an IDR FX rate."
+    },
+    {
+      "id": "malformed-source-conf-credit",
+      "blessed": false,
+      "legacy_behavior": "A malformed body still awards CONF +15 because the URL field is non-empty.",
+      "target_behavior": "Malformed responses are distinct collection failures."
+    }
+  ]
+}

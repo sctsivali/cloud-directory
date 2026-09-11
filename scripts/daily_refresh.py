@@ -6,23 +6,87 @@ Silent when nothing new and refresh is healthy.
 """
 from __future__ import annotations
 
-import csv, json, re, subprocess, sys
+import argparse, csv, json, re, subprocess, sys, warnings
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 
-ROOT = Path("/home/hermes-prime/arena-next")
-INGEST = ROOT / "data" / "ingest"
-GATE = ROOT / "scripts" / "ingest_provider.py"
-CANDIDATES = ROOT / "data" / "uncovered-candidates.csv"
-STATE = ROOT / "data" / ".discover-state.json"
-TMP = Path("/tmp/cd-daily")
 ASEAN = {
     "Indonesia", "Malaysia", "Singapore", "Thailand", "Vietnam",
     "Philippines", "Cambodia", "Laos", "Myanmar", "Brunei",
 }
 
 
+@dataclass(frozen=True)
+class RefreshPaths:
+    root: Path
+    ingest: Path
+    gate: Path
+    candidates: Path
+    state: Path
+    tmp: Path
+
+
+def repo_root() -> Path:
+    return Path(__file__).resolve().parent.parent
+
+
+def parse_args(argv=None):
+    p = argparse.ArgumentParser(
+        description="15-minute watchdog: refresh known files + ingest one uncovered provider."
+    )
+    p.add_argument("--root", type=Path, default=None, help="Repository root (defaults to this checkout)")
+    p.add_argument("--ingest-dir", type=Path, default=None)
+    p.add_argument("--gate", type=Path, default=None)
+    p.add_argument("--candidates", type=Path, default=None)
+    p.add_argument("--state", type=Path, default=None)
+    p.add_argument("--tmp", type=Path, default=Path("/tmp/cd-daily"))
+    p.add_argument(
+        "--legacy-direct-write",
+        action="store_true",
+        help="Deprecated. Apply ingest SQL directly. Kept for compatibility; do not use for enrichment.",
+    )
+    return p.parse_args(argv)
+
+
+def paths_from_args(args) -> RefreshPaths:
+    root = (args.root or repo_root()).resolve()
+    return RefreshPaths(
+        root=root,
+        ingest=(args.ingest_dir or (root / "data" / "ingest")).resolve(),
+        gate=(args.gate or (root / "scripts" / "ingest_provider.py")).resolve(),
+        candidates=(args.candidates or (root / "data" / "uncovered-candidates.csv")).resolve(),
+        state=(args.state or (root / "data" / ".discover-state.json")).resolve(),
+        tmp=Path(args.tmp).resolve(),
+    )
+
+
+def configure(paths: RefreshPaths) -> None:
+    global ROOT, INGEST, GATE, CANDIDATES, STATE, TMP
+    ROOT = paths.root
+    INGEST = paths.ingest
+    GATE = paths.gate
+    CANDIDATES = paths.candidates
+    STATE = paths.state
+    TMP = paths.tmp
+
+
+ROOT: Path
+INGEST: Path
+GATE: Path
+CANDIDATES: Path
+STATE: Path
+TMP: Path
+configure(paths_from_args(parse_args([])))
+
+
 def fetch(url: str) -> tuple[int, str]:
+    """Deprecated unbounded fetch. Phase 4 collectors must use workers.collector.fetch."""
+    warnings.warn(
+        "daily_refresh.fetch is deprecated; use workers.collector.fetch_url with injected DNS/HTTP",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     try:
         from curl_cffi import requests as r
 
@@ -277,19 +341,20 @@ def snap(pid: str) -> str:
 
 def log_update(kind: str, pid: str, title_id: str, title_en: str,
                summary_id: str, summary_en: str, href: str) -> None:
-    sql = (
-        "INSERT INTO directory_updates "
-        "(kind, provider_id, title_id, title_en, summary_id, summary_en, href) VALUES ("
-        f"{sql_lit(kind)},{sql_lit(pid)},{sql_lit(title_id)},{sql_lit(title_en)},"
-        f"{sql_lit(summary_id)},{sql_lit(summary_en)},{sql_lit(href)});"
+    warnings.warn(
+        "generic directory_updates insertion is retired; public updates come from published change_events",
+        DeprecationWarning,
+        stacklevel=2,
     )
-    p = TMP / "log-update.sql"
-    TMP.mkdir(parents=True, exist_ok=True)
-    p.write_text(sql)
-    apply_sql(p)
+    return
 
 
 def refresh_known() -> list[str]:
+    warnings.warn(
+        "daily_refresh.refresh_known applies canonical SQL and is deprecated",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     fail: list[str] = []
     TMP.mkdir(parents=True, exist_ok=True)
     for path in sorted(INGEST.glob("*.json")):
@@ -325,19 +390,33 @@ def refresh_known() -> list[str]:
     return fail
 
 
-def main() -> int:
-    fail = refresh_known()
-    added = hunt_and_ingest()
-    if not fail and not added:
-        return 0
-    now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
-    lines = [f"Cloud Directory 15m — {now}"]
-    if added:
-        lines.append(added)
-    if fail:
-        lines.append("Gagal refresh: " + "; ".join(fail[:8]))
-    print("\n".join(lines))
-    return 1 if fail else 0
+def main(argv=None) -> int:
+    args = parse_args(argv)
+    configure(paths_from_args(args))
+    if args.legacy_direct_write:
+        warnings.warn(
+            "legacy direct SQL refresh is deprecated; Phase 4 enrichment is proposal-only",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        fail = refresh_known()
+        added = hunt_and_ingest()
+        if not fail and not added:
+            return 0
+        now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+        lines = [f"Cloud Directory 15m — {now}"]
+        if added:
+            lines.append(added)
+        if fail:
+            lines.append("Gagal refresh: " + "; ".join(fail[:8]))
+        print("\n".join(lines))
+        return 1 if fail else 0
+    print(
+        "daily_refresh: refusing live fetch and canonical writes; "
+        "use workers.orchestrator with mocked or injected transports",
+        file=sys.stderr,
+    )
+    return 2
 
 
 if __name__ == "__main__":

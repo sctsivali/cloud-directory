@@ -1,0 +1,19 @@
+{
+  "provider_id": "evidence-stale",
+  "blessed_for_new_engine": false,
+  "legacy": { "sov": 80, "conf": 85, "oss": 30, "min_price": 96 },
+  "known_defects": [
+    {
+      "id": "stale-evidence-as-current",
+      "blessed": false,
+      "legacy_behavior": "A 2022 snapshot still awards full CONF source and hypervisor credit.",
+      "target_behavior": "Stale evidence cannot be presented as freshly verified; observation time stays 2022."
+    },
+    {
+      "id": "annual-stored-as-usd-month",
+      "blessed": false,
+      "legacy_behavior": "Annual USD 96 is stored in price_usd_month and sorts as a monthly price.",
+      "target_behavior": "Commitment period is part of the price observation and must be normalized or left incomparable."
+    }
+  ]
+}

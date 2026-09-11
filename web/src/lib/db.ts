@@ -1,4 +1,37 @@
 import { Pool } from "pg";
+import { loadDataRevision } from '../../../packages/domain/src/intelligence/data-revisions.ts';
+import { CURRENT_CLAIMS_AT_SQL } from '../../../packages/domain/src/current-claims.ts';
+import {
+  bindDisplayedScore,
+  CURRENT_METHODOLOGY,
+  LATEST_SCORING_RUN_BY_PROVIDER_SQL,
+  SCORE_COMPONENTS_FOR_RUNS_SQL,
+  scoringRunIdentity,
+  selectLatestScoringRun,
+  type DisplayedScore,
+  type ScoreComponentRow,
+  type ScoringRunRow,
+} from "../../../packages/domain/src/scoring/index.ts";
+import {
+  selectPublicUpdates,
+  PUBLIC_UPDATES_QUERY,
+  type PublicDirectoryUpdate,
+} from "../../../packages/domain/src/revisions/public-feed.ts";
+import type { ChangeEvent } from "../../../packages/domain/src/revisions/types.ts";
+import { LEGACY_CONF_SQL, LEGACY_OSS_SQL, LEGACY_SOV_SQL } from "./legacy-scoring";
+import {
+  buildCountryTimeline,
+  buildOutlook,
+  buildProviderTimeline,
+  buildTrendReport,
+  inferObservationWindow,
+  publicOutlookEligibilityView,
+  publicTrendView,
+  requireRegisteredIso2,
+  windowFromInferred,
+  type TrendMetric,
+} from "../../../packages/domain/src/intelligence/index.ts";
+import { projectPublicTimelineDocument } from "../../../packages/domain/src/revisions/public-projection.ts";
 
 const globalForPg = globalThis as unknown as { pool?: Pool };
 
@@ -11,72 +44,9 @@ export const pool =
 
 if (!globalForPg.pool) globalForPg.pool = pool;
 
-const ASEAN = `'Indonesia','Malaysia','Singapore','Thailand','Vietnam','Philippines','Cambodia','Laos','Myanmar','Brunei'`;
-
-const CITY_NAMED = `
-  btrim(COALESCE(%CITY%,'')) <> ''
-  AND btrim(%CITY%) !~* '^(undisclosed|unknown|not disclosed)'
-`;
-
-const SOV = `
-  (
-    CASE WHEN EXISTS (
-      SELECT 1 FROM tiers tx
-      WHERE tx.provider_id = p.id
-        AND tx.status = 'OK'
-        AND ${CITY_NAMED.replaceAll("%CITY%", "tx.dc_city")}
-        AND COALESCE(tx.dc_country,'') IN (${ASEAN})
-    ) OR EXISTS (
-      SELECT 1 FROM provider_locations pl
-      JOIN locations l ON l.id = pl.location_id
-      WHERE pl.provider_id = p.id
-        AND ${CITY_NAMED.replaceAll("%CITY%", "l.city")}
-        AND l.country IN (${ASEAN})
-    ) THEN 40 ELSE 0 END
-    + CASE WHEN COALESCE(NULLIF(p.legal_country,''), p.hq_country, '') IN (${ASEAN})
-      THEN 25 ELSE 0 END
-    + CASE WHEN COALESCE(p.legal_country,'') IN (${ASEAN}) AND EXISTS (
-        SELECT 1 FROM tiers tx
-        WHERE tx.provider_id = p.id
-          AND tx.status = 'OK'
-          AND ${CITY_NAMED.replaceAll("%CITY%", "tx.dc_city")}
-          AND tx.dc_country = p.legal_country
-      ) THEN 15 ELSE 0 END
-    + CASE WHEN EXISTS (
-        SELECT 1 FROM provider_buildings pb
-        JOIN buildings b ON b.id = pb.building_id
-        WHERE pb.provider_id = p.id AND b.listed
-      ) THEN 20 ELSE 0 END
-  )
-`;
-
-const CONF = `
-  (
-    CASE WHEN COALESCE(p.hq_country,'') <> '' THEN 20 ELSE 0 END
-    + CASE
-        WHEN btrim(COALESCE(st.hypervisor,'')) = '' THEN 0
-        WHEN COALESCE(st.hypervisor,'') ~* 'likely|implied|typical|unknown|confirmed:|not disclosed|belum ditemukan|sales model|derived' THEN 0
-        WHEN length(btrim(st.hypervisor)) > 60 THEN 0
-        ELSE 20
-      END
-    + CASE WHEN EXISTS (
-        SELECT 1 FROM provider_buildings pb
-        JOIN buildings b ON b.id = pb.building_id
-        WHERE pb.provider_id = p.id AND b.listed
-      ) THEN 15 ELSE 0 END
-    + CASE WHEN EXISTS (
-        SELECT 1 FROM tiers tx
-        WHERE tx.provider_id = p.id
-          AND COALESCE(tx.dc_country,'') <> ''
-          AND ${CITY_NAMED.replaceAll("%CITY%", "tx.dc_city")}
-      ) THEN 15 ELSE 0 END
-    + CASE WHEN EXISTS (
-        SELECT 1 FROM sources so
-        WHERE so.provider_id = p.id AND COALESCE(so.url,'') <> ''
-      ) THEN 15 ELSE 0 END
-    + CASE WHEN COALESCE(p.legal_country,'') <> '' THEN 15 ELSE 0 END
-  )
-`;
+const SOV = LEGACY_SOV_SQL;
+const CONF = LEGACY_CONF_SQL;
+const OSS = LEGACY_OSS_SQL;
 
 export type OverviewProvider = {
   id: string;
@@ -164,6 +134,161 @@ export async function getOverview(): Promise<OverviewData> {
   };
 }
 
+export type ScoreEngineMeta = {
+  score_engine: "canonical" | "legacy-fallback";
+  algorithm_version: string;
+  ruleset_hash: string;
+  data_revision: string;
+  uncertainty: number | null;
+  fallback_label: string | null;
+  scoring_run_id: string | null;
+  methodology_id: string;
+  offering_id: string | null;
+  deployment_id: string | null;
+  composite: number | null;
+  ranking_lower_bound: number | null;
+};
+
+function metaFromDisplayed(displayed: DisplayedScore): ScoreEngineMeta {
+  return {
+    score_engine: displayed.engine,
+    algorithm_version: displayed.algorithmVersion,
+    ruleset_hash: displayed.rulesetHash,
+    data_revision: displayed.dataRevision,
+    uncertainty: displayed.uncertainty,
+    fallback_label: displayed.fallbackLabel,
+    scoring_run_id: displayed.scoringRunId,
+    methodology_id: displayed.methodologyId,
+    offering_id: displayed.offeringId,
+    deployment_id: displayed.deploymentId,
+    composite: displayed.composite,
+    ranking_lower_bound: displayed.rankingLowerBound,
+  };
+}
+
+export function legacyScoreMeta(): ScoreEngineMeta {
+  return metaFromDisplayed(
+    bindDisplayedScore({
+      legacySql: { sov: 0, oss: 0, conf: 0 },
+      runs: [],
+      components: [],
+      identity: null,
+    })
+  );
+}
+
+function applyDisplayedScore<T extends { sov_score: number; oss_score: number; conf_score: number }>(
+  row: T,
+  displayed: DisplayedScore
+): T & ScoreEngineMeta {
+  return {
+    ...row,
+    sov_score: displayed.sov_score,
+    oss_score: displayed.oss_score,
+    conf_score: displayed.conf_score,
+    ...metaFromDisplayed(displayed),
+  };
+}
+
+export function publicScoreFields(row: ScoreEngineMeta & { sov_score: number; oss_score: number; conf_score: number }) {
+  return {
+    sov_score: row.sov_score,
+    oss_score: row.oss_score,
+    conf_score: row.conf_score,
+    score_engine: row.score_engine,
+    algorithm_version: row.algorithm_version,
+    ruleset_hash: row.ruleset_hash,
+    data_revision: row.data_revision,
+    methodology_id: row.methodology_id,
+    scoring_run_id: row.scoring_run_id,
+    offering_id: row.offering_id,
+    deployment_id: row.deployment_id,
+    fallback_label: row.fallback_label,
+    composite: row.composite,
+    ranking_lower_bound: row.ranking_lower_bound,
+    uncertainty: row.uncertainty,
+  };
+}
+
+function asIso(value: unknown): string {
+  return value instanceof Date ? value.toISOString() : String(value);
+}
+
+function mapScoringRun(row: Record<string, unknown>): ScoringRunRow {
+  return {
+    id: String(row.id),
+    offeringId: row.offering_id == null ? null : String(row.offering_id),
+    deploymentId: row.deployment_id == null ? null : String(row.deployment_id),
+    providerId: row.provider_id == null ? null : String(row.provider_id),
+    methodologyId: String(row.methodology_id),
+    algorithmVersion: String(row.algorithm_version),
+    rulesetHash: String(row.ruleset_hash),
+    dataRevision: String(row.data_revision),
+    engine: row.engine === "legacy-fallback" ? "legacy-fallback" : "canonical",
+    composite: row.composite == null ? null : Number(row.composite),
+    rankingLowerBound: row.ranking_lower_bound == null ? null : Number(row.ranking_lower_bound),
+    uncertainty: Number(row.uncertainty),
+    createdAt: asIso(row.created_at),
+  };
+}
+
+function mapScoreComponent(row: Record<string, unknown>): ScoreComponentRow {
+  const codes = row.reason_codes;
+  return {
+    scoringRunId: String(row.scoring_run_id),
+    dimension: String(row.dimension),
+    knowledgeState: String(row.knowledge_state),
+    value: row.value == null ? null : Number(row.value),
+    weight: Number(row.weight),
+    uncertainty: Number(row.uncertainty),
+    reasonCodes: Array.isArray(codes) ? codes.map((item) => String(item)) : [],
+  };
+}
+
+type ScoringPack = { runs: ScoringRunRow[]; components: ScoreComponentRow[] };
+
+function bindProviderRow<T extends { sov_score: number; oss_score: number; conf_score: number }>(
+  row: T,
+  pack: ScoringPack | undefined
+): T & ScoreEngineMeta {
+  const runs = pack?.runs ?? [];
+  const latest = selectLatestScoringRun(runs);
+  return applyDisplayedScore(
+    row,
+    bindDisplayedScore({
+      legacySql: { sov: row.sov_score, oss: row.oss_score, conf: row.conf_score },
+      runs,
+      components: pack?.components ?? [],
+      identity: latest ? scoringRunIdentity(latest) : null,
+    })
+  );
+}
+
+async function loadScoringPackByProvider(ids: string[]): Promise<Map<string, ScoringPack>> {
+  const out = new Map<string, ScoringPack>();
+  if (ids.length === 0) return out;
+  try {
+    const { rows } = await pool.query(LATEST_SCORING_RUN_BY_PROVIDER_SQL, [ids, CURRENT_METHODOLOGY.id]);
+    const runs = (rows as Record<string, unknown>[]).map(mapScoringRun);
+    const runIds = runs.map((run) => run.id);
+    let components: ScoreComponentRow[] = [];
+    if (runIds.length > 0) {
+      const componentRows = await pool.query(SCORE_COMPONENTS_FOR_RUNS_SQL, [runIds]);
+      components = (componentRows.rows as Record<string, unknown>[]).map(mapScoreComponent);
+    }
+    for (const run of runs) {
+      if (!run.providerId) continue;
+      out.set(run.providerId, {
+        runs: [run],
+        components: components.filter((row) => row.scoringRunId === run.id),
+      });
+    }
+  } catch {
+    /* scoring_runs absent: labeled legacy fallback */
+  }
+  return out;
+}
+
 export type ArenaRow = OverviewProvider & {
   loc_count: number;
   oss_score: number;
@@ -173,7 +298,7 @@ export type ArenaRow = OverviewProvider & {
   storage: string | null;
   container_runtime: string | null;
   control_plane: string | null;
-};
+} & ScoreEngineMeta;
 
 export async function getArena(): Promise<ArenaRow[]> {
   const { rows } = await pool.query<ArenaRow>(`
@@ -187,13 +312,7 @@ export async function getArena(): Promise<ArenaRow[]> {
       MAX(t.ram_gb)::float AS max_ram,
       ${SOV}::int AS sov_score,
       ${CONF}::int AS conf_score,
-      (
-        CASE WHEN COALESCE(st.hypervisor,'') ~* 'kvm|proxmox|xen' THEN 30 ELSE 0 END
-        + CASE WHEN COALESCE(st.orchestration,'') ~* 'kubernetes|k8s|docker' THEN 20 ELSE 0 END
-        + CASE WHEN COALESCE(st.storage,'') ~* 'ceph|openebs|longhorn|rook' THEN 20 ELSE 0 END
-        + CASE WHEN st.open_source IS TRUE THEN 15 ELSE 0 END
-        + CASE WHEN COALESCE(st.control_plane,'') ~* 'proxmox|openstack' THEN 15 ELSE 0 END
-      )::int AS oss_score
+      ${OSS}::int AS oss_score
     FROM providers p
     LEFT JOIN sovereignty s ON s.provider_id = p.id
     LEFT JOIN stacks st ON st.provider_id = p.id
@@ -202,7 +321,8 @@ export async function getArena(): Promise<ArenaRow[]> {
     GROUP BY p.id, s.data_residency, st.hypervisor, st.orchestration, st.storage, st.container_runtime, st.control_plane, st.open_source, st.source_url
     ORDER BY p.is_local_asean DESC, p.name
   `);
-  return rows;
+  const pack = await loadScoringPackByProvider(rows.map((r) => r.id));
+  return rows.map((row) => bindProviderRow(row, pack.get(row.id)));
 }
 
 export type ProviderDetail = {
@@ -250,7 +370,7 @@ export type ProviderDetail = {
     sov_score: number | null;
     oss_score: number | null;
   }[];
-};
+} & ScoreEngineMeta;
 
 export async function getProvider(id: string): Promise<ProviderDetail | null> {
   const { rows } = await pool.query(
@@ -261,13 +381,7 @@ export async function getProvider(id: string): Promise<ProviderDetail | null> {
       st.hypervisor, st.orchestration, st.storage, st.control_plane, st.container_runtime, st.virtualization, st.open_source, st.source_url,
       ${SOV}::int AS sov_score,
       ${CONF}::int AS conf_score,
-      (
-        CASE WHEN COALESCE(st.hypervisor,'') ~* 'kvm|proxmox|xen' THEN 30 ELSE 0 END
-        + CASE WHEN COALESCE(st.orchestration,'') ~* 'kubernetes|k8s|docker' THEN 20 ELSE 0 END
-        + CASE WHEN COALESCE(st.storage,'') ~* 'ceph|openebs|longhorn|rook' THEN 20 ELSE 0 END
-        + CASE WHEN st.open_source IS TRUE THEN 15 ELSE 0 END
-        + CASE WHEN COALESCE(st.control_plane,'') ~* 'proxmox|openstack' THEN 15 ELSE 0 END
-      )::int AS oss_score
+      ${OSS}::int AS oss_score
     FROM providers p
     LEFT JOIN sovereignty s ON s.provider_id = p.id
     LEFT JOIN stacks st ON st.provider_id = p.id
@@ -339,12 +453,16 @@ export async function getProvider(id: string): Promise<ProviderDetail | null> {
       [id]
     ),
   ]);
-  return {
-    ...p,
-    cities: locs.rows,
-    sources: srcs.rows,
-    tiers: tiers.rows,
-  };
+  const pack = await loadScoringPackByProvider([id]);
+  return bindProviderRow(
+    {
+      ...p,
+      cities: locs.rows,
+      sources: srcs.rows,
+      tiers: tiers.rows,
+    },
+    pack.get(id)
+  );
 }
 
 export type BuildingRow = {
@@ -522,25 +640,88 @@ export async function getMapSites(): Promise<MapSite[]> {
   return rows;
 }
 
-export type DirectoryUpdate = {
-  id: number;
-  kind: "discovered" | "updated";
-  provider_id: string | null;
-  title_id: string;
-  title_en: string;
-  summary_id: string | null;
-  summary_en: string | null;
-  href: string | null;
-  occurred_at: string;
-};
+export type DirectoryUpdate = PublicDirectoryUpdate;
+
+function mapChangeEventRow(row: Record<string, unknown>): ChangeEvent {
+  const evidence = row.evidence_snapshot_ids;
+  return {
+    id: String(row.id),
+    receiptId: String(row.receipt_id),
+    verificationState: row.verification_state as ChangeEvent["verificationState"],
+    revisionId: String(row.revision_id),
+    proposalId: String(row.proposal_id),
+    changeType: row.change_type as ChangeEvent["changeType"],
+    entityType: String(row.entity_type),
+    entityId: String(row.entity_id),
+    fieldName: String(row.field_name),
+    oldValue: row.old_value,
+    newValue: row.new_value,
+    valueSensitivity: (row.value_sensitivity as ChangeEvent["valueSensitivity"]) ?? "public",
+    sourceId: row.source_id ? String(row.source_id) : null,
+    evidenceSnapshotIds: Array.isArray(evidence) ? evidence.filter((item): item is string => typeof item === "string") : [],
+    detectedAt: row.detected_at ? String(row.detected_at) : null,
+    observedAt: row.observed_at ? String(row.observed_at) : null,
+    reviewedAt: row.reviewed_at ? String(row.reviewed_at) : null,
+    publishedAt: String(row.published_at),
+    correctionOfEventId: row.correction_of_event_id ? String(row.correction_of_event_id) : null,
+    titleId: String(row.title_id),
+    titleEn: String(row.title_en),
+    summaryId: row.summary_id ? String(row.summary_id) : null,
+    summaryEn: row.summary_en ? String(row.summary_en) : null,
+    providerId: row.provider_id ? String(row.provider_id) : null,
+    href: row.href ? String(row.href) : null,
+  };
+}
 
 export async function getDirectoryUpdates(): Promise<DirectoryUpdate[]> {
-  const { rows } = await pool.query<DirectoryUpdate>(`
-    SELECT id, kind, provider_id, title_id, title_en, summary_id, summary_en, href,
-           occurred_at::text AS occurred_at
-    FROM directory_updates
-    ORDER BY occurred_at DESC, id DESC
-    LIMIT 80
-  `);
+  const events = await pool.query(PUBLIC_UPDATES_QUERY);
+  return selectPublicUpdates(events.rows.map(mapChangeEventRow), []);
+}
+
+import { readTrendRequest } from '../../../packages/domain/src/intelligence/request.ts';
+export async function getTrendsResponse(raw: unknown) { return readTrendRequest(pool, raw); }
+
+export async function getTrendReport(args?: {
+  countryCode?: string | null;
+  providerId?: string | null;
+  dataRevision?: string | null;
+  window?: { start: string; end: string } | null;
+}): Promise<ReturnType<typeof publicTrendView>> {
+  const { facts, id: dataRevision } = await loadDataRevision(pool, args?.dataRevision);
+  const window = args?.window ?? windowFromInferred(inferObservationWindow(facts));
+  return publicTrendView(
+    buildTrendReport({
+      facts,
+      window,
+      countryCode: args?.countryCode ?? null,
+      providerId: args?.providerId ?? null,
+      dataRevision,
+    })
+  );
+}
+
+export async function getProviderTimelineDoc(providerId: string) {
+  const { facts, id: dataRevision } = await loadDataRevision(pool);
+  const window = windowFromInferred(inferObservationWindow(facts));
+  return projectPublicTimelineDocument(buildProviderTimeline({ facts, window, providerId, dataRevision }));
+}
+
+export async function getCountryPageData(code: string) {
+  const country = requireRegisteredIso2(code);
+  const { facts, id: dataRevision } = await loadDataRevision(pool);
+  const window = windowFromInferred(inferObservationWindow(facts));
+  const timeline = projectPublicTimelineDocument(buildCountryTimeline({ facts, window, countryCode: country.iso2, dataRevision }));
+  const trends = publicTrendView(buildTrendReport({ facts, window, countryCode: country.iso2, dataRevision }));
+  return { country, timeline, trends };
+}
+
+export async function getOutlookEligibility(metric: TrendMetric, countryCode?: string | null, requestedRevision?: string | null) {
+  const { facts, id: dataRevision } = await loadDataRevision(pool, requestedRevision);
+  const window = windowFromInferred(inferObservationWindow(facts));
+  return publicOutlookEligibilityView(buildOutlook({ facts, window, countryCode: countryCode ?? null, dataRevision }, metric));
+}
+
+export async function getCurrentClaims(subjectType: string, subjectId: string, at?: string) {
+  const { rows } = await pool.query(CURRENT_CLAIMS_AT_SQL, [at ?? new Date().toISOString(), subjectType, subjectId]);
   return rows;
 }

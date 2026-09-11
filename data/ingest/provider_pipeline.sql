@@ -1,3 +1,5 @@
+-- Schema changes in this file are deprecated.
+-- Canonical schema is migrations/0001_legacy_baseline.sql (scripts/migrate.py).
 CREATE TABLE IF NOT EXISTS provider_pipeline (
   id serial PRIMARY KEY,
   name text NOT NULL,

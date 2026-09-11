@@ -1,3 +1,6 @@
+-- Schema CREATE in this file is deprecated.
+-- Canonical schema is migrations/0001_legacy_baseline.sql (scripts/migrate.py).
+-- The INSERT rows remain a data seed, not a schema migration.
 CREATE TABLE IF NOT EXISTS directory_updates (
   id           SERIAL PRIMARY KEY,
   kind         TEXT NOT NULL CHECK (kind IN ('discovered', 'updated')),

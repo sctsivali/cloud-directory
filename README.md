@@ -31,6 +31,20 @@ Cloud in Asia is the media/ecosystem. **Cloud Directory** is this product: compa
 
 Unknown is unknown. We do not invent building names, photos, or legal conclusions.
 
+## Schema
+
+PostgreSQL migrations live in `migrations/` with a checksum ledger (`migrations/manifest.json`, currently schema version 8). Apply with an explicit URL:
+
+```bash
+python scripts/migrate.py --database-url "$TEST_DATABASE_URL"
+python scripts/migrate.py --verify-manifest
+python scripts/migrate_legacy_data.py --database-url "$TEST_DATABASE_URL"
+```
+
+`migrate_legacy_data.py` copies existing public rows into Phase 2 catalog/claim tables as `legacy/unverified`. It does not change public scoring.
+
+The built-in MCP server (`mcp/`, official SDK, contract `cloud-directory-mcp` 1.0.0) can read the directory and submit typed proposals. It cannot publish or run SQL. See `docs/mcp-contract.md`.
+
 ## License
 
 Source is public for review and correction. See the site footer and `/correct`.

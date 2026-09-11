@@ -1,0 +1,68 @@
+{
+  "id": "local-packages",
+  "name": "Nusantara Compute",
+  "hq_country": "Indonesia",
+  "legal_country": "Indonesia",
+  "legal_note": "Fictional Indonesian legal entity for the acceptance corpus.",
+  "origin": "local",
+  "is_local_asean": true,
+  "data_residency": "local",
+  "coverage_tags": [
+    "local_provider_with_public_packages",
+    "exact_facility",
+    "confirmed_kvm",
+    "current_price",
+    "source_200"
+  ],
+  "stack": {
+    "hypervisor": "KVM",
+    "orchestration": "Kubernetes",
+    "storage": "Ceph",
+    "container_runtime": "containerd",
+    "control_plane": "Proxmox",
+    "open_source": true
+  },
+  "locations": [{ "city": "Jakarta", "country": "Indonesia" }],
+  "buildings": [
+    {
+      "name": "Nusantara DC Campus",
+      "city": "Jakarta",
+      "country": "Indonesia",
+      "listed": true
+    }
+  ],
+  "tiers": [
+    {
+      "id": "local-packages-s",
+      "tier_name": "Compute S",
+      "status": "OK",
+      "vcpu": 2,
+      "ram_gb": 4,
+      "price_usd_month": 8.5,
+      "currency": "USD",
+      "billing_period": "monthly",
+      "dc_city": "Jakarta",
+      "dc_country": "Indonesia"
+    },
+    {
+      "id": "local-packages-m",
+      "tier_name": "Compute M",
+      "status": "OK",
+      "vcpu": 4,
+      "ram_gb": 8,
+      "price_usd_month": 16,
+      "currency": "USD",
+      "billing_period": "monthly",
+      "dc_city": "Jakarta",
+      "dc_country": "Indonesia"
+    }
+  ],
+  "sources": [
+    {
+      "url": "https://fixtures.example.test/nusantara-compute/plans",
+      "status": "200",
+      "fixture": "ok-200.html",
+      "observed_at": "2026-09-01T00:00:00Z"
+    }
+  ]
+}
