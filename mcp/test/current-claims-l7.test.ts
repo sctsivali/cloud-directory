@@ -5,6 +5,46 @@ import { TEST_DATABASE_URL, withMigratedDatabase } from "./pg-harness.ts";
 import { PostgresDirectoryReader } from "../src/read-tools.ts";
 import { executeTool } from "../src/handlers.ts";
 
+it("current claims conflict on knowledge state plus canonical JSON through PostgreSQL reads", { skip: !TEST_DATABASE_URL }, async () => {
+  await withMigratedDatabase(async (client) => {
+    for (const [claimType, first, second] of [
+      ["identical", '{"text":"KVM"}', '{"text":"KVM"}'],
+      ["reordered", '{"text":"KVM","nested":{"a":1,"b":2}}', '{"nested":{"b":2,"a":1},"text":"KVM"}'],
+      ["json-null", 'null', 'null'],
+    ]) {
+      for (const [suffix, knowledge, value] of [["a", "confirmed_absent", first], ["z", "present", second]]) {
+        await client.query(`INSERT INTO claims
+          (id, subject_type, subject_id, claim_type, value, knowledge_state, assessment_state, observed_at, recorded_at)
+          VALUES ($1, 'provider', 'semantic-pair', $2, $3::jsonb, $4, 'independently_verified', '2026-06-01', '2026-06-02')`,
+        [`${claimType}-${suffix}`, claimType, value, knowledge]);
+      }
+    }
+    const reader = new PostgresDirectoryReader(client);
+    const rows = await reader.getClaims("provider", "semantic-pair");
+    assert.equal(rows.length, 3);
+    for (const row of rows) {
+      assert.equal(row.knowledge_state, "conflicting");
+      assert.equal(row.value, null);
+      assert.equal(row.assessment_state, "independently_verified");
+      assert.deepEqual([...(row.contributing_ids as string[])].sort(), [`${row.claim_type}-a`, `${row.claim_type}-z`]);
+    }
+    const tool = JSON.parse((await executeTool({ reader, repo: null, principalId: "reader", capabilities: ["read"] }, "directory.get_claims", { subjectType: "provider", subjectId: "semantic-pair" })).content[0]!.text);
+    assert.equal(tool.ok, true);
+    assert.equal(tool.claims.length, 3);
+    assert.ok(tool.claims.every((row: { knowledge_state: string; value: unknown }) => row.knowledge_state === "conflicting" && row.value === null));
+
+    // Equal states must still collapse reordered nested JSON to the latest ID.
+    await client.query("UPDATE claims SET knowledge_state = 'present' WHERE subject_id = 'semantic-pair'");
+    const equivalent = await reader.getClaims("provider", "semantic-pair");
+    assert.equal(equivalent.length, 3);
+    for (const row of equivalent) {
+      assert.equal(row.knowledge_state, "present");
+      assert.equal(row.id, `${row.claim_type}-z`);
+    }
+    assert.deepEqual(equivalent.find((row) => row.claim_type === "reordered")?.value, { text: "KVM", nested: { a: 1, b: 2 } });
+  });
+});
+
 it("L7 API/MCP current claims follow chain, drop cycles, and emit conflict", { skip: !TEST_DATABASE_URL }, async () => {
   await withMigratedDatabase(async (client, pool) => {
     async function insert(

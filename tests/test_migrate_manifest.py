@@ -81,6 +81,7 @@ REQUIRED_PHASE2_MARKERS = (
     ("0016_collection_submission_outcomes.sql", "rejected or ambiguous required submissions prevent proposed"),
     ("0016_collection_submission_outcomes.sql", "cannot insert submission outcome after task is proposed"),
     ("0016_collection_submission_outcomes.sql", "required submission count cap exceeded"),
+    ("0017_current_claim_knowledge_conflicts.sql", "jsonb_build_array(a.knowledge_state, a.value)"),
 )
 
 REQUIRED_BASELINE_MARKERS = (
@@ -162,10 +163,11 @@ class TestManifestLedger(unittest.TestCase):
             "0014_structured_price_terms.sql",
             "0015_current_claims.sql",
             "0016_collection_submission_outcomes.sql",
+            "0017_current_claim_knowledge_conflicts.sql",
         ]
         manifest = json.loads(self.manifest_path.read_text())
-        self.assertEqual(manifest["schema_version"], 16)
-        self.assertEqual(len(manifest["migrations"]), 16)
+        self.assertEqual(manifest["schema_version"], 17)
+        self.assertEqual(len(manifest["migrations"]), 17)
         for i, filename in enumerate(expected_files, start=1):
             row = manifest["migrations"][i - 1]
             self.assertEqual(row["version"], i)
@@ -175,7 +177,7 @@ class TestManifestLedger(unittest.TestCase):
             digest = hashlib.sha256(path.read_bytes()).hexdigest()
             self.assertEqual(row["checksum"], digest)
         loaded = migrate.load_manifest(self.migrations_dir)
-        self.assertEqual(loaded.schema_version, 16)
+        self.assertEqual(loaded.schema_version, 17)
         self.assertEqual([m.filename for m in loaded.migrations], expected_files)
         self.assertEqual(loaded.migrations[0].checksum, hashlib.sha256(self.baseline.read_bytes()).hexdigest())
 

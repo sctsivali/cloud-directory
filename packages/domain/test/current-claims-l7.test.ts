@@ -237,6 +237,23 @@ describe("L7 current-claim resolver", () => {
     assert.deepEqual(resolved[0]?.contributingIds, ["same-json-z"]);
   });
 
+  it("conflicts on contradictory knowledge states even with identical JSON", () => {
+    const present = claim({ id: "present", value: { text: "KVM" }, evidenceIds: ["ev-present"] });
+    const absent = claim({
+      id: "absent", value: { text: "KVM" }, knowledgeState: "confirmed_absent",
+      evidenceIds: ["ev-absent"],
+    });
+    for (const rows of [[present, absent], [absent, present]]) {
+      const resolved = current(rows);
+      assert.equal(resolved.length, 1);
+      assert.equal(resolved[0]?.knowledgeState, "conflicting");
+      assert.equal(resolved[0]?.value, null);
+      assert.equal(resolved[0]?.assessmentState, "extracted");
+      assert.deepEqual(resolved[0]?.contributingIds, ["absent", "present"]);
+      assert.deepEqual(resolved[0]?.evidenceIds, ["ev-absent", "ev-present"]);
+    }
+  });
+
   it("emits conflicting when current valid authoritative sources disagree", () => {
     const kvm = claim({
       id: "src-kvm",

@@ -160,7 +160,7 @@ export function resolveCurrentClaims(claims: readonly ClaimRecord[], now: string
     authoritative.sort(compareLatest);
     const latest = authoritative[0];
     if (!latest) continue;
-    const keys = new Set(authoritative.map((row) => valueKey(row.value)));
+    const keys = new Set(authoritative.map((row) => valueKey([row.knowledgeState, row.value])));
     const contributingIds = [...new Set(authoritative.map((row) => row.id))].sort();
     if (keys.size > 1) {
       result.push({
